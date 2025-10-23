@@ -13,7 +13,17 @@ process.on("unhandledRejection", (err) => {
 console.log("Booting backend…");
 
 const app = express();
-app.use(cors());
+const allowed = ["http://localhost:3000", /\.vercel\.app$/];
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowed.some(a => (a instanceof RegExp ? a.test(origin) : a === origin))) {
+      return cb(null, true);
+    }
+    return cb(new Error("Not allowed by CORS"));
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
@@ -38,6 +48,5 @@ async function connect_mongo() {
     console.log("✔ Mongo connected");
   } catch (err) {
     console.error("✖ Mongo connection failed:", err && err.message ? err.message : err);
-    // Keep server alive so you can see logs & health; fix env/Atlas and redeploy
   }
 }
