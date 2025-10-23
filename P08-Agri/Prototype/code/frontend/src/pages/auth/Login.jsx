@@ -15,15 +15,8 @@ function Login() {
     set_error_text("");
     set_is_loading(true);
     try {
-      const result = await login_api({ email, password });
-      const user_role = result && result.user && typeof result.user.role === "string" ? result.user.role.toLowerCase() : "";
-      if (user_role === "farmer") {
-        navigate("/farmer-dashboard");
-      } else if (user_role === "inspector" || user_role === "quality inspector") {
-        navigate("/inspector-dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      await login_api({ email, password });
+      navigate("/dashboard");
     } catch (err) {
       const message = err && err.message ? err.message : "Login failed. Please try again.";
       set_error_text(message);

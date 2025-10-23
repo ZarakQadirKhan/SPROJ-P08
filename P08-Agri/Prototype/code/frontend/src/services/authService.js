@@ -1,11 +1,21 @@
 const API_BASE = process.env.REACT_APP_API_URL;
 
 function pick_user(data) {
-  if (!data) return null;
-  if (data.user) return data.user;
-  if (data.data && data.data.user) return data.data.user;
-  if (data.profile) return data.profile;
-  if (data.data && data.data.profile) return data.data.profile;
+  if (!data) {
+    return null;
+  }
+  if (data.user) {
+    return data.user;
+  }
+  if (data.data && data.data.user) {
+    return data.data.user;
+  }
+  if (data.profile) {
+    return data.profile;
+  }
+  if (data.data && data.data.profile) {
+    return data.data.profile;
+  }
   return null;
 }
 

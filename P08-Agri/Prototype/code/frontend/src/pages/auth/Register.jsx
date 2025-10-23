@@ -52,7 +52,11 @@ function Register() {
       new_errors.confirm_password = "Passwords do not match";
     }
     set_field_errors(new_errors);
-    return Object.keys(new_errors).length === 0;
+    if (Object.keys(new_errors).length === 0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   async function handle_submit(e) {
@@ -66,15 +70,8 @@ function Register() {
     try {
       const { name, email, phone, role, password } = form_data;
       const payload = { full_name: name, email, phone: phone || undefined, role, password };
-      const result = await register_api(payload);
-      const user_role = result && result.user && typeof result.user.role === "string" ? result.user.role.toLowerCase() : "";
-      if (user_role === "farmer") {
-        navigate("/farmer-dashboard");
-      } else if (user_role === "inspector" || user_role === "quality inspector") {
-        navigate("/inspector-dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      await register_api(payload);
+      navigate("/dashboard");
     } catch (err) {
       const message = err && err.message ? err.message : "Registration failed. Please try again.";
       set_api_error(message);
@@ -90,9 +87,7 @@ function Register() {
           <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
           <p className="mt-2 text-sm text-gray-600">
             Already have an account?{" "}
-            <Link to="/login" className="text-green-600 hover:text-green-500">
-              Sign in
-            </Link>
+            <Link to="/login" className="text-green-600 hover:text-green-500">Sign in</Link>
           </p>
         </div>
 
