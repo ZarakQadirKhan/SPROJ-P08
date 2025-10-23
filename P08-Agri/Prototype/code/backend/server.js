@@ -7,10 +7,11 @@ const app = express();
 /* ---------- Allowed origins ---------- */
 const LOCAL_ORIGIN = 'http://localhost:3000';
 const PROD_ORIGIN = 'https://sproj-p08-silk.vercel.app';
+// allow any Vercel preview: https://<anything>.vercel.app
 const VERCEL_PREVIEW_RE = /^https:\/\/[\w-]+\.vercel\.app$/;
 
 function is_allowed_origin(origin) {
-  if (!origin) return true;
+  if (!origin) return true; // curl / same-origin
   if (origin === LOCAL_ORIGIN) return true;
   if (origin === PROD_ORIGIN) return true;
   if (VERCEL_PREVIEW_RE.test(origin)) return true;
@@ -28,37 +29,27 @@ const cors_options = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 204
 };
+
 app.use(cors(cors_options));
-app.options('*', cors(cors_options));
+// DO NOT use app.options('*', ...) on Express 5 / path-to-regexp v6.
+// The middleware above already answers preflights.
 
 /* ---------- Body parsers ---------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ---------- Small helpers ---------- */
-function s(v) {
-  if (v === undefined || v === null) return '';
-  return String(v).trim();
-}
-
 /* ---------- Health ---------- */
 app.get('/health', (req, res) => res.json({ ok: true }));
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-/* ---------- Debug echo (useful to verify what server receives) ---------- */
-app.post('/api/echo', (req, res) => {
-  res.json({ received_headers: req.headers, body: req.body });
-});
-
 /* ---------- Auth routes (demo stubs) ---------- */
 app.post('/api/auth/register', (req, res) => {
-  console.log('REGISTER body:', req.body);
-
-  const full_name = s(req.body.full_name || req.body.name);
-  const email = s(req.body.email);
-  const phone = s(req.body.phone);
-  const role = s(req.body.role);
-  const password = s(req.body.password);
+  // Accept both `name` and `full_name`
+  const full_name = (req.body.full_name || req.body.name || '').trim();
+  const email = (req.body.email || '').trim();
+  const phone = (req.body.phone || '').trim();
+  const role = (req.body.role || '').trim();
+  const password = (req.body.password || '').trim();
 
   if (!full_name || !email || !password || !role) {
     return res.status(400).json({ error: 'Missing fields' });
@@ -66,15 +57,12 @@ app.post('/api/auth/register', (req, res) => {
 
   const user = { id: 'u_' + Date.now(), full_name, email, phone, role };
   const token = 'stub_token';
-
   return res.status(201).json({ ok: true, user, token });
 });
 
 app.post('/api/auth/login', (req, res) => {
-  console.log('LOGIN body:', req.body);
-
-  const email = s(req.body.email);
-  const password = s(req.body.password);
+  const email = (req.body.email || '').trim();
+  const password = (req.body.password || '').trim();
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Missing credentials' });
@@ -82,7 +70,6 @@ app.post('/api/auth/login', (req, res) => {
 
   const user = { id: 'u_' + Date.now(), email, role: 'farmer' };
   const token = 'stub_token';
-
   return res.status(200).json({ ok: true, user, token });
 });
 
