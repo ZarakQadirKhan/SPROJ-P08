@@ -31,8 +31,6 @@ const cors_options = {
 };
 
 app.use(cors(cors_options));
-// DO NOT use app.options('*', ...) on Express 5 / path-to-regexp v6.
-// The middleware above already answers preflights.
 
 /* ---------- Body parsers ---------- */
 app.use(express.json());
