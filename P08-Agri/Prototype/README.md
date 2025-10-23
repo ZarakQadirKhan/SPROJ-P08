@@ -15,9 +15,9 @@
 
 ---
 ## Accessing the Prototype
-https://sproj-p08.onrender.com
-https://sproj-p08-p580fwf0n-zarakqadirkhans-projects.vercel.app/
-26100370@lums.edu.pk
+-https://sproj-p08.onrender.com \\
+-https://sproj-p08-p580fwf0n-zarakqadirkhans-projects.vercel.app/
+-26100370@lums.edu.pk
 zarakkhan
 this is just one ID-password
 you can make your own ID-password to login/register
