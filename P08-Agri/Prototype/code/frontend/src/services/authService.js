@@ -1,37 +1,47 @@
 const API_BASE = process.env.REACT_APP_API_URL;
 
-async function handle_response(response) {
+function pick_user(data) {
+  if (!data) return null;
+  if (data.user) return data.user;
+  if (data.data && data.data.user) return data.data.user;
+  if (data.profile) return data.profile;
+  if (data.data && data.data.profile) return data.data.profile;
+  return null;
+}
+
+async function handle_response(res) {
   let data = null;
   try {
-    data = await response.json();
+    data = await res.json();
   } catch (_) {}
-  if (!response.ok) {
-    const message = data?.error || data?.message || "Request failed";
+  if (!res.ok) {
+    const message = (data && (data.error || data.message)) || `Request failed (${res.status})`;
     throw new Error(message);
   }
-  return data;
+  const user = pick_user(data);
+  return { raw: data, user };
 }
 
 export async function register(payload) {
   if (!API_BASE) {
     throw new Error("API base URL is not set");
   }
-  const response = await fetch(`${API_BASE}/api/auth/register`, {
+  const res = await fetch(`${API_BASE}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-  return handle_response(response);
+  return handle_response(res);
 }
 
 export async function login(payload) {
   if (!API_BASE) {
     throw new Error("API base URL is not set");
   }
-  const response = await fetch(`${API_BASE}/api/auth/login`, {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-  return handle_response(response);
+  return handle_response(res);
 }

@@ -1,4 +1,3 @@
-// server.js (Express 5–safe CORS incl. all previews for this project)
 const express = require("express");
 const cors = require("cors");
 
@@ -37,10 +36,8 @@ const cors_options = {
   optionsSuccessStatus: 204
 };
 
-// CORS for normal requests
 app.use(cors(cors_options));
 
-// Express 5–safe preflight handler (no "*" path)
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     const origin = req.headers.origin;
@@ -59,12 +56,10 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Health check
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// Example auth routes
 app.post("/api/auth/register", (req, res) => {
   const { full_name, email, phone, role, password } = req.body;
   if (!full_name || !email || !password || !role) {
@@ -81,7 +76,6 @@ app.post("/api/auth/login", (req, res) => {
   return res.status(200).json({ ok: true, user: { role: "farmer" } });
 });
 
-// Nice JSON for CORS denials
 app.use((err, req, res, next) => {
   if (err && err.message === "Not allowed by CORS") {
     return res.status(403).json({ error: "CORS blocked: origin not allowed" });

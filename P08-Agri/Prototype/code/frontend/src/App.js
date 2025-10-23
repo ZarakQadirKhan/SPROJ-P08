@@ -1,52 +1,31 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import Dashboard from './pages/Dashboard';
-import './App.css';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Register from "./pages/auth/Register";
+import Login from "./pages/auth/Login";
 
-function App() {
-  const isAuthenticated = () => {
-    return localStorage.getItem('token') !== null;
-  };
-
-  const PrivateRoute = ({ children }) => {
-    return isAuthenticated() ? children : <Navigate to="/login" />;
-  };
-
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route 
-          path="/dashboard" 
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path="/farmer-dashboard" 
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path="/inspector-dashboard" 
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } 
-        />
-        <Route path="/" element={<Navigate to="/login" />} />
-      </Routes>
-    </Router>
-  );
+function FarmerDashboard() {
+  return <div style={{ padding: 24 }}>Farmer Dashboard</div>;
 }
 
-export default App;
+function InspectorDashboard() {
+  return <div style={{ padding: 24 }}>Inspector Dashboard</div>;
+}
+
+function Dashboard() {
+  return <div style={{ padding: 24 }}>General Dashboard</div>;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
+        <Route path="/inspector-dashboard" element={<InspectorDashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="*" element={<Login />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

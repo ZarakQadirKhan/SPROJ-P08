@@ -33,29 +33,24 @@ function Register() {
     if (!form_data.name.trim()) {
       new_errors.name = "Name is required";
     }
-
     const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form_data.email || !email_regex.test(form_data.email)) {
       new_errors.email = "Valid email is required";
     }
-
     if (form_data.phone) {
       const digits = form_data.phone.replace(/[^0-9]/g, "");
       if (!/^\d{10,}$/.test(digits)) {
         new_errors.phone = "Valid phone number is required";
       }
     }
-
     if (!form_data.password) {
       new_errors.password = "Password is required";
     } else if (form_data.password.length < 8) {
       new_errors.password = "Password must be at least 8 characters";
     }
-
     if (form_data.password !== form_data.confirm_password) {
       new_errors.confirm_password = "Passwords do not match";
     }
-
     set_field_errors(new_errors);
     return Object.keys(new_errors).length === 0;
   }
@@ -63,35 +58,25 @@ function Register() {
   async function handle_submit(e) {
     e.preventDefault();
     set_api_error("");
-
     const is_valid = validate_form();
     if (!is_valid) {
       return;
     }
-
     set_is_loading(true);
-
     try {
-      const { confirm_password, name, email, phone, role, password } = form_data;
-      const payload = {
-        full_name: name,
-        email: email,
-        phone: phone || undefined,
-        role: role,
-        password: password
-      };
-
+      const { name, email, phone, role, password } = form_data;
+      const payload = { full_name: name, email, phone: phone || undefined, role, password };
       const result = await register_api(payload);
-
-      if (result?.user?.role === "farmer") {
+      const user_role = result && result.user && typeof result.user.role === "string" ? result.user.role.toLowerCase() : "";
+      if (user_role === "farmer") {
         navigate("/farmer-dashboard");
-      } else if (result?.user?.role === "inspector") {
+      } else if (user_role === "inspector" || user_role === "quality inspector") {
         navigate("/inspector-dashboard");
       } else {
         navigate("/dashboard");
       }
     } catch (err) {
-      const message = err?.message || "Registration failed. Please try again.";
+      const message = err && err.message ? err.message : "Registration failed. Please try again.";
       set_api_error(message);
     } finally {
       set_is_loading(false);
@@ -120,9 +105,7 @@ function Register() {
         <form className="mt-8 space-y-6" onSubmit={handle_submit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Full Name
-              </label>
+              <label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name</label>
               <input
                 id="name"
                 name="name"
@@ -138,9 +121,7 @@ function Register() {
             </div>
 
             <div>
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email Address
-              </label>
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label>
               <input
                 id="email"
                 name="email"
@@ -156,9 +137,7 @@ function Register() {
             </div>
 
             <div>
-              <label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                Phone Number (Optional)
-              </label>
+              <label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone Number (Optional)</label>
               <input
                 id="phone"
                 name="phone"
@@ -173,9 +152,7 @@ function Register() {
             </div>
 
             <div>
-              <label htmlFor="role" className="text-sm font-medium text-gray-700">
-                I am a
-              </label>
+              <label htmlFor="role" className="text-sm font-medium text-gray-700">I am a</label>
               <select
                 id="role"
                 name="role"
@@ -190,9 +167,7 @@ function Register() {
             </div>
 
             <div>
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
               <div className="mt-1 relative">
                 <input
                   id="password"
@@ -224,9 +199,7 @@ function Register() {
             </div>
 
             <div>
-              <label htmlFor="confirm_password" className="text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
+              <label htmlFor="confirm_password" className="text-sm font-medium text-gray-700">Confirm Password</label>
               <input
                 id="confirm_password"
                 name="confirm_password"
@@ -254,13 +227,9 @@ function Register() {
 
           <p className="text-xs text-gray-500 text-center">
             By creating an account, you agree to our{" "}
-            <Link to="/terms" className="text-green-600 hover:text-green-500">
-              Terms of Service
-            </Link>{" "}
+            <Link to="/terms" className="text-green-600 hover:text-green-500">Terms of Service</Link>{" "}
             and{" "}
-            <Link to="/privacy" className="text-green-600 hover:text-green-500">
-              Privacy Policy
-            </Link>
+            <Link to="/privacy" className="text-green-600 hover:text-green-500">Privacy Policy</Link>
           </p>
         </form>
       </div>

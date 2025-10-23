@@ -16,15 +16,16 @@ function Login() {
     set_is_loading(true);
     try {
       const result = await login_api({ email, password });
-      if (result?.user?.role === "farmer") {
+      const user_role = result && result.user && typeof result.user.role === "string" ? result.user.role.toLowerCase() : "";
+      if (user_role === "farmer") {
         navigate("/farmer-dashboard");
-      } else if (result?.user?.role === "inspector") {
+      } else if (user_role === "inspector" || user_role === "quality inspector") {
         navigate("/inspector-dashboard");
       } else {
         navigate("/dashboard");
       }
     } catch (err) {
-      const message = err?.message || "Login failed. Please try again.";
+      const message = err && err.message ? err.message : "Login failed. Please try again.";
       set_error_text(message);
     } finally {
       set_is_loading(false);
@@ -38,9 +39,7 @@ function Login() {
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
           <p className="mt-2 text-sm text-gray-600">
             New to AgriQual?{" "}
-            <Link to="/register" className="text-green-600 hover:text-green-500">
-              Create an account
-            </Link>
+            <Link to="/register" className="text-green-600 hover:text-green-500">Create an account</Link>
           </p>
         </div>
 
@@ -53,9 +52,7 @@ function Login() {
         <form className="mt-8 space-y-6" onSubmit={handle_submit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email address
-              </label>
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">Email address</label>
               <input
                 id="email"
                 name="email"
@@ -70,9 +67,7 @@ function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
               <div className="mt-1 relative">
                 <input
                   id="password"
@@ -104,9 +99,7 @@ function Login() {
           </div>
 
           <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-green-600 hover:text-green-500">
-              Forgot your password?
-            </Link>
+            <Link to="/forgot-password" className="text-sm text-green-600 hover:text-green-500">Forgot your password?</Link>
           </div>
 
           <div className="space-y-4">
