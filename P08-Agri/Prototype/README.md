@@ -1,14 +1,19 @@
-Project: P08-AgriQual
-Team: 
-26100370 Zarak Qadir Khan
-26100219 Syeda Umaima Hasan
-26100247 Mishaal Usman
-26100259 muhammad walid khalid
+# Project: P08-AgriQual
 
-LIST OF REQUIREMENTS COMPLETED IN THE PROTOTYPE:
-User Registration/Login: walid khalid
-Get Weather Aware Advisory: zarak, mishaal, umaima
-Deployment: zarak, mishaal, umaima
+## Team Members
+- **26100370** Zarak Qadir Khan  
+- **26100219** Syeda Umaima Hasan  
+- **26100247** Mishaal Usman  
+- **26100259** Muhammad Walid Khalid  
+
+---
+
+## List of Requirements Completed in the Prototype
+- **User Registration and Login:** Muhammad Walid Khalid  
+- **Get Weather-Aware Advisory:** Zarak Qadir Khan, Mishaal Usman, Syeda Umaima Hasan  
+- **Deployment:** Zarak Qadir Khan, Mishaal Usman, Syeda Umaima Hasan  
+
+---
 
 HOW TO ACCESS THE PROTOTYPE
 
