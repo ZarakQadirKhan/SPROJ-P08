@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE}/api/auth`;
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  headers: { 'Content-Type': 'application/json' },
 });
 
 export const register = async (userData) => {
   try {
     const response = await api.post('/register', userData);
+
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -25,6 +25,7 @@ export const register = async (userData) => {
 export const login = async (credentials) => {
   try {
     const response = await api.post('/login', credentials);
+
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -42,20 +43,12 @@ export const logout = () => {
 
 export const getCurrentUser = () => {
   const userStr = localStorage.getItem('user');
-  if (userStr) {
-    return JSON.parse(userStr);
-  } else {
-    return null;
-  }
+  return userStr ? JSON.parse(userStr) : null;
 };
 
-export const getToken = () => {
-  return localStorage.getItem('token');
-};
+export const getToken = () => localStorage.getItem('token');
 
-export const isAuthenticated = () => {
-  return getToken() !== null;
-};
+export const isAuthenticated = () => !!getToken();
 
 const auth_service = {
   register,
@@ -63,7 +56,7 @@ const auth_service = {
   logout,
   getCurrentUser,
   getToken,
-  isAuthenticated
+  isAuthenticated,
 };
 
 export default auth_service;
