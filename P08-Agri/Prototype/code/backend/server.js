@@ -1,3 +1,4 @@
+// server.js (Express 5–safe CORS incl. all previews for this project)
 const express = require("express");
 const cors = require("cors");
 
@@ -32,18 +33,38 @@ const cors_options = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204
 };
 
+// CORS for normal requests
 app.use(cors(cors_options));
-app.options("*", cors(cors_options));
+
+// Express 5–safe preflight handler (no "*" path)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    const origin = req.headers.origin;
+    if (is_allowed_origin(origin)) {
+      res.header("Access-Control-Allow-Origin", origin || "*");
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      return res.sendStatus(204);
+    } else {
+      return res.status(403).json({ error: "CORS blocked: origin not allowed" });
+    }
+  }
+  next();
+});
 
 app.use(express.json());
 
+// Health check
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
+// Example auth routes
 app.post("/api/auth/register", (req, res) => {
   const { full_name, email, phone, role, password } = req.body;
   if (!full_name || !email || !password || !role) {
@@ -60,11 +81,12 @@ app.post("/api/auth/login", (req, res) => {
   return res.status(200).json({ ok: true, user: { role: "farmer" } });
 });
 
+// Nice JSON for CORS denials
 app.use((err, req, res, next) => {
   if (err && err.message === "Not allowed by CORS") {
     return res.status(403).json({ error: "CORS blocked: origin not allowed" });
   }
-  return next(err);
+  next(err);
 });
 
 const port = process.env.PORT || 5000;
