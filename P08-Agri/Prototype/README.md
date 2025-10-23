@@ -8,7 +8,7 @@
 
 ---
 
-## List of Requirements Completed in the Prototype
+## Use Cases Completed
 - **User Registration and Login:** Muhammad Walid Khalid  
 - **Get Weather-Aware Advisory:** Zarak Qadir Khan, Mishaal Usman, Syeda Umaima Hasan  
 - **Deployment:** Zarak Qadir Khan, Mishaal Usman, Syeda Umaima Hasan  
