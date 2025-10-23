@@ -17,5 +17,4 @@ export const fetch_weather_by_coords = async (latitude, longitude) => {
   }
 };
 
-const weather_service = { fetch_weather_by_coords };
-export default weather_service;
+export default { fetch_weather_by_coords };
