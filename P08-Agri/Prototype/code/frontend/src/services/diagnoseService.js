@@ -2,10 +2,9 @@ const from_env =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
   process.env.REACT_APP_API_BASE_URL
 
-const default_base =
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:5000'
-    : 'https://sproj-p08.onrender.com'
+const is_localhost = window.location.hostname === 'localhost'
+const is_vercel = /\.vercel\.app$/.test(window.location.hostname)
+const default_base = is_localhost ? 'http://localhost:5000' : (is_vercel ? '' : 'https://sproj-p08.onrender.com')
 
 const preferred_base = from_env || default_base
 
@@ -23,6 +22,10 @@ async function try_post_diagnose(base_url, file) {
 export async function diagnose_image(file) {
   // Try configured base first; on 404/network error, fall back to default Render API
   const bases_to_try = preferred_base === default_base ? [preferred_base] : [preferred_base, default_base]
+  // If using vercel rewrite (relative ''), also try absolute Render as a backup
+  if (bases_to_try[0] === '' && !bases_to_try.includes('https://sproj-p08.onrender.com')) {
+    bases_to_try.push('https://sproj-p08.onrender.com')
+  }
 
   let last_error_message = 'Request failed'
   for (const base of bases_to_try) {

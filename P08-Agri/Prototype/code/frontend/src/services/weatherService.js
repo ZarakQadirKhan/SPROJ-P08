@@ -5,11 +5,10 @@ const fromEnv =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
   process.env.REACT_APP_API_BASE_URL;
 
+const isLocalhost = window.location.hostname === 'localhost'
+const isVercel = /\.vercel\.app$/.test(window.location.hostname)
 const API_BASE =
-  fromEnv ||
-  (window.location.hostname === 'localhost'
-    ? 'http://localhost:5000'
-    : 'https://sproj-p08.onrender.com'); 
+  fromEnv || (isLocalhost ? 'http://localhost:5000' : (isVercel ? '' : 'https://sproj-p08.onrender.com'));
 
 export async function fetch_weather_by_coords(latitude, longitude) {
   const url = `${API_BASE}/api/weather?lat=${encodeURIComponent(
