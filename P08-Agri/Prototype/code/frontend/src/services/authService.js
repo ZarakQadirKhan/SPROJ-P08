@@ -1,7 +1,13 @@
 import axios from 'axios';
 
-// Set this on Vercel: REACT_APP_API_BASE_URL = https://<your-render>.onrender.com
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+// Resolve backend base URL (works for CRA or Vite)
+const fromEnv =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
+  process.env.REACT_APP_API_BASE_URL;
+
+const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+const isVercel = typeof window !== 'undefined' && /\.vercel\.app$/.test(window.location.hostname);
+const API_BASE = fromEnv || (isLocalhost ? 'http://localhost:5000' : (isVercel ? '' : 'https://sproj-p08-2.onrender.com'));
 const API_URL = `${API_BASE}/api/auth`;
 
 const api = axios.create({
@@ -20,7 +26,8 @@ export const register = async (userData) => {
     }
     return response.data;
   } catch (error) {
-    throw error?.response?.data?.message || 'Registration failed';
+    const message = error?.response?.data?.message || error?.response?.data?.error || 'Registration failed';
+    throw new Error(message);
   }
 };
 
@@ -34,7 +41,8 @@ export const login = async (credentials) => {
     }
     return response.data;
   } catch (error) {
-    throw error?.response?.data?.message || 'Login failed';
+    const message = error?.response?.data?.message || error?.response?.data?.error || 'Login failed';
+    throw new Error(message);
   }
 };
 
@@ -52,7 +60,7 @@ export const getToken = () => localStorage.getItem('token');
 
 export const isAuthenticated = () => !!getToken();
 
-export default {
+const authService = {
   register,
   login,
   logout,
@@ -60,3 +68,5 @@ export default {
   getToken,
   isAuthenticated,
 };
+
+export default authService;
