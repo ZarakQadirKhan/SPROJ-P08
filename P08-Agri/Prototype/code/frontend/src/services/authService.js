@@ -60,7 +60,7 @@ export const getToken = () => localStorage.getItem('token');
 
 export const isAuthenticated = () => !!getToken();
 
-export default {
+const authService = {
   register,
   login,
   logout,
@@ -68,3 +68,5 @@ export default {
   getToken,
   isAuthenticated,
 };
+
+export default authService;
