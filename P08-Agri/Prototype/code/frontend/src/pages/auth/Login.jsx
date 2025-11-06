@@ -16,7 +16,25 @@ function Login() {
     set_is_loading(true);
     try {
       await login_api({ email, password });
-      navigate("/dashboard");
+      // Get user role from localStorage to determine redirect
+      const userJson = localStorage.getItem('user');
+      if (userJson) {
+        try {
+          const user = JSON.parse(userJson);
+          const role = user?.role;
+          if (role === 'farmer') {
+            navigate("/farmer-dashboard");
+          } else if (role === 'inspector' || role === 'admin') {
+            navigate("/inspector-dashboard");
+          } else {
+            navigate("/dashboard");
+          }
+        } catch {
+          navigate("/dashboard");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       const message = err && err.message ? err.message : "Login failed. Please try again.";
       set_error_text(message);
