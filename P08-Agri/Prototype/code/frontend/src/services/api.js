@@ -2,11 +2,13 @@ const from_env =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
   process.env.REACT_APP_API_URL;
 
+const isLocalhost = window.location.hostname === 'localhost';
+const isVercel = /\.vercel\.app$/.test(window.location.hostname);
 const api_base =
   from_env ||
-  (window.location.hostname === 'localhost'
+  (isLocalhost
     ? 'http://localhost:5000'
-    : 'https://<your-backend>.onrender.com');
+    : (isVercel ? '' : 'https://sproj-p08-2.onrender.com'));
 
 export async function register_user(payload) {
   const res = await fetch(`${api_base}/api/auth/register`, {

@@ -63,7 +63,7 @@ app.post('/api/auth/register', (req, res) => {
     res.status(400).json({ error: 'Missing fields' })
     return
   }
-  const user = { id: 'u_' + Date.now(), full_name, email, phone, role }
+  const user = { id: 'u_' + Date.now(), name: full_name, full_name, email, phone, role }
   const token = 'stub_token'
   res.status(201).json({ ok: true, user, token })
 })
@@ -75,7 +75,9 @@ app.post('/api/auth/login', (req, res) => {
     res.status(400).json({ error: 'Missing credentials' })
     return
   }
-  const user = { id: 'u_' + Date.now(), email, role: 'farmer' }
+  // Extract name from email for stub (in real app, fetch from database)
+  const name_from_email = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  const user = { id: 'u_' + Date.now(), name: name_from_email, email, role: 'farmer' }
   const token = 'stub_token'
   res.status(200).json({ ok: true, user, token })
 })

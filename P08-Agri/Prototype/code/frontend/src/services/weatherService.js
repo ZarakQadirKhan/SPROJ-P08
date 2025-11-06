@@ -8,7 +8,7 @@ const fromEnv =
 const isLocalhost = window.location.hostname === 'localhost'
 const isVercel = /\.vercel\.app$/.test(window.location.hostname)
 const API_BASE =
-  fromEnv || (isLocalhost ? 'http://localhost:5000' : (isVercel ? '' : 'https://sproj-p08.onrender.com'));
+  fromEnv || (isLocalhost ? 'http://localhost:5000' : (isVercel ? '' : 'https://sproj-p08-2.onrender.com'));
 
 export async function fetch_weather_by_coords(latitude, longitude) {
   const url = `${API_BASE}/api/weather?lat=${encodeURIComponent(
