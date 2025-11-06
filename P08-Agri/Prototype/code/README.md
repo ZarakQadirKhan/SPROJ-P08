@@ -29,7 +29,7 @@ This will start:
 - Frontend on `http://localhost:3000`
 - Backend on `http://localhost:5000`
 
-### Run Separately
+### Run Separately 
 
 **Backend only:**
 ```bash
