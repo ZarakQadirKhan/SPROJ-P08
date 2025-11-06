@@ -88,16 +88,26 @@ app.post('/api/auth/login', (req, res) => {
 const diagnose_router_path = path.resolve(__dirname, 'routes', 'diagnose.js')
 let diagnose_mounted = false
 try {
-  const diagnose_router = require(diagnose_router_path)
-  app.use('/api/diagnose', diagnose_router)
-  diagnose_mounted = true
+  if (fs.existsSync(diagnose_router_path)) {
+    const diagnose_router = require(diagnose_router_path)
+    app.use('/api/diagnose', diagnose_router)
+    diagnose_mounted = true
+    console.log('Diagnose router mounted successfully')
+  } else {
+    console.warn('Diagnose router file not found:', diagnose_router_path)
+  }
 } catch (e) {
-  console.error('Failed to mount diagnose router:', e)
+  console.error('Failed to mount diagnose router:', e.message || e)
+  console.error('Stack:', e.stack)
 }
 
 if (!diagnose_mounted) {
   app.post('/api/diagnose', (req, res) => {
-    res.status(501).json({ ok: false, message: 'Diagnose router not mounted', detail: 'Check backend logs' })
+    res.status(501).json({ 
+      ok: false, 
+      message: 'Diagnose router not mounted', 
+      detail: 'The diagnose router failed to load. Check backend logs and ensure all dependencies (multer, form-data) are installed.' 
+    })
   })
 }
 
