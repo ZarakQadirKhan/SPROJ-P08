@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import Dashboard from './pages/dashboard/Dashboard'; // <-- ensure this path
+import Dashboard from './pages/dashboard/Dashboard';
+import FarmerDashboard from './pages/dashboard/FarmerDashboard';
 import './App.css';
 
 function App() {
@@ -10,8 +11,52 @@ function App() {
     return localStorage.getItem('token') !== null;
   };
 
-  const PrivateRoute = ({ children }) => {
-    return isAuthenticated() ? children : <Navigate to="/login" />;
+  const getUserRole = () => {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) return null;
+    try {
+      const user = JSON.parse(userJson);
+      return user.role || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const PrivateRoute = ({ children, allowedRoles }) => {
+    if (!isAuthenticated()) {
+      return <Navigate to="/login" />;
+    }
+    
+    if (allowedRoles && allowedRoles.length > 0) {
+      const userRole = getUserRole();
+      if (!allowedRoles.includes(userRole)) {
+        // Redirect to appropriate dashboard based on role
+        if (userRole === 'farmer') {
+          return <Navigate to="/farmer-dashboard" />;
+        } else if (userRole === 'inspector') {
+          return <Navigate to="/inspector-dashboard" />;
+        } else {
+          return <Navigate to="/dashboard" />;
+        }
+      }
+    }
+    
+    return children;
+  };
+
+  const DashboardRedirect = () => {
+    if (!isAuthenticated()) {
+      return <Navigate to="/login" />;
+    }
+    
+    const userRole = getUserRole();
+    if (userRole === 'farmer') {
+      return <Navigate to="/farmer-dashboard" />;
+    } else if (userRole === 'inspector') {
+      return <Navigate to="/inspector-dashboard" />;
+    } else {
+      return <Navigate to="/dashboard" />;
+    }
   };
 
   return (
@@ -22,24 +67,20 @@ function App() {
 
         <Route
           path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
+          element={<DashboardRedirect />}
         />
         <Route
           path="/farmer-dashboard"
           element={
-            <PrivateRoute>
-              <Dashboard />
+            <PrivateRoute allowedRoles={['farmer']}>
+              <FarmerDashboard />
             </PrivateRoute>
           }
         />
         <Route
           path="/inspector-dashboard"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={['inspector', 'admin']}>
               <Dashboard />
             </PrivateRoute>
           }
