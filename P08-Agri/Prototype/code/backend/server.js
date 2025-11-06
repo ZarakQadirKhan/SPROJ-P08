@@ -14,7 +14,10 @@ function is_allowed_origin(origin) {
   if (!origin) return true
   if (origin === LOCAL_ORIGIN) return true
   if (origin === PROD_ORIGIN) return true
+  // Allow all Vercel preview and production deployments
   if (VERCEL_PREVIEW_RE.test(origin)) return true
+  // Also allow any vercel.app subdomain
+  if (origin && typeof origin === 'string' && origin.includes('.vercel.app')) return true
   return false
 }
 
@@ -88,7 +91,15 @@ try {
   const diagnose_router = require(diagnose_router_path)
   app.use('/api/diagnose', diagnose_router)
   diagnose_mounted = true
-} catch (e) {}
+} catch (e) {
+  console.error('Failed to mount diagnose router:', e)
+}
+
+if (!diagnose_mounted) {
+  app.post('/api/diagnose', (req, res) => {
+    res.status(501).json({ ok: false, message: 'Diagnose router not mounted', detail: 'Check backend logs' })
+  })
+}
 
 app.use((err, req, res, next) => {
   if (err && err.message === 'Not allowed by CORS') {

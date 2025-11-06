@@ -14,6 +14,7 @@ function get_ml_service_url() {
   return ''
 }
 
+// Handle both with and without trailing slash
 router.post('/', upload.single('image'), async (req, res) => {
   if (!req.file) {
     res.status(400).json({ message: 'Image is required in field "image"' })
