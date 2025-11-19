@@ -11,6 +11,7 @@ function FarmerDashboard() {
   const [is_getting_weather, set_is_getting_weather] = useState(false)
   const [weather_error, set_weather_error] = useState('')
   const [weather_data, set_weather_data] = useState(null)
+  const [forecast_days, set_forecast_days] = useState(7)
 
   const [selected_file, set_selected_file] = useState(null)
   const [preview_url, set_preview_url] = useState('')
@@ -54,7 +55,7 @@ function FarmerDashboard() {
     set_weather_data(null)
     try {
       const { latitude, longitude } = await get_browser_location()
-      const data = await fetch_weather_by_coords(latitude, longitude)
+      const data = await fetch_weather_by_coords(latitude, longitude, forecast_days)
       set_weather_data(data)
     } catch (err) {
       const msg = typeof err === 'string' ? err : err && err.message ? err.message : 'Failed to get weather'
@@ -105,6 +106,20 @@ function FarmerDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">AgriQual - My Farm Dashboard</h1>
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Forecast:</label>
+              <select
+                value={forecast_days}
+                onChange={(e) => set_forecast_days(Number(e.target.value))}
+                className="px-2 py-1 border border-gray-300 rounded text-sm"
+                disabled={is_getting_weather}
+              >
+                <option value={1}>Today</option>
+                <option value={3}>3 Days</option>
+                <option value={7}>7 Days</option>
+                <option value={14}>14 Days</option>
+              </select>
+            </div>
             <button
               type="button"
               onClick={handle_get_weather}
@@ -124,6 +139,13 @@ function FarmerDashboard() {
             <span className="text-sm text-gray-600">
               Welcome, <span className="font-medium">{user.name || 'Farmer'}</span>
             </span>
+            <button
+              type="button"
+              onClick={() => navigate('/contact-support')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              Contact Support
+            </button>
             <button
               onClick={handle_logout}
               className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -214,7 +236,9 @@ function FarmerDashboard() {
                 {weather_data.city} • {weather_data.current.temperature_c}°C • Wind {weather_data.current.wind_speed_kmh} km/h
               </p>
             </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            {/* Today's Summary */}
+            <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 border-b border-gray-200">
               <div className="bg-gray-50 rounded-lg p-4 text-center">
                 <p className="text-sm text-gray-600">Max Temp</p>
                 <p className="text-2xl font-semibold text-gray-900">{weather_data.today.tmax_c}°C</p>
@@ -232,8 +256,56 @@ function FarmerDashboard() {
                 <p className="text-2xl font-semibold text-gray-900">{weather_data.today.uv_index_max}</p>
               </div>
             </div>
-            <div className="px-6 pb-6">
-              <h3 className="text-md font-semibold text-gray-900 mb-3">Crop Care Recommendations</h3>
+
+            {/* Multi-day Forecast */}
+            {weather_data.forecast && weather_data.forecast.length > 1 && (
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-md font-semibold text-gray-900 mb-4">{weather_data.forecast_days}-Day Forecast</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {weather_data.forecast.map((day, idx) => {
+                    const date = day.date ? new Date(day.date) : null;
+                    const dateLabel = date ? (idx === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })) : `Day ${idx + 1}`;
+                    return (
+                      <div key={idx} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="font-semibold text-gray-900 mb-2">{dateLabel}</div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">High:</span>
+                            <span className="font-medium">{day.tmax_c !== null ? `${day.tmax_c}°C` : 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Low:</span>
+                            <span className="font-medium">{day.tmin_c !== null ? `${day.tmin_c}°C` : 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Rain:</span>
+                            <span className="font-medium">{day.precipitation_mm !== null ? `${day.precipitation_mm}mm` : 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">UV:</span>
+                            <span className="font-medium">{day.uv_index_max !== null ? day.uv_index_max : 'N/A'}</span>
+                          </div>
+                        </div>
+                        {day.advice && day.advice.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gray-300">
+                            <p className="text-xs font-medium text-gray-700 mb-1">Advice:</p>
+                            <ul className="list-disc pl-4 text-xs text-gray-600 space-y-1">
+                              {day.advice.slice(0, 2).map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Today's Advice */}
+            <div className="px-6 pb-6 pt-4">
+              <h3 className="text-md font-semibold text-gray-900 mb-3">Today's Crop Care Recommendations</h3>
               <ul className="list-disc pl-6 text-gray-700 space-y-2">
                 {weather_data.advice.map((item, idx) => (
                   <li key={idx} className="text-sm">{item}</li>

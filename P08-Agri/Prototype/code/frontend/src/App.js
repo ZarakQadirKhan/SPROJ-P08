@@ -4,6 +4,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import FarmerDashboard from './pages/dashboard/FarmerDashboard';
+import ContactSupport from './pages/support/ContactSupport';
 import './App.css';
 
 function App() {
@@ -82,6 +83,14 @@ function App() {
           element={
             <PrivateRoute allowedRoles={['inspector', 'admin']}>
               <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/contact-support"
+          element={
+            <PrivateRoute>
+              <ContactSupport />
             </PrivateRoute>
           }
         />

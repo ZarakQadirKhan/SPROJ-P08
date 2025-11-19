@@ -111,6 +111,32 @@ if (!diagnose_mounted) {
   })
 }
 
+const support_router_path = path.resolve(__dirname, 'routes', 'support.js')
+let support_mounted = false
+try {
+  if (fs.existsSync(support_router_path)) {
+    const support_router = require(support_router_path)
+    app.use('/api/support', support_router)
+    support_mounted = true
+    console.log('Support router mounted successfully')
+  } else {
+    console.warn('Support router file not found:', support_router_path)
+  }
+} catch (e) {
+  console.error('Failed to mount support router:', e.message || e)
+  console.error('Stack:', e.stack)
+}
+
+if (!support_mounted) {
+  app.post('/api/support', (req, res) => {
+    res.status(501).json({ 
+      ok: false, 
+      message: 'Support router not mounted', 
+      detail: 'The support router failed to load. Check backend logs and ensure all dependencies are installed.' 
+    })
+  })
+}
+
 app.use((err, req, res, next) => {
   if (err && err.message === 'Not allowed by CORS') {
     res.status(403).json({ error: 'CORS blocked: origin not allowed' })
