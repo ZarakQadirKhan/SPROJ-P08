@@ -9,7 +9,7 @@ function VerifyOtp() {
   const stateEmail = location.state && location.state.email ? location.state.email : ''
   const storedEmail = localStorage.getItem('pending_signup_email') || ''
 
-  const [email, setEmail] = useState(stateEmail || storedEmail)
+  const [email] = useState(stateEmail || storedEmail)
   const [otp, setOtp] = useState('')
   const [errorText, setErrorText] = useState('')
   const [infoText, setInfoText] = useState('')
