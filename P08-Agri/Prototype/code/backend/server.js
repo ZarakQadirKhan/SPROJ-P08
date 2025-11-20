@@ -129,8 +129,28 @@ if (diagnose_mounted === false) {
     const payload = {
       ok: false,
       message: 'Diagnose router not mounted',
-      detail: 'The diagnose router failed to load. Check backend logs and ensure all dependencies (multer, form-data) are installed.'
+      detail:
+        'The diagnose router failed to load. Check backend logs and ensure all dependencies (multer, form-data) are installed.'
     }
+    response.status(501).json(payload)
+  })
+}
+
+const help_router_path = path.resolve(__dirname, 'routes', 'help.js')
+const help_exists = fs.existsSync(help_router_path)
+let help_mounted = false
+
+try {
+  if (help_exists === true) {
+    const help_router = require(help_router_path)
+    app.use('/api/help', help_router)
+    help_mounted = true
+  }
+} catch (error) {}
+
+if (help_mounted === false) {
+  app.post('/api/help/complaints', function (request, response) {
+    const payload = { ok: false, message: 'Help router not mounted' }
     response.status(501).json(payload)
   })
 }
