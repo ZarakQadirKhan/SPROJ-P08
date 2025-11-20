@@ -42,10 +42,10 @@ function is_allowed_origin(origin) {
     return true
   }
 
-  const is_vercel_preview = VERCEL_PREVIEW_RE.test(origin)
-  if (is_vercel_preview === true) {
-    return true
-  }
+  // const is_vercel_preview = VERCEL_PREVIEW_RE.test(origin)
+  // if (is_vercel_preview === true) {
+  //   return true
+  // }
 
   const is_string_origin = typeof origin === 'string'
   if (is_string_origin === true && origin.includes('.vercel.app')) {
