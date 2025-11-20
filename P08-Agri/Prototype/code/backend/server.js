@@ -11,84 +11,89 @@ const PROD_ORIGIN = 'https://sproj-p08-silk.vercel.app'
 const VERCEL_PREVIEW_RE = /^https:\/\/[\w-]+\.vercel\.app$/
 
 function is_allowed_origin(origin) {
-  if (!origin) return true
-  if (origin === LOCAL_ORIGIN) return true
-  if (origin === PROD_ORIGIN) return true
-  // Allow all Vercel preview and production deployments
-  if (VERCEL_PREVIEW_RE.test(origin)) return true
-  // Also allow any vercel.app subdomain
-  if (origin && typeof origin === 'string' && origin.includes('.vercel.app')) return true
+  if (!origin) {
+    return true
+  }
+
+  if (origin === LOCAL_ORIGIN) {
+    return true
+  }
+
+  if (origin === PROD_ORIGIN) {
+    return true
+  }
+
+  const is_vercel_preview = VERCEL_PREVIEW_RE.test(origin)
+  if (is_vercel_preview === true) {
+    return true
+  }
+
+  const is_string_origin = typeof origin === 'string'
+  if (is_string_origin === true && origin.includes('.vercel.app')) {
+    return true
+  }
+
   return false
 }
 
 const cors_options = {
-  origin(origin, cb) {
-    if (is_allowed_origin(origin)) return cb(null, true)
-    return cb(new Error('Not allowed by CORS'))
+  origin(origin, callback) {
+    if (is_allowed_origin(origin) === true) {
+      callback(null, true)
+      return
+    }
+
+    const cors_error = new Error('Not allowed by CORS')
+    callback(cors_error)
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 204
 }
-app.use(cors(cors_options))
 
+app.use(cors(cors_options))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-app.get('/health', (req, res) => res.json({ ok: true, cwd: process.cwd() }))
-app.get('/api/health', (req, res) => res.json({ ok: true }))
+app.get('/health', function (request, response) {
+  const payload = { ok: true, cwd: process.cwd() }
+  response.json(payload)
+})
+
+app.get('/api/health', function (request, response) {
+  const payload = { ok: true }
+  response.json(payload)
+})
+
+const auth_router = require(path.resolve(__dirname, 'routes', 'auth.js'))
+app.use('/api/auth', auth_router)
 
 const weather_router_path = path.resolve(__dirname, 'routes', 'weather.js')
 const weather_exists = fs.existsSync(weather_router_path)
 let weather_mounted = false
+
 try {
-  if (weather_exists) {
+  if (weather_exists === true) {
     const weather_router = require(weather_router_path)
     app.use('/api/weather', weather_router)
     weather_mounted = true
   }
-} catch (e) {}
+} catch (error) {}
 
-if (!weather_mounted) {
-  app.get('/api/weather', (req, res) => {
-    res.status(501).json({ ok: false, message: 'Weather router not mounted' })
+if (weather_mounted === false) {
+  app.get('/api/weather', function (request, response) {
+    const payload = { ok: false, message: 'Weather router not mounted' }
+    response.status(501).json(payload)
   })
 }
 
-app.post('/api/auth/register', (req, res) => {
-  const full_name = (req.body.full_name || req.body.name || '').trim()
-  const email = (req.body.email || '').trim()
-  const phone = (req.body.phone || '').trim()
-  const role = (req.body.role || '').trim()
-  const password = (req.body.password || '').trim()
-  if (!full_name || !email || !password || !role) {
-    res.status(400).json({ error: 'Missing fields' })
-    return
-  }
-  const user = { id: 'u_' + Date.now(), name: full_name, full_name, email, phone, role }
-  const token = 'stub_token'
-  res.status(201).json({ ok: true, user, token })
-})
-
-app.post('/api/auth/login', (req, res) => {
-  const email = (req.body.email || '').trim()
-  const password = (req.body.password || '').trim()
-  if (!email || !password) {
-    res.status(400).json({ error: 'Missing credentials' })
-    return
-  }
-  // Extract name from email for stub (in real app, fetch from database)
-  const name_from_email = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  const user = { id: 'u_' + Date.now(), name: name_from_email, email, role: 'farmer' }
-  const token = 'stub_token'
-  res.status(200).json({ ok: true, user, token })
-})
-
 const diagnose_router_path = path.resolve(__dirname, 'routes', 'diagnose.js')
 let diagnose_mounted = false
+
 try {
-  if (fs.existsSync(diagnose_router_path)) {
+  const diagnose_exists = fs.existsSync(diagnose_router_path)
+  if (diagnose_exists === true) {
     const diagnose_router = require(diagnose_router_path)
     app.use('/api/diagnose', diagnose_router)
     diagnose_mounted = true
@@ -96,28 +101,33 @@ try {
   } else {
     console.warn('Diagnose router file not found:', diagnose_router_path)
   }
-} catch (e) {
-  console.error('Failed to mount diagnose router:', e.message || e)
-  console.error('Stack:', e.stack)
+} catch (error) {
+  const error_message = error.message || error
+  console.error('Failed to mount diagnose router:', error_message)
+  console.error('Stack:', error.stack)
 }
 
-if (!diagnose_mounted) {
-  app.post('/api/diagnose', (req, res) => {
-    res.status(501).json({ 
-      ok: false, 
-      message: 'Diagnose router not mounted', 
-      detail: 'The diagnose router failed to load. Check backend logs and ensure all dependencies (multer, form-data) are installed.' 
-    })
+if (diagnose_mounted === false) {
+  app.post('/api/diagnose', function (request, response) {
+    const payload = {
+      ok: false,
+      message: 'Diagnose router not mounted',
+      detail: 'The diagnose router failed to load. Check backend logs and ensure all dependencies (multer, form-data) are installed.'
+    }
+    response.status(501).json(payload)
   })
 }
 
-app.use((err, req, res, next) => {
-  if (err && err.message === 'Not allowed by CORS') {
-    res.status(403).json({ error: 'CORS blocked: origin not allowed' })
+app.use(function (error, request, response, next) {
+  const is_cors_error = error && error.message === 'Not allowed by CORS'
+  if (is_cors_error === true) {
+    const payload = { error: 'CORS blocked: origin not allowed' }
+    response.status(403).json(payload)
     return
   }
-  next(err)
+
+  next(error)
 })
 
 const port = process.env.PORT || 5000
-app.listen(port, () => {})
+app.listen(port, function () {})
