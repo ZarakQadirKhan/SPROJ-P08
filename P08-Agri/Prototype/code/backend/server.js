@@ -3,8 +3,24 @@ const express = require('express')
 const cors = require('cors')
 const fs = require('fs')
 const path = require('path')
+const mongoose = require('mongoose')
 
 const app = express()
+
+const mongo_uri = process.env.MONGO_URI
+
+if (!mongo_uri) {
+  console.error('MONGO_URI is not defined in environment variables')
+} else {
+  mongoose
+    .connect(mongo_uri)
+    .then(function () {
+      console.log('MongoDB connected')
+    })
+    .catch(function (error) {
+      console.error('MongoDB connection error:', error.message || error)
+    })
+}
 
 const LOCAL_ORIGIN = 'http://localhost:3000'
 const PROD_ORIGIN = 'https://sproj-p08-silk.vercel.app'
