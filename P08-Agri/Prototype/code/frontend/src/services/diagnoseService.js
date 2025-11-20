@@ -11,7 +11,18 @@ const preferred_base = from_env || default_base
 async function try_post_diagnose(base_url, file) {
   const form = new FormData()
   form.append('image', file)
-  const response = await fetch(`${base_url}/api/diagnose`, { method: 'POST', body: form })
+  
+  const token = localStorage.getItem('token')
+  const headers = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  
+  const response = await fetch(`${base_url}/api/diagnose`, { 
+    method: 'POST', 
+    body: form,
+    headers 
+  })
   let json = null
   try {
     json = await response.json()

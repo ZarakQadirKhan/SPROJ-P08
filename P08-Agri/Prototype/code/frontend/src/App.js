@@ -5,6 +5,7 @@ import Register from './pages/auth/Register'
 import VerifyOtp from './pages/auth/VerifyOtp'
 import Dashboard from './pages/dashboard/Dashboard'
 import FarmerDashboard from './pages/dashboard/FarmerDashboard'
+import DiagnosticHistory from './pages/dashboard/DiagnosticHistory'
 import './App.css'
 
 function App() {
@@ -74,6 +75,14 @@ function App() {
           element={
             <PrivateRoute allowedRoles={['farmer']}>
               <FarmerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/diagnostic-history"
+          element={
+            <PrivateRoute allowedRoles={['farmer']}>
+              <DiagnosticHistory />
             </PrivateRoute>
           }
         />

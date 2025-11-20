@@ -180,6 +180,29 @@ if (account_mounted === false) {
   })
 }
 
+// ===== History router =====
+const history_router_path = path.resolve(__dirname, 'routes', 'history.js')
+const history_exists = fs.existsSync(history_router_path)
+let history_mounted = false
+
+try {
+  if (history_exists === true) {
+    const history_router = require(history_router_path)
+    app.use('/api/history', history_router)
+    history_mounted = true
+    console.log('History router mounted successfully')
+  }
+} catch (error) {
+  console.error('Failed to mount history router:', error.message || error)
+}
+
+if (history_mounted === false) {
+  app.get('/api/history', function (request, response) {
+    const payload = { ok: false, message: 'History router not mounted' }
+    response.status(501).json(payload)
+  })
+}
+
 // ===== Error handler =====
 app.use(function (error, request, response, next) {
   const is_cors_error = error && error.message === 'Not allowed by CORS'

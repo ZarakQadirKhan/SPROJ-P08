@@ -309,6 +309,13 @@ function FarmerDashboard() {
             </button>
             <button
               type="button"
+              onClick={() => navigate('/diagnostic-history')}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+            >
+              History
+            </button>
+            <button
+              type="button"
               onClick={open_help_modal}
               className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >

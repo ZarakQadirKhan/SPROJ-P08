@@ -2,9 +2,28 @@ const express = require('express')
 const axios = require('axios')
 const multer = require('multer')
 const FormData = require('form-data')
+const jwt = require('jsonwebtoken')
+const Diagnosis = require('../models/Diagnosis')
 
 const router = express.Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } })
+
+function get_auth_user(request) {
+  const auth_header = request.headers.authorization || ''
+  if (!auth_header.startsWith('Bearer ')) {
+    return null
+  }
+  const token = auth_header.slice(7)
+  if (!token) {
+    return null
+  }
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET)
+    return payload
+  } catch (error) {
+    return null
+  }
+}
 
 function get_ml_service_url() {
   const url = process.env.ML_SERVICE_URL || ''
@@ -20,6 +39,13 @@ router.post('/', upload.single('image'), async (req, res) => {
     res.status(400).json({ message: 'Image is required in field "image"' })
     return
   }
+  
+  const auth_user = get_auth_user(req)
+  if (!auth_user) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+  
   const ml_base = get_ml_service_url()
   if (!ml_base) {
     res.status(501).json({ message: 'ML service not configured', detail: 'Set ML_SERVICE_URL in the backend environment' })
@@ -36,6 +62,23 @@ router.post('/', upload.single('image'), async (req, res) => {
       res.status(502).json({ message: 'Empty response from ML service' })
       return
     }
+    
+    // Save diagnosis to database
+    try {
+      const diagnosis_record = new Diagnosis({
+        user_id: auth_user.userId,
+        diagnosis: ml_resp.data.diagnosis,
+        confidence: ml_resp.data.confidence,
+        alternatives: ml_resp.data.alternatives || [],
+        recommendations: ml_resp.data.recommendations || [],
+        processing_ms: ml_resp.data.processing_ms
+      })
+      await diagnosis_record.save()
+    } catch (db_err) {
+      console.error('Failed to save diagnosis to database:', db_err.message || db_err)
+      // Continue even if saving fails - user still gets result
+    }
+    
     res.json(ml_resp.data)
   } catch (err) {
     const status = err && err.response && err.response.status ? err.response.status : null
