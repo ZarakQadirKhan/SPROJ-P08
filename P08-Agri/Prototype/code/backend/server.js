@@ -4,10 +4,10 @@ const cors = require('cors')
 const fs = require('fs')
 const path = require('path')
 const mongoose = require('mongoose')
+const { connect_redis } = require('./redis_client')
 
 const app = express()
 
-// ===== MongoDB connection =====
 const mongo_uri = process.env.MONGODB_URI || process.env.MONGO_URI
 
 if (!mongo_uri) {
@@ -22,7 +22,6 @@ if (!mongo_uri) {
       console.error('MongoDB connection error:', error.message || error)
     })
 }
-// ==============================
 
 const LOCAL_ORIGIN = 'http://localhost:3000'
 const PROD_ORIGIN = 'https://sproj-p08-silk.vercel.app'
@@ -147,5 +146,17 @@ app.use(function (error, request, response, next) {
   next(error)
 })
 
-const port = process.env.PORT || 5000
-app.listen(port, function () {})
+async function start_server() {
+  try {
+    await connect_redis()
+    console.log('Redis connected')
+  } catch (error) {
+    const message = error.message || error
+    console.error('Redis connection error:', message)
+  }
+
+  const port = process.env.PORT || 5000
+  app.listen(port, function () {})
+}
+
+start_server()
