@@ -57,7 +57,7 @@ function get_client_ip(request) {
 function clean_text(value, max_len) {
   const str = typeof value === 'string' ? value : String(value || '')
   let trimmed = str.trim()
-  trimmed = trimmed.replace(/\s+/g, ' ')
+  trimmed = trimmed.replaceAll(/\s+/g, ' ')
   if (max_len && trimmed.length > max_len) {
     trimmed = trimmed.slice(0, max_len)
   }
