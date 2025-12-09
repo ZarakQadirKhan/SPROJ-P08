@@ -7,8 +7,8 @@ const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast'
 
 router.get('/', async function (request, response) {
   try {
-    const latitude = parseFloat(request.query.lat)
-    const longitude = parseFloat(request.query.lon)
+    const latitude = Number.parseFloat(request.query.lat)
+    const longitude = Number.parseFloat(request.query.lon)
 
     if (Number.isNaN(latitude) === true || Number.isNaN(longitude) === true) {
       return response.status(400).json({
@@ -40,7 +40,30 @@ router.get('/', async function (request, response) {
 
     console.log('[Weather] fetching from open-meteo:', url)
 
-    const api_response = await axios.get(WEATHER_API_URL, { params })
+    let api_response
+    try {
+      api_response = await axios.get(WEATHER_API_URL, { params, timeout: 10000 })
+    } catch (axios_error) {
+      console.error('[Weather] Open-Meteo API request failed:', axios_error?.message || axios_error)
+      if (axios_error?.response?.status === 429) {
+        return response.status(429).json({
+          ok: false,
+          message: 'Daily API request limit exceeded. Please try again tomorrow.',
+          detail: 'The weather service has reached its daily limit'
+        })
+      }
+      throw axios_error
+    }
+
+    if (!api_response || !api_response.data) {
+      console.error('[Weather] Invalid API response structure')
+      return response.status(502).json({
+        ok: false,
+        message: 'Invalid response from weather service',
+        detail: 'The weather API returned an unexpected format'
+      })
+    }
+
     const data = api_response.data || {}
 
     const current = {
@@ -123,14 +146,19 @@ router.get('/', async function (request, response) {
 
     response.json(payload)
   } catch (error) {
-    console.error(
-      '[Weather] Unexpected error:',
-      error?.response?.data || error?.message || error
-    )
+    const error_detail = error?.response?.data || error?.message || String(error)
+    console.error('[Weather] Unexpected error:', error_detail)
+    if (error?.stack) {
+      console.error('[Weather] Error stack:', error.stack)
+    }
+    
+    // Don't send error details in production to avoid exposing internals
+    const detail = process.env.NODE_ENV === 'development' ? error_detail : 'Internal server error'
+    
     response.status(500).json({
       ok: false,
       message: 'Failed to fetch weather data',
-      detail: error?.message || String(error)
+      detail: detail
     })
   }
 })
