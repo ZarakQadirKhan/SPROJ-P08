@@ -175,12 +175,28 @@ function DiagnosticHistory() {
         <div 
           role="dialog" 
           aria-modal="true"
-          className="fixed inset-0 z-50 overflow-y-auto" 
-          onClick={close_detail_modal}
-          onKeyDown={(e) => e.key === 'Escape' && close_detail_modal()}
+          aria-labelledby="diagnosis-detail-title"
+          className="fixed inset-0 z-50 overflow-y-auto"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              close_detail_modal()
+            }
+          }}
         >
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
+            <div 
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={close_detail_modal}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  close_detail_modal()
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Close modal"
+            ></div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
             <div
               role="document"
@@ -189,7 +205,7 @@ function DiagnosticHistory() {
             >
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-2xl font-bold text-gray-900">Diagnosis Details</h3>
+                  <h3 id="diagnosis-detail-title" className="text-2xl font-bold text-gray-900">Diagnosis Details</h3>
                   <button
                     onClick={close_detail_modal}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
