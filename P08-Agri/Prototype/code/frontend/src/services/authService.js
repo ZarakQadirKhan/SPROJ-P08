@@ -1,28 +1,14 @@
 import axios from 'axios'
-
-const fromEnv =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
-  process.env.REACT_APP_API_BASE_URL
-
-const isLocalhost =
-  typeof window !== 'undefined' && window.location.hostname === 'localhost'
-const isVercel =
-  typeof window !== 'undefined' && /\.vercel\.app$/.test(window.location.hostname)
-
-const API_BASE =
-  fromEnv ||
-  (isLocalhost ? 'http://localhost:5001' : (isVercel ? '' : 'https://sproj-p08-2.onrender.com'))
-
-const API_URL = `${API_BASE}/api/auth`
+import { API_BASE_URL } from './baseUrl'
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_BASE_URL}/api/auth`,
   headers: { 'Content-Type': 'application/json' }
 })
 
-export const register = async (userData) => {
+export const register = async (user_data) => {
   try {
-    const response = await api.post('/register', userData)
+    const response = await api.post('/register', user_data)
     if (response.data?.token) {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
@@ -37,9 +23,9 @@ export const register = async (userData) => {
   }
 }
 
-export const registerWithOtp = async (userData) => {
+export const registerWithOtp = async (user_data) => {
   try {
-    const response = await api.post('/register-otp', userData)
+    const response = await api.post('/register-otp', user_data)
     if (response.data?.debug_otp && process.env.NODE_ENV !== 'production') {
       console.log('[Auth] Debug OTP (dev only):', response.data.debug_otp)
     }
@@ -85,26 +71,24 @@ export const login = async (credentials) => {
       'Login failed'
 
     if (error?.response?.status === 429) {
-      const rawSeconds = Number(error?.response?.data?.retryAfterSeconds)
-      if (!Number.isNaN(rawSeconds) && rawSeconds > 0) {
-        const minutes = Math.floor(rawSeconds / 60)
-        const seconds = rawSeconds % 60
-
-        let timePart = ''
+      const raw_seconds = Number(error?.response?.data?.retryAfterSeconds)
+      if (!Number.isNaN(raw_seconds) && raw_seconds > 0) {
+        const minutes = Math.floor(raw_seconds / 60)
+        const seconds = raw_seconds % 60
+        let time_part = ''
         if (minutes > 0) {
-          timePart += `${minutes} minute${minutes === 1 ? '' : 's'}`
+          time_part += `${minutes} minute${minutes === 1 ? '' : 's'}`
         }
         if (seconds > 0) {
-          if (timePart) {
-            timePart += ' and '
+          if (time_part) {
+            time_part += ' and '
           }
-          timePart += `${seconds} second${seconds === 1 ? '' : 's'}`
+          time_part += `${seconds} second${seconds === 1 ? '' : 's'}`
         }
-        if (!timePart) {
-          timePart = `${rawSeconds} seconds`
+        if (!time_part) {
+          time_part = `${raw_seconds} seconds`
         }
-
-        message = `${message} You can try again in approximately ${timePart}.`
+        message = `${message} You can try again in approximately ${time_part}.`
       }
     }
 
@@ -122,7 +106,7 @@ export const changePassword = async ({ oldPassword, newPassword }) => {
 
   try {
     const response = await axios.post(
-      `${API_BASE}/api/account/change-password`,
+      `${API_BASE_URL}/api/account/change-password`,
       { oldPassword, newPassword },
       {
         headers: {
@@ -131,7 +115,6 @@ export const changePassword = async ({ oldPassword, newPassword }) => {
         }
       }
     )
-
     return response.data
   } catch (error) {
     let message =
@@ -140,26 +123,24 @@ export const changePassword = async ({ oldPassword, newPassword }) => {
       'Failed to change password'
 
     if (error?.response?.status === 429) {
-      const rawSeconds = Number(error?.response?.data?.retryAfterSeconds)
-      if (!Number.isNaN(rawSeconds) && rawSeconds > 0) {
-        const minutes = Math.floor(rawSeconds / 60)
-        const seconds = rawSeconds % 60
-
-        let timePart = ''
+      const raw_seconds = Number(error?.response?.data?.retryAfterSeconds)
+      if (!Number.isNaN(raw_seconds) && raw_seconds > 0) {
+        const minutes = Math.floor(raw_seconds / 60)
+        const seconds = raw_seconds % 60
+        let time_part = ''
         if (minutes > 0) {
-          timePart += `${minutes} minute${minutes === 1 ? '' : 's'}`
+          time_part += `${minutes} minute${minutes === 1 ? '' : 's'}`
         }
         if (seconds > 0) {
-          if (timePart) {
-            timePart += ' and '
+          if (time_part) {
+            time_part += ' and '
           }
-          timePart += `${seconds} second${seconds === 1 ? '' : 's'}`
+          time_part += `${seconds} second${seconds === 1 ? '' : 's'}`
         }
-        if (!timePart) {
-          timePart = `${rawSeconds} seconds`
+        if (!time_part) {
+          time_part = `${raw_seconds} seconds`
         }
-
-        message = `${message} You can try again in approximately ${timePart}.`
+        message = `${message} You can try again in approximately ${time_part}.`
       }
     }
 
@@ -179,7 +160,7 @@ export const getCurrentUser = () => {
 
 export const isAuthenticated = () => !!getToken()
 
-const authService = {
+export default {
   register,
   registerWithOtp,
   verifyOtp,
@@ -190,5 +171,3 @@ const authService = {
   getToken,
   isAuthenticated
 }
-
-export default authService
