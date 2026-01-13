@@ -160,7 +160,7 @@ export const getCurrentUser = () => {
 
 export const isAuthenticated = () => !!getToken()
 
-export default {
+const auth_service = {
   register,
   registerWithOtp,
   verifyOtp,
@@ -171,3 +171,5 @@ export default {
   getToken,
   isAuthenticated
 }
+
+export default auth_service

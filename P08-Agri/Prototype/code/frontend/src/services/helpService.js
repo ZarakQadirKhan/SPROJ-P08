@@ -63,4 +63,6 @@ export async function send_complaint(payload) {
   }
 }
 
-export default { send_complaint }
+const help_service = { send_complaint }
+
+export default help_service

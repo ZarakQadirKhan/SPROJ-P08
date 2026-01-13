@@ -22,7 +22,9 @@ async function post_diagnose(file) {
   } catch {}
 
   if (!response.ok) {
-    const msg = (json && (json.message || json.error || json.detail)) || `Request failed (${response.status})`
+    const msg =
+      (json && (json.message || json.error || json.detail)) ||
+      `Request failed (${response.status})`
     throw new Error(msg)
   }
 
@@ -33,4 +35,6 @@ export async function diagnose_image(file) {
   return post_diagnose(file)
 }
 
-export default { diagnose_image }
+const diagnose_service = { diagnose_image }
+
+export default diagnose_service

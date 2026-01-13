@@ -44,4 +44,6 @@ export async function send_chat_message({ diagnosis, messages }) {
   }
 }
 
-export default { send_chat_message }
+const chat_service = { send_chat_message }
+
+export default chat_service

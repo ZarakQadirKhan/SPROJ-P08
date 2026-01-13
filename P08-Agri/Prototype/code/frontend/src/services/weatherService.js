@@ -24,4 +24,8 @@ export async function fetch_weather_by_coords(latitude, longitude) {
   return data
 }
 
-export default { fetch_weather_by_coords }
+const weather_service = {
+  fetch_weather_by_coords
+}
+
+export default weather_service

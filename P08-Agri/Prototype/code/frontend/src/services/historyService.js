@@ -54,4 +54,9 @@ export async function get_diagnosis_by_id(id) {
   return data
 }
 
-export default { get_diagnosis_history, get_diagnosis_by_id }
+const history_service = {
+  get_diagnosis_history,
+  get_diagnosis_by_id
+}
+
+export default history_service
