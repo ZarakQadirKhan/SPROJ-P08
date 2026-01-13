@@ -7,7 +7,7 @@ const is_vercel = /\.vercel\.app$/.test(window.location.hostname)
 const api_base =
   from_env ||
   (is_localhost
-    ? 'http://localhost:5000'
+    ? 'http://localhost:5001'
     : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com'))
 
 export async function get_diagnosis_history(limit = 50, skip = 0) {

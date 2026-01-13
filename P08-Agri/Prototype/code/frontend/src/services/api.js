@@ -7,7 +7,7 @@ const isVercel = /\.vercel\.app$/.test(window.location.hostname);
 const api_base =
   from_env ||
   (isLocalhost
-    ? 'http://localhost:5000'
+    ? 'http://localhost:5001'
     : (isVercel ? '' : 'https://sproj-p08-2.onrender.com'));
 
 export async function register_user(payload) {

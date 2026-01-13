@@ -4,7 +4,7 @@ const from_env =
 
 const is_localhost = window.location.hostname === 'localhost'
 const is_vercel = /\.vercel\.app$/.test(window.location.hostname)
-const default_base = is_localhost ? 'http://localhost:5000' : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com')
+const default_base = is_localhost ? 'http://localhost:5001' : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com')
 
 const preferred_base = from_env || default_base
 

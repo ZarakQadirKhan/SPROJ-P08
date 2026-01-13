@@ -9,7 +9,7 @@ const is_localhost = typeof window !== 'undefined' && window.location.hostname =
 const is_vercel = typeof window !== 'undefined' && /\.vercel\.app$/.test(window.location.hostname)
 
 const api_base =
-  from_env || (is_localhost ? 'http://localhost:5000' : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com'))
+  from_env || (is_localhost ? 'http://localhost:5001' : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com'))
 
 const chat_api = axios.create({
   baseURL: api_base + '/api/chat',

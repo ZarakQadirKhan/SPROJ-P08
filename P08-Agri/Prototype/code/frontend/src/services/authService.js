@@ -11,7 +11,7 @@ const isVercel =
 
 const API_BASE =
   fromEnv ||
-  (isLocalhost ? 'http://localhost:5000' : (isVercel ? '' : 'https://sproj-p08-2.onrender.com'))
+  (isLocalhost ? 'http://localhost:5001' : (isVercel ? '' : 'https://sproj-p08-2.onrender.com'))
 
 const API_URL = `${API_BASE}/api/auth`
 
