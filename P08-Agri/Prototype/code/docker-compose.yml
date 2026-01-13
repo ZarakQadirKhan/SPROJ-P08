@@ -1,4 +1,17 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agriqual-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_BASE_URL: http://backend:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -10,19 +23,17 @@ services:
       NODE_ENV: production
       PORT: 5000
 
-      MONGO_URI: "mongodb://mongo:27017/agriqual"
-      REDIS_URL: "redis://redis:6379"
+      MONGO_URI: mongodb://mongo:27017/agriqual
+      REDIS_URL: redis://redis:6379
+      ML_BASE_URL: http://ml:8001
 
-      ML_BASE_URL: "http://ml:8001"
-
-      OPENAI_API_KEY: "${OPENAI_API_KEY}"
-
-      SMTP_HOST: "${SMTP_HOST}"
-      SMTP_PORT: "${SMTP_PORT}"
-      SMTP_USER: "${SMTP_USER}"
-      SMTP_PASS: "${SMTP_PASS}"
-      EMAIL_FROM: "${EMAIL_FROM}"
-      SUPPORT_TO_EMAIL: "${SUPPORT_TO_EMAIL}"
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
+      SUPPORT_TO_EMAIL: ${SUPPORT_TO_EMAIL}
     depends_on:
       - mongo
       - redis
@@ -35,7 +46,7 @@ services:
       dockerfile: Dockerfile
     container_name: agriqual-ml
     ports:
-      - "${ML_PORT:-8001}:8001"
+      - "8001:8001"
     environment:
       PORT: 8001
     restart: unless-stopped
@@ -44,7 +55,7 @@ services:
     image: mongo:7
     container_name: agriqual-mongo
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
@@ -53,7 +64,7 @@ services:
     image: redis:7-alpine
     container_name: agriqual-redis
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
