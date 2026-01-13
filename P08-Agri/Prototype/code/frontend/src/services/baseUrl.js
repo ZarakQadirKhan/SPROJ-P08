@@ -21,6 +21,6 @@ const is_vercel = /\.vercel\.app$/.test(hostname)
 
 const default_base = is_localhost
   ? 'http://localhost:5001'
-  : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com')
+  : (is_vercel ? '' : 'https://sproj-p08-qnpt.onrender.com')
 
 export const API_BASE_URL = env_base || default_base
