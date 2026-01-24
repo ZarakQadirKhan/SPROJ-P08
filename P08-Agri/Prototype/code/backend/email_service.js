@@ -1,26 +1,21 @@
-const nodemailer = require('nodemailer')
+const { Resend } = require('resend')
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-})
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 async function send_otp_email(recipient_email = '', otp = '') {
   if (!recipient_email || !otp) {
-    return
+    throw new Error('Missing recipient_email or otp')
   }
 
-  if (!process.env.SMTP_USER) {
-    console.log('OTP for', recipient_email, 'is', otp)
-    return
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('OTP for', recipient_email, 'is', otp)
+      return
+    }
+    throw new Error('RESEND_API_KEY is not set')
   }
 
-  const from_email = process.env.EMAIL_FROM || process.env.SMTP_USER
+  const from_email = process.env.EMAIL_FROM || 'AgriQual <onboarding@resend.dev>'
 
   const text_lines = [
     'Your AgriQual verification code is: ' + otp,
@@ -30,14 +25,20 @@ async function send_otp_email(recipient_email = '', otp = '') {
     'If you did not request this code, you can ignore this email.'
   ]
 
-  const mail_options = {
+  const result = await resend.emails.send({
     from: from_email,
-    to: recipient_email,
+    to: [recipient_email],
     subject: 'Your AgriQual verification code',
     text: text_lines.join('\n')
+  })
+
+  if (result && result.error) {
+    throw new Error(String(result.error.message || 'Resend failed'))
   }
 
-  await transporter.sendMail(mail_options)
+  if (result && result.id) {
+    console.log('Resend OTP email id:', result.id)
+  }
 }
 
 async function send_help_email(payload = {}) {
@@ -46,20 +47,23 @@ async function send_help_email(payload = {}) {
   const user_email = String(payload?.userEmail || '').trim()
   const ticket_id = String(payload?.ticketId || '').trim()
 
-  const to_email = process.env.SUPPORT_TO_EMAIL || '26100370@lums.edu.pk'
+  const to_email = process.env.SUPPORT_TO_EMAIL || 'zarakqadirkhan02@gmail.com'
 
-  if (!process.env.SMTP_USER) {
-    console.log('Help email (not actually sent). To:', to_email)
-    console.log('From user:', user_email || 'Unknown user')
-    if (ticket_id) {
-      console.log('Ticket ID:', ticket_id)
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Help email (not actually sent). To:', to_email)
+      console.log('From user:', user_email || 'Unknown user')
+      if (ticket_id) {
+        console.log('Ticket ID:', ticket_id)
+      }
+      console.log('Subject:', subject)
+      console.log('Message:', message)
+      return
     }
-    console.log('Subject:', subject)
-    console.log('Message:', message)
-    return
+    throw new Error('RESEND_API_KEY is not set')
   }
 
-  const from_email = process.env.EMAIL_FROM || process.env.SMTP_USER
+  const from_email = process.env.EMAIL_FROM || 'AgriQual <onboarding@resend.dev>'
   const final_subject = '[AgriQual Help] ' + subject
 
   const body_lines = [
@@ -72,27 +76,36 @@ async function send_help_email(payload = {}) {
     message
   ]
 
-  const mail_options = {
+  const result = await resend.emails.send({
     from: from_email,
-    to: to_email,
+    to: [to_email],
     subject: final_subject,
     text: body_lines.join('\n')
+  })
+
+  if (result && result.error) {
+    throw new Error(String(result.error.message || 'Resend failed'))
   }
 
-  await transporter.sendMail(mail_options)
+  if (result && result.id) {
+    console.log('Resend help email id:', result.id)
+  }
 }
 
 async function send_password_change_email(recipient_email = '') {
   if (!recipient_email) {
-    return
+    throw new Error('Missing recipient_email')
   }
 
-  if (!process.env.SMTP_USER) {
-    console.log('Password change notification (not actually sent). To:', recipient_email)
-    return
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Password change notification (not actually sent). To:', recipient_email)
+      return
+    }
+    throw new Error('RESEND_API_KEY is not set')
   }
 
-  const from_email = process.env.EMAIL_FROM || process.env.SMTP_USER
+  const from_email = process.env.EMAIL_FROM || 'AgriQual <onboarding@resend.dev>'
 
   const lines = [
     'Hello,',
@@ -105,14 +118,20 @@ async function send_password_change_email(recipient_email = '') {
     'This email was sent automatically. Please do not reply.'
   ]
 
-  const mail_options = {
+  const result = await resend.emails.send({
     from: from_email,
-    to: recipient_email,
+    to: [recipient_email],
     subject: 'Your AgriQual password was changed',
     text: lines.join('\n')
+  })
+
+  if (result && result.error) {
+    throw new Error(String(result.error.message || 'Resend failed'))
   }
 
-  await transporter.sendMail(mail_options)
+  if (result && result.id) {
+    console.log('Resend password change email id:', result.id)
+  }
 }
 
 module.exports = {

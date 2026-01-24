@@ -1,18 +1,9 @@
-// frontend/src/services/helpService.js
 import axios from 'axios'
 import { getToken } from './authService'
-
-const from_env =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
-  process.env.REACT_APP_API_BASE_URL
-
-const is_localhost = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-const is_vercel = typeof window !== 'undefined' && /\.vercel\.app$/.test(window.location.hostname)
-const api_base =
-  from_env || (is_localhost ? 'http://localhost:5000' : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com'))
+import { API_BASE_URL } from './baseUrl'
 
 const help_api = axios.create({
-  baseURL: api_base + '/api/help',
+  baseURL: `${API_BASE_URL}/api/help`,
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -22,12 +13,9 @@ export async function send_complaint(payload) {
     throw new Error('You must be logged in to send a help request')
   }
 
-  const subject = payload && payload.subject ? String(payload.subject).trim() : ''
-  const message = payload && payload.message ? String(payload.message).trim() : ''
+  const subject = payload?.subject ? String(payload.subject).trim() : ''
+  const message = payload?.message ? String(payload.message).trim() : ''
 
-  if (!subject && !message) {
-    throw new Error('Subject and message are required')
-  }
   if (!subject) {
     throw new Error('Subject is required')
   }
@@ -39,28 +27,18 @@ export async function send_complaint(payload) {
     const response = await help_api.post(
       '/complaints',
       { subject, message },
-      {
-        headers: {
-          Authorization: 'Bearer ' + token
-        }
-      }
+      { headers: { Authorization: 'Bearer ' + token } }
     )
     return response.data
   } catch (error) {
-    const status = error && error.response && error.response.status
+    const status = error?.response?.status
     let message_text =
-      (error &&
-        error.response &&
-        error.response.data &&
-        (error.response.data.message || error.response.data.error)) ||
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
       'Failed to send help request'
 
     if (status === 429) {
-      const raw_seconds =
-        error &&
-        error.response &&
-        error.response.data &&
-        Number(error.response.data.retryAfterSeconds)
+      const raw_seconds = Number(error?.response?.data?.retryAfterSeconds)
       if (!Number.isNaN(raw_seconds) && raw_seconds > 0) {
         const minutes = Math.floor(raw_seconds / 60)
         const seconds = raw_seconds % 60
@@ -84,3 +62,7 @@ export async function send_complaint(payload) {
     throw new Error(message_text)
   }
 }
+
+const help_service = { send_complaint }
+
+export default help_service

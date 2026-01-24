@@ -1,14 +1,4 @@
-const from_env =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
-  process.env.REACT_APP_API_URL
-
-const is_localhost = window.location.hostname === 'localhost'
-const is_vercel = /\.vercel\.app$/.test(window.location.hostname)
-const api_base =
-  from_env ||
-  (is_localhost
-    ? 'http://localhost:5000'
-    : (is_vercel ? '' : 'https://sproj-p08-2.onrender.com'))
+import { API_BASE_URL } from './baseUrl'
 
 export async function get_diagnosis_history(limit = 50, skip = 0) {
   const token = localStorage.getItem('token')
@@ -16,12 +6,11 @@ export async function get_diagnosis_history(limit = 50, skip = 0) {
     throw new Error('Not authenticated')
   }
 
-  const url = `${api_base}/api/history?limit=${limit}&skip=${skip}`
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE_URL}/api/history?limit=${limit}&skip=${skip}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`
     }
   })
 
@@ -44,12 +33,11 @@ export async function get_diagnosis_by_id(id) {
     throw new Error('Not authenticated')
   }
 
-  const url = `${api_base}/api/history/${id}`
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE_URL}/api/history/${id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`
     }
   })
 
@@ -65,3 +53,10 @@ export async function get_diagnosis_by_id(id) {
 
   return data
 }
+
+const history_service = {
+  get_diagnosis_history,
+  get_diagnosis_by_id
+}
+
+export default history_service
