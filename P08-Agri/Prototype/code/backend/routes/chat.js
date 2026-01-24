@@ -118,7 +118,8 @@ function normalize_messages(raw_messages) {
   return normalized
 }
 
-router.post('/', async function (request, response) {
+// Handle both with and without trailing slash
+router.post(['/', ''], async function (request, response) {
   try {
     const auth_user = get_auth_user(request)
     if (!auth_user) {
