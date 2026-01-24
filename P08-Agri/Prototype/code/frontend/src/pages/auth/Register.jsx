@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { registerWithOtp } from '../../services/authService'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 function Register() {
   const navigate = useNavigate()
+  const { t, language, setLanguage } = useLanguage()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,26 +33,26 @@ function Register() {
     const newErrors = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t.register.nameRequired
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!formData.email || !emailRegex.test(formData.email)) {
-      newErrors.email = 'Valid email is required'
+      newErrors.email = t.register.validEmailRequired
     }
 
     if (formData.phone && !/^\d{10,}$/.test(formData.phone.replace(/[^0-9]/g, ''))) {
-      newErrors.phone = 'Valid phone number is required'
+      newErrors.phone = t.register.validPhoneRequired
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = t.register.passwordRequired
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters'
+      newErrors.password = t.register.passwordMinLength
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
+      newErrors.confirmPassword = t.register.passwordsDoNotMatch
     }
 
     setErrors(newErrors)
@@ -80,7 +82,7 @@ function Register() {
 
       navigate('/verify-otp', { state: { email: userData.email } })
     } catch (err) {
-      const msg = typeof err === 'string' ? err : (err && err.message ? err.message : 'Registration failed. Please try again.')
+      const msg = typeof err === 'string' ? err : (err && err.message ? err.message : t.register.registrationFailed)
       setApiError(msg)
       console.error('Registration error:', err)
     } finally {
@@ -91,12 +93,20 @@ function Register() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full space-y-8">
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+            className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+          >
+            {language === 'en' ? 'اردو' : 'English'}
+          </button>
+        </div>
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
+          <h2 className="text-3xl font-bold text-gray-900">{t.register.title}</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Already have an account{' '}
+            {t.register.alreadyHaveAccount}{' '}
             <Link to="/login" className="text-green-600 hover:text-green-500">
-              Sign in
+              {t.register.signIn}
             </Link>
           </p>
         </div>
@@ -111,7 +121,7 @@ function Register() {
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Full Name
+                {t.register.fullNameLabel}
               </label>
               <input
                 id="name"
@@ -124,14 +134,14 @@ function Register() {
                 className={`mt-1 w-full px-3 py-2 border ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 } rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
-                placeholder="John Doe"
+                placeholder={t.register.fullNamePlaceholder}
               />
               {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
             </div>
 
             <div>
               <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email Address
+                {t.register.emailLabel}
               </label>
               <input
                 id="email"
@@ -144,14 +154,14 @@ function Register() {
                 className={`mt-1 w-full px-3 py-2 border ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 } rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
-                placeholder="john@example.com"
+                placeholder={t.register.emailPlaceholder}
               />
               {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
             </div>
 
             <div>
               <label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                Phone Number (Optional)
+                {t.register.phoneLabel}
               </label>
               <input
                 id="phone"
@@ -163,14 +173,14 @@ function Register() {
                 className={`mt-1 w-full px-3 py-2 border ${
                   errors.phone ? 'border-red-500' : 'border-gray-300'
                 } rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
-                placeholder="+92 300 1234567"
+                placeholder={t.register.phonePlaceholder}
               />
               {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
             </div>
 
             <div>
               <label htmlFor="role" className="text-sm font-medium text-gray-700">
-                I am a
+                {t.register.roleLabel}
               </label>
               <select
                 id="role"
@@ -180,14 +190,14 @@ function Register() {
                 disabled={loading}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
-                <option value="farmer">Farmer</option>
-                <option value="inspector">Quality Inspector</option>
+                <option value="farmer">{t.register.roleFarmer}</option>
+                <option value="inspector">{t.register.roleInspector}</option>
               </select>
             </div>
 
             <div>
               <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
+                {t.register.passwordLabel}
               </label>
               <div className="mt-1 relative">
                 <input
@@ -233,7 +243,7 @@ function Register() {
 
             <div>
               <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-                Confirm Password
+                {t.register.confirmPasswordLabel}
               </label>
               <input
                 id="confirmPassword"
@@ -260,18 +270,18 @@ function Register() {
               disabled={loading}
               className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Sending OTP...' : 'Create Account'}
+              {loading ? t.register.sendingOtp : t.register.createAccountButton}
             </button>
           </div>
 
           <p className="text-xs text-gray-500 text-center">
-            By creating an account, you agree to our{' '}
+            {t.register.termsText}{' '}
             <Link to="/terms" className="text-green-600 hover:text-green-500">
-              Terms of Service
+              {t.register.termsOfService}
             </Link>{' '}
-            and{' '}
+            {t.register.and}{' '}
             <Link to="/privacy" className="text-green-600 hover:text-green-500">
-              Privacy Policy
+              {t.register.privacyPolicy}
             </Link>
           </p>
         </form>

@@ -5,9 +5,11 @@ import { diagnose_image } from '../../services/diagnoseService'
 import { send_complaint } from '../../services/helpService'
 import { changePassword } from '../../services/authService'
 import { send_chat_message } from '../../services/chatService'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 function Dashboard() {
   const navigate = useNavigate()
+  const { t, language, setLanguage } = useLanguage()
   const user_json = localStorage.getItem('user') || '{}'
   const user = JSON.parse(user_json)
 

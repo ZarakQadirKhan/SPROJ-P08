@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { LanguageProvider } from './contexts/LanguageContext'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import VerifyOtp from './pages/auth/VerifyOtp'
@@ -63,40 +64,43 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
+    <LanguageProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
 
-        <Route path="/dashboard" element={<DashboardRedirect />} />
-        <Route
-          path="/farmer-dashboard"
-          element={
-            <PrivateRoute allowedRoles={['farmer']}>
-              <FarmerDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/diagnostic-history"
-          element={
-            <PrivateRoute allowedRoles={['farmer']}>
-              <DiagnosticHistory />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/inspector-dashboard"
-          element={
-            <PrivateRoute allowedRoles={['inspector', 'admin']}>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route path="/" element={<Navigate to="/login" />} />
-      </Routes>
-    </Router>
+          <Route path="/dashboard" element={<DashboardRedirect />} />
+          <Route
+            path="/farmer-dashboard"
+            element={
+              <PrivateRoute allowedRoles={['farmer']}>
+                <FarmerDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/diagnostic-history"
+            element={
+              <PrivateRoute allowedRoles={['farmer']}>
+                <DiagnosticHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/inspector-dashboard"
+            element={
+              <PrivateRoute allowedRoles={['inspector', 'admin']}>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/login" />} /> 
+
+        </Routes>
+      </Router>
+    </LanguageProvider>
   )
 }
 

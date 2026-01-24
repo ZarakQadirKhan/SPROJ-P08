@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { get_diagnosis_history } from '../../services/historyService'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 function formatDate(dateString) {
   const date = new Date(dateString)
@@ -34,6 +35,7 @@ function getConfidenceBarColor(confidence) {
 
 function DiagnosticHistory() {
   const navigate = useNavigate()
+  const { t, language, setLanguage } = useLanguage()
   const [diagnoses, setDiagnoses] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -103,10 +105,16 @@ function DiagnosticHistory() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">Diagnostic History</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{t.diagnosticHistory.title}</h1>
             </div>
-            <div className="text-sm text-gray-600">
-              {total > 0 && <span>{total} total diagnoses</span>}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+              >
+                {language === 'en' ? '\u0627\u0631\u062f\u0648' : 'English'}
+              </button>
+              {total > 0 && <span>{total} {t.diagnosticHistory.totalDiagnoses}</span>}
             </div>
           </div>
         </div>
@@ -136,13 +144,13 @@ function DiagnosticHistory() {
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="mt-2 text-lg font-medium text-gray-900">No diagnostic history</h3>
-            <p className="mt-1 text-sm text-gray-500">Start by analyzing some crop images!</p>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">{t.diagnosticHistory.noHistory}</h3>
+            <p className="mt-1 text-sm text-gray-500">{t.diagnosticHistory.noHistoryMessage}</p>
             <button
               onClick={handle_back_to_dashboard}
               className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
-              Go to Dashboard
+              {t.diagnosticHistory.goToDashboard}
             </button>
           </div>
         )}
@@ -209,7 +217,7 @@ function DiagnosticHistory() {
             >
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="flex items-start justify-between mb-4">
-                  <h3 id="diagnosis-detail-title" className="text-2xl font-bold text-gray-900">Diagnosis Details</h3>
+                  <h3 id="diagnosis-detail-title" className="text-2xl font-bold text-gray-900">{t.diagnosticHistory.diagnosisDetails}</h3>
                   <button
                     onClick={close_detail_modal}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -222,12 +230,12 @@ function DiagnosticHistory() {
 
                 <div className="space-y-4">
                   <div>
-                    <div className="block text-sm font-medium text-gray-700 mb-1">Diagnosis</div>
+                    <div className="block text-sm font-medium text-gray-700 mb-1">{t.diagnosticHistory.diagnosis}</div>
                     <p className="text-lg font-semibold text-gray-900">{selectedDiagnosis.diagnosis}</p>
                   </div>
 
                   <div>
-                    <div className="block text-sm font-medium text-gray-700 mb-1">Confidence</div>
+                    <div className="block text-sm font-medium text-gray-700 mb-1">{t.diagnosticHistory.confidence}</div>
                     <div className="flex items-center space-x-2">
                       <div className="flex-1 bg-gray-200 rounded-full h-3">
                         <div
@@ -242,13 +250,13 @@ function DiagnosticHistory() {
                   </div>
 
                   <div>
-                    <div className="block text-sm font-medium text-gray-700 mb-1">Date</div>
+                    <div className="block text-sm font-medium text-gray-700 mb-1">{t.diagnosticHistory.date}</div>
                     <p className="text-gray-900">{formatDate(selectedDiagnosis.created_at)}</p>
                   </div>
 
                   {selectedDiagnosis.alternatives && selectedDiagnosis.alternatives.length > 0 && (
                     <div>
-                      <div className="block text-sm font-medium text-gray-700 mb-2">Alternative Diagnoses</div>
+                      <div className="block text-sm font-medium text-gray-700 mb-2">{t.diagnosticHistory.alternativeDiagnoses}</div>
                       <div className="space-y-2">
                         {selectedDiagnosis.alternatives.map((alt, index) => (
                           <div key={alt.label || `alt-${index}`} className="flex justify-between items-center p-2 bg-gray-50 rounded">
@@ -262,7 +270,7 @@ function DiagnosticHistory() {
 
                   {selectedDiagnosis.recommendations && selectedDiagnosis.recommendations.length > 0 && (
                     <div>
-                      <div className="block text-sm font-medium text-gray-700 mb-2">Recommendations</div>
+                      <div className="block text-sm font-medium text-gray-700 mb-2">{t.diagnosticHistory.recommendations}</div>
                       <ul className="space-y-2">
                         {selectedDiagnosis.recommendations.map((rec, index) => (
                           <li key={`rec-${index}-${rec.substring(0, 20)}`} className="flex items-start">
@@ -278,7 +286,7 @@ function DiagnosticHistory() {
 
                   {selectedDiagnosis.processing_ms && (
                     <div className="text-xs text-gray-500">
-                      Processing time: {selectedDiagnosis.processing_ms}ms
+                      {t.diagnosticHistory.processingTime}: {selectedDiagnosis.processing_ms}ms
                     </div>
                   )}
                 </div>
@@ -289,7 +297,7 @@ function DiagnosticHistory() {
                   onClick={close_detail_modal}
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition-colors"
                 >
-                  Close
+                  {t.diagnosticHistory.close}
                 </button>
               </div>
             </div>

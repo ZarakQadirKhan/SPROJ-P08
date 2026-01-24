@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { verifyOtp } from '../../services/authService'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 function VerifyOtp() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t, language, setLanguage } = useLanguage()
 
   const stateEmail = location.state && location.state.email ? location.state.email : ''
   const storedEmail = localStorage.getItem('pending_signup_email') || ''
@@ -17,11 +19,11 @@ function VerifyOtp() {
 
   useEffect(() => {
     if (!email) {
-      setErrorText('No pending signup found. Please register again.')
+      setErrorText(t.verifyOtp.noPendingSignup)
     } else {
-      setInfoText('We have sent a verification code to ' + email + '. Enter it below to complete signup.')
+      setInfoText(`${t.verifyOtp.verificationSent} ${email}. ${t.verifyOtp.enterBelow}`)
     }
-  }, [email])
+  }, [email, t])
 
   function handleOtpChange(e) {
     if (isLoading) {
@@ -38,11 +40,11 @@ function VerifyOtp() {
       return
     }
     if (!email) {
-      setErrorText('No pending signup found. Please register again.')
+      setErrorText(t.verifyOtp.noPendingSignup)
       return
     }
     if (!otp || otp.length < 4) {
-      setErrorText('Please enter the verification code.')
+      setErrorText(t.verifyOtp.enterVerificationCode)
       return
     }
 
@@ -62,7 +64,7 @@ function VerifyOtp() {
         navigate('/dashboard')
       }
     } catch (err) {
-      const message = err && err.message ? err.message : 'Invalid code. Please try again.'
+      const message = err && err.message ? err.message : t.verifyOtp.invalidCode
       setErrorText(message)
     } finally {
       setIsLoading(false)
@@ -72,14 +74,22 @@ function VerifyOtp() {
   if (!email) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+            className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+          >
+            {language === 'en' ? 'اردو' : 'English'}
+          </button>
+        </div>
         <div className="max-w-md w-full space-y-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Verification Error</h2>
-          <p className="text-sm text-gray-600">{errorText || 'Something went wrong.'}</p>
+          <h2 className="text-2xl font-bold text-gray-900">{t.verifyOtp.verificationError}</h2>
+          <p className="text-sm text-gray-600">{errorText || t.verifyOtp.somethingWentWrong}</p>
           <Link
             to="/register"
             className="inline-flex items-center justify-center mt-4 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md"
           >
-            Go back to Register
+            {t.verifyOtp.goBackToRegister}
           </Link>
         </div>
       </div>
@@ -89,8 +99,16 @@ function VerifyOtp() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+            className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+          >
+            {language === 'en' ? 'اردو' : 'English'}
+          </button>
+        </div>
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Verify your email</h2>
+          <h2 className="text-3xl font-bold text-gray-900">{t.verifyOtp.title}</h2>
           {infoText && <p className="mt-2 text-sm text-gray-600">{infoText}</p>}
         </div>
 
@@ -103,7 +121,7 @@ function VerifyOtp() {
         <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="otp" className="text-sm font-medium text-gray-700">
-              Enter 6-digit code
+              {t.verifyOtp.codeLabel}
             </label>
             <input
               id="otp"
@@ -139,12 +157,11 @@ function VerifyOtp() {
                 />
               </svg>
             )}
-            {isLoading ? 'Verifying...' : 'Verify OTP'}
+            {isLoading ? t.verifyOtp.verifying : t.verifyOtp.verifyButton}
           </button>
 
           <p className="text-xs text-gray-500 text-center">
-            Enter the code sent to <span className="font-medium">{email}</span>. If you did not receive it, check your
-            spam folder or try registering again.
+            {t.verifyOtp.codeInfo} <span className="font-medium">{email}</span>. {t.verifyOtp.noCodeReceived}
           </p>
         </form>
       </div>

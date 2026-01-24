@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login as login_api } from "../../services/authService";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 function Login() {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useLanguage();
   const [email, set_email] = useState("");
   const [password, set_password] = useState("");
   const [show_password, set_show_password] = useState(false);
@@ -36,7 +38,7 @@ function Login() {
         navigate("/dashboard");
       }
     } catch (err) {
-      const message = err && err.message ? err.message : "Login failed. Please try again.";
+      const message = err && err.message ? err.message : t.login.loginFailed;
       set_error_text(message);
     } finally {
       set_is_loading(false);
@@ -46,11 +48,19 @@ function Login() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+            className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+          >
+            {language === 'en' ? 'اردو' : 'English'}
+          </button>
+        </div>
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
+          <h2 className="text-3xl font-bold text-gray-900">{t.login.title}</h2>
           <p className="mt-2 text-sm text-gray-600">
-            New to AgriQual?{" "}
-            <Link to="/register" className="text-green-600 hover:text-green-500">Create an account</Link>
+            {t.login.newToAgriQual}{" "}
+            <Link to="/register" className="text-green-600 hover:text-green-500">{t.login.createAccount}</Link>
           </p>
         </div>
 
@@ -63,7 +73,7 @@ function Login() {
         <form className="mt-8 space-y-6" onSubmit={handle_submit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">Email address</label>
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">{t.login.emailLabel}</label>
               <input
                 id="email"
                 name="email"
@@ -72,13 +82,13 @@ function Login() {
                 value={email}
                 onChange={(e) => set_email(e.target.value)}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="name@company.com"
+                placeholder={t.login.emailPlaceholder}
                 disabled={is_loading}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">{t.login.passwordLabel}</label>
               <div className="mt-1 relative">
                 <input
                   id="password"
@@ -110,7 +120,7 @@ function Login() {
           </div>
 
           <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-green-600 hover:text-green-500">Forgot your password?</Link>
+            <Link to="/forgot-password" className="text-sm text-green-600 hover:text-green-500">{t.login.forgotPassword}</Link>
           </div>
 
           <div className="space-y-4">
@@ -119,7 +129,7 @@ function Login() {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">or</span>
+                <span className="px-2 bg-white text-gray-500">{t.login.orDivider}</span>
               </div>
             </div>
 
@@ -134,7 +144,7 @@ function Login() {
                 <path fill="#FBBC05" d="M19.834192,20.9995801 C22.0291676,18.9520994 23.4545455,15.903663 23.4545455,12 C23.4545455,11.2909091 23.3454545,10.5272727 23.1818182,9.81818182 L12,9.81818182 L12,14.4545455 L18.4363636,14.4545455 C18.1187732,16.013626 17.2662994,17.2212117 16.0407269,18.0125889 L19.834192,20.9995801 Z"/>
                 <path fill="#4285F4" d="M5.27698177,14.2678769 C5.03832634,13.556323 4.90909091,12.7937589 4.90909091,12 C4.90909091,11.2182781 5.03443647,10.4668121 5.26620003,9.76452941 L1.23999023,6.65002441 C0.43658717,8.26043162 0,10.0753848 0,12 C0,13.9195484 0.444780743,15.7301709 1.23746264,17.3349879 L5.27698177,14.2678769 Z"/>
               </svg>
-              Continue with Google
+              {t.login.continueWithGoogle}
             </button>
 
             <button
@@ -142,7 +152,7 @@ function Login() {
               disabled={is_loading}
               className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {is_loading ? "Logging in..." : "Login"}
+              {is_loading ? t.login.loggingIn : t.login.loginButton}
             </button>
           </div>
         </form>

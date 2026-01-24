@@ -5,9 +5,11 @@ import { diagnose_image } from '../../services/diagnoseService'
 import { send_complaint } from '../../services/helpService'
 import { changePassword } from '../../services/authService'
 import { send_chat_message } from '../../services/chatService'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 function FarmerDashboard() {
   const navigate = useNavigate()
+  const { t, language, setLanguage } = useLanguage()
   const user_json = localStorage.getItem('user') || '{}'
   const user = JSON.parse(user_json)
 
@@ -53,7 +55,7 @@ function FarmerDashboard() {
   function get_browser_location() {
     return new Promise((resolve, reject) => {
       if (!('geolocation' in navigator)) {
-        reject(new Error('Geolocation is not available'))
+        reject(new Error(t.farmerDashboard.geolocationNotAvailable))
         return
       }
       navigator.geolocation.getCurrentPosition(
@@ -63,7 +65,7 @@ function FarmerDashboard() {
           resolve({ latitude, longitude })
         },
         () => {
-          reject(new Error('Location permission denied or unavailable'))
+          reject(new Error(t.farmerDashboard.locationPermissionDenied))
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
       )
@@ -82,7 +84,7 @@ function FarmerDashboard() {
       const data = await fetch_weather_by_coords(coords.latitude, coords.longitude)
       set_weather_data(data)
     } catch (err) {
-      const msg = typeof err === 'string' ? err : (err && err.message ? err.message : 'Failed to get weather')
+      const msg = typeof err === 'string' ? err : (err && err.message ? err.message : t.farmerDashboard.failedToGetWeather)
       set_weather_error(msg)
     } finally {
       set_is_getting_weather(false)
@@ -125,7 +127,7 @@ function FarmerDashboard() {
       const data = await diagnose_image(selected_file)
       set_diagnose_result(data)
     } catch (err) {
-      const message = err && err.message ? err.message : 'Analysis failed'
+      const message = err && err.message ? err.message : t.farmerDashboard.analysisFailed
       set_diagnose_error(message)
     } finally {
       set_is_uploading(false)
@@ -142,9 +144,9 @@ function FarmerDashboard() {
       const intro_message = {
         role: 'assistant',
         content:
-          `I have analyzed your wheat image. The diagnosis is "${diagnose_result.diagnosis}" ` +
-          (confidence !== 'unknown' ? `with about ${confidence}% confidence. ` : '') +
-          'You can ask me follow-up questions about this result, possible treatments, or anything about your crop.'
+          `${t.farmerDashboard.analyzedWheatImage} "${diagnose_result.diagnosis}" ` +
+          (confidence !== 'unknown' ? `${t.farmerDashboard.withConfidence} ${confidence}${t.farmerDashboard.confidencePercent} ` : '') +
+          t.farmerDashboard.askFollowUp
       }
 
       set_is_chat_open(true)
@@ -157,7 +159,7 @@ function FarmerDashboard() {
       set_chat_input('')
       set_chat_error_text('')
     }
-  }, [diagnose_result])
+  }, [diagnose_result, t.farmerDashboard.analyzedWheatImage, t.farmerDashboard.askFollowUp, t.farmerDashboard.confidencePercent, t.farmerDashboard.withConfidence])
 
   function open_help_modal() {
     set_help_subject('')
@@ -205,7 +207,7 @@ function FarmerDashboard() {
     const message_trimmed = help_message.trim()
 
     if (!subject_trimmed || !message_trimmed) {
-      set_help_error_text('Subject and message are required')
+      set_help_error_text(t.farmerDashboard.subjectAndMessageRequired)
       return
     }
 
@@ -215,11 +217,11 @@ function FarmerDashboard() {
 
     try {
       await send_complaint({ subject: subject_trimmed, message: message_trimmed })
-      set_help_success_text('Your message has been sent successfully')
+      set_help_success_text(t.farmerDashboard.helpSubmitSuccess)
       set_help_subject('')
       set_help_message('')
     } catch (error) {
-      const message = error && error.message ? error.message : 'Failed to send help request'
+      const message = error && error.message ? error.message : t.farmerDashboard.helpSubmitFailed
       set_help_error_text(message)
     } finally {
       set_is_sending_help(false)
@@ -289,17 +291,17 @@ function FarmerDashboard() {
     const new_pass = new_password
 
     if (!old1 || !old2 || !new_pass) {
-      set_cp_error_text('All fields are required')
+      set_cp_error_text(t.register.passwordRequired)
       return
     }
 
     if (old1 !== old2) {
-      set_cp_error_text('Old password entries do not match')
+      set_cp_error_text(t.farmerDashboard.passwordsDoNotMatch)
       return
     }
 
     if (new_pass.length < 8) {
-      set_cp_error_text('New password must be at least 8 characters long')
+      set_cp_error_text(t.farmerDashboard.newPasswordTooShort)
       return
     }
 
@@ -309,12 +311,12 @@ function FarmerDashboard() {
 
     try {
       await changePassword({ oldPassword: old1, newPassword: new_pass })
-      set_cp_success_text('Your password has been changed successfully')
+      set_cp_success_text(t.farmerDashboard.passwordChangeSuccess)
       set_old_password_first('')
       set_old_password_second('')
       set_new_password('')
     } catch (error) {
-      const message = error && error.message ? error.message : 'Failed to change password'
+      const message = error && error.message ? error.message : t.farmerDashboard.passwordChangeFailed
       set_cp_error_text(message)
     } finally {
       set_is_changing_password(false)
@@ -338,7 +340,7 @@ function FarmerDashboard() {
       return
     }
     if (!diagnose_result) {
-      set_chat_error_text('Please run a diagnosis first.')
+      set_chat_error_text(t.farmerDashboard.selectImageFirst)
       return
     }
 
@@ -359,7 +361,7 @@ function FarmerDashboard() {
       const assistant_message = { role: 'assistant', content: result.content }
       set_chat_messages((prev) => [...prev, assistant_message])
     } catch (error) {
-      const message = error && error.message ? error.message : 'Failed to contact assistant'
+      const message = error && error.message ? error.message : t.dashboard.helpSubmitFailed
       set_chat_error_text(message)
     } finally {
       set_is_sending_chat(false)
@@ -370,15 +372,21 @@ function FarmerDashboard() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">AgriQual - My Farm Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">AgriQual - {t.farmerDashboard.welcome}</h1>
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+              className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+            >
+              {language === 'en' ? '\u0627\u0631\u062f\u0648' : 'English'}
+            </button>
             <button
               type="button"
               onClick={handle_get_weather}
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60"
               disabled={is_getting_weather}
             >
-              {is_getting_weather ? 'Getting weather...' : 'Get Weather Advisory'}
+              {is_getting_weather ? t.farmerDashboard.gettingWeather : t.farmerDashboard.getWeather}
             </button>
             <input
               ref={file_input_ref}
@@ -392,21 +400,21 @@ function FarmerDashboard() {
               onClick={handle_click_upload_button}
               className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600"
             >
-              Upload Wheat Image
+              {t.farmerDashboard.uploadImage}
             </button>
             <button
               type="button"
               onClick={() => navigate('/diagnostic-history')}
               className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
             >
-              History
+              {t.farmerDashboard.viewHistory}
             </button>
             <button
               type="button"
               onClick={open_help_modal}
               className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
-              Help
+              {t.farmerDashboard.needHelp}
             </button>
             <div className="relative">
               <button
@@ -415,7 +423,7 @@ function FarmerDashboard() {
                 className="flex items-center text-sm text-gray-600 hover:text-gray-800 focus:outline-none"
               >
                 <span>
-                  Welcome, <span className="font-medium">{user.name || 'Farmer'}</span>
+                  {t.farmerDashboard.welcome}, <span className="font-medium">{user.name || 'Farmer'}</span>
                 </span>
                 <svg
                   className="w-4 h-4 ml-1"
@@ -433,7 +441,7 @@ function FarmerDashboard() {
                     onClick={open_change_password_modal}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Change Password
+                    {t.farmerDashboard.changePassword}
                   </button>
                 </div>
               )}
@@ -442,7 +450,7 @@ function FarmerDashboard() {
               onClick={handle_logout}
               className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
-              Logout
+              {t.farmerDashboard.logout}
             </button>
           </div>
         </div>
@@ -452,7 +460,7 @@ function FarmerDashboard() {
         {selected_file && (
           <div className="bg-white rounded-lg shadow mb-8">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Wheat Crop Diagnosis</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.diagnosisResults}</h2>
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -460,7 +468,7 @@ function FarmerDashboard() {
                   className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-60"
                   disabled={is_uploading}
                 >
-                  {is_uploading ? 'Analyzing...' : 'Analyze'}
+                  {is_uploading ? t.farmerDashboard.analyzing : t.farmerDashboard.analyzeImage}
                 </button>
                 <button
                   type="button"
@@ -476,7 +484,7 @@ function FarmerDashboard() {
                   }}
                   className="px-4 py-2 bg-gray-100 text-gray-900 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
                 >
-                  Clear
+                  {t.common.close}
                 </button>
               </div>
             </div>
@@ -491,11 +499,11 @@ function FarmerDashboard() {
                 {diagnose_result && (
                   <div className="space-y-3">
                     <div className="text-lg">
-                      Diagnosis:{' '}
+                      {t.farmerDashboard.diagnosis}:{' '}
                       <span className="font-semibold capitalize">{diagnose_result.diagnosis}</span>
                     </div>
                     <div>
-                      Confidence:{' '}
+                      {t.farmerDashboard.confidence}:{' '}
                       {typeof diagnose_result.confidence === 'number'
                         ? (diagnose_result.confidence * 100).toFixed(1) + '%'
                         : 'N/A'}
@@ -503,7 +511,7 @@ function FarmerDashboard() {
                     {Array.isArray(diagnose_result.recommendations) &&
                       diagnose_result.recommendations.length > 0 && (
                         <div>
-                          <div className="font-medium">Recommendations</div>
+                          <div className="font-medium">{t.farmerDashboard.recommendations}</div>
                           <ul className="list-disc pl-6">
                             {diagnose_result.recommendations.map((r, i) => (
                               <li key={i}>{r}</li>
@@ -514,7 +522,7 @@ function FarmerDashboard() {
                     {Array.isArray(diagnose_result.alternatives) &&
                       diagnose_result.alternatives.length > 0 && (
                         <div>
-                          <div className="font-medium">Alternatives</div>
+                          <div className="font-medium">{t.farmerDashboard.alternatives}</div>
                           <ul className="list-disc pl-6">
                             {diagnose_result.alternatives.map((a, i) => (
                               <li key={i} className="capitalize">
@@ -525,21 +533,21 @@ function FarmerDashboard() {
                         </div>
                       )}
                     <div className="text-sm text-gray-600">
-                      Processing time: {diagnose_result.processing_ms} ms
+                      {t.farmerDashboard.processingTime}: {diagnose_result.processing_ms} ms
                     </div>
                   </div>
                 )}
                 {!diagnose_result && !diagnose_error && (
-                  <p className="text-sm text-gray-600">Click Analyze to diagnose your wheat crop.</p>
+                  <p className="text-sm text-gray-600">{t.farmerDashboard.selectImageFirst}</p>
                 )}
 
                 {is_chat_open && (
                   <div className="mt-6 border-t pt-4">
-                    <h3 className="text-md font-semibold text-gray-900 mb-2">Chat with AgriQual Assistant</h3>
+                    <h3 className="text-md font-semibold text-gray-900 mb-2">{t.farmerDashboard.aiAssistant}</h3>
                     <div className="h-64 bg-gray-50 rounded-md p-3 overflow-y-auto mb-3">
                       {chat_messages.length === 0 && (
                         <p className="text-sm text-gray-500">
-                          Ask follow-up questions about this diagnosis or your crop management.
+                          {t.farmerDashboard.askFollowUp}
                         </p>
                       )}
                       {chat_messages.map((msg, index) => (
@@ -573,14 +581,14 @@ function FarmerDashboard() {
                         onChange={handle_chat_input_change}
                         disabled={is_sending_chat}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 text-sm"
-                        placeholder="Ask a question about this diagnosis..."
+                        placeholder={t.farmerDashboard.chatPlaceholder}
                       />
                       <button
                         type="submit"
                         disabled={is_sending_chat || !chat_input.trim()}
                         className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60 text-sm flex items-center justify-center"
                       >
-                        {is_sending_chat ? 'Sending...' : 'Send'}
+                        {is_sending_chat ? t.common.sending : t.common.send}
                       </button>
                     </form>
                   </div>
@@ -599,32 +607,32 @@ function FarmerDashboard() {
         {weather_data && (
           <div className="bg-white rounded-lg shadow mb-8">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Weather Advisory for Your Crops</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.currentWeather}</h2>
               <p className="text-sm text-gray-600">
-                {weather_data.city} • {weather_data.current.temperature_c}°C • Wind{' '}
+                {weather_data.city} • {weather_data.current.temperature_c}°C • {t.farmerDashboard.windSpeed}{' '}
                 {weather_data.current.wind_speed_kmh} km/h
               </p>
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-600">Max Temp</p>
+                <p className="text-sm text-gray-600">{t.farmerDashboard.maxTemp}</p>
                 <p className="text-2xl font-semibold text-gray-900">{weather_data.today.tmax_c}°C</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-600">Min Temp</p>
+                <p className="text-sm text-gray-600">{t.farmerDashboard.minTemp}</p>
                 <p className="text-2xl font-semibold text-gray-900">{weather_data.today.tmin_c}°C</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-600">Precipitation</p>
+                <p className="text-sm text-gray-600">{t.farmerDashboard.precipitation}</p>
                 <p className="text-2xl font-semibold text-gray-900">{weather_data.today.precipitation_mm} mm</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-600">UV Index</p>
+                <p className="text-sm text-gray-600">{t.farmerDashboard.uvIndex}</p>
                 <p className="text-2xl font-semibold text-gray-900">{weather_data.today.uv_index_max}</p>
               </div>
             </div>
             <div className="px-6 pb-6">
-              <h3 className="text-md font-semibold text-gray-900 mb-3">Crop Care Recommendations</h3>
+              <h3 className="text-md font-semibold text-gray-900 mb-3">{t.farmerDashboard.recommendations}</h3>
               <ul className="list-disc pl-6 text-gray-700 space-y-2">
                 {weather_data.advice.map((item, idx) => (
                   <li key={idx} className="text-sm">
@@ -635,10 +643,10 @@ function FarmerDashboard() {
             {weather_data.llm_advice && (
               <div className="mt-6 bg-green-50 border border-green-100 rounded-xl p-5">
                 <h4 className="text-lg font-semibold text-green-900">
-                  More Detailed Explanations
+                  {t.farmerDashboard.aiAssistant}
                 </h4>
                 <p className="text-xs text-green-700 mt-1 mb-3">
-                  Generated by the AI assistant from today&apos;s weather conditions.
+                  {t.farmerDashboard.askFollowUp}
                 </p>
                 <div className="text-sm text-green-900 whitespace-pre-line leading-relaxed space-y-2">
                   {weather_data.llm_advice}
@@ -664,7 +672,7 @@ function FarmerDashboard() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">My Wheat Fields</p>
+                <p className="text-sm text-gray-600">{t.farmerDashboard.myWheatFields}</p>
                 <p className="text-2xl font-semibold text-gray-900">5</p>
               </div>
             </div>
@@ -682,7 +690,7 @@ function FarmerDashboard() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Total Diagnoses</p>
+                <p className="text-sm text-gray-600">{t.farmerDashboard.totalDiagnosesCard}</p>
                 <p className="text-2xl font-semibold text-gray-900">12</p>
               </div>
             </div>
@@ -705,7 +713,7 @@ function FarmerDashboard() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Recent Issues</p>
+                <p className="text-sm text-gray-600">{t.farmerDashboard.recentIssues}</p>
                 <p className="text-2xl font-semibold text-gray-900">3</p>
               </div>
             </div>
@@ -714,40 +722,40 @@ function FarmerDashboard() {
 
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">My Wheat Fields</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.myWheatFields}</h2>
             <button
               type="button"
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm"
             >
-              Add New Field
+              {t.farmerDashboard.addNewField}
             </button>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 relative">
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-semibold text-gray-900">North Field</h3>
-                <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">Healthy</span>
+                <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">{t.farmerDashboard.healthy}</span>
               </div>
               <div className="space-y-1 text-sm text-gray-600 mb-4">
                 <p>
-                  Area: <span className="font-medium">5 acres</span>
+                  {t.farmerDashboard.area}: <span className="font-medium">5 acres</span>
                 </p>
                 <p>
-                  Variety: <span className="font-medium">Punjab-11</span>
+                  {t.farmerDashboard.variety}: <span className="font-medium">Punjab-11</span>
                 </p>
                 <p>
-                  Sowing Date: <span className="font-medium">Oct 2024</span>
+                  {t.farmerDashboard.sowingDate}: <span className="font-medium">Oct 2024</span>
                 </p>
                 <p>
-                  Location: <span className="font-medium">Lahore, Punjab</span>
+                  {t.farmerDashboard.location}: <span className="font-medium">Lahore, Punjab</span>
                 </p>
               </div>
               <div className="flex gap-2">
                 <button className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
-                  View Details
+                  {t.farmerDashboard.viewDetails}
                 </button>
                 <button className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
-                  Edit
+                  {t.farmerDashboard.edit}
                 </button>
               </div>
             </div>
@@ -756,29 +764,29 @@ function FarmerDashboard() {
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-semibold text-gray-900">East Field</h3>
                 <span className="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded">
-                  Needs Attention
+                  {t.farmerDashboard.needsAttention}
                 </span>
               </div>
               <div className="space-y-1 text-sm text-gray-600 mb-4">
                 <p>
-                  Area: <span className="font-medium">3 acres</span>
+                  {t.farmerDashboard.area}: <span className="font-medium">3 acres</span>
                 </p>
                 <p>
-                  Variety: <span className="font-medium">Faisalabad-2008</span>
+                  {t.farmerDashboard.variety}: <span className="font-medium">Faisalabad-2008</span>
                 </p>
                 <p>
-                  Sowing Date: <span className="font-medium">Nov 2024</span>
+                  {t.farmerDashboard.sowingDate}: <span className="font-medium">Nov 2024</span>
                 </p>
                 <p>
-                  Location: <span className="font-medium">Lahore, Punjab</span>
+                  {t.farmerDashboard.location}: <span className="font-medium">Lahore, Punjab</span>
                 </p>
               </div>
               <div className="flex gap-2">
                 <button className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
-                  View Details
+                  {t.farmerDashboard.viewDetails}
                 </button>
                 <button className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
-                  Edit
+                  {t.farmerDashboard.edit}
                 </button>
               </div>
             </div>
@@ -786,28 +794,28 @@ function FarmerDashboard() {
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 relative">
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-semibold text-gray-900">South Field</h3>
-                <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">Healthy</span>
+                <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">{t.farmerDashboard.healthy}</span>
               </div>
               <div className="space-y-1 text-sm text-gray-600 mb-4">
                 <p>
-                  Area: <span className="font-medium">7 acres</span>
+                  {t.farmerDashboard.area}: <span className="font-medium">7 acres</span>
                 </p>
                 <p>
-                  Variety: <span className="font-medium">Sehar-2006</span>
+                  {t.farmerDashboard.variety}: <span className="font-medium">Sehar-2006</span>
                 </p>
                 <p>
-                  Sowing Date: <span className="font-medium">Oct 2024</span>
+                  {t.farmerDashboard.sowingDate}: <span className="font-medium">Oct 2024</span>
                 </p>
                 <p>
-                  Location: <span className="font-medium">Lahore, Punjab</span>
+                  {t.farmerDashboard.location}: <span className="font-medium">Lahore, Punjab</span>
                 </p>
               </div>
               <div className="flex gap-2">
                 <button className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
-                  View Details
+                  {t.farmerDashboard.viewDetails}
                 </button>
                 <button className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
-                  Edit
+                  {t.farmerDashboard.edit}
                 </button>
               </div>
             </div>
@@ -816,40 +824,40 @@ function FarmerDashboard() {
 
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Diagnoses</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t.diagnosticHistory.title}</h2>
           </div>
           <div className="divide-y divide-gray-200">
             <div className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Diagnosis for North Field</p>
-                  <p className="text-xs text-gray-500">2 hours ago</p>
+                  <p className="text-sm font-medium text-gray-900">{t.farmerDashboard.diagnosisFor} North Field</p>
+                  <p className="text-xs text-gray-500">2 {t.farmerDashboard.hoursAgo}</p>
                 </div>
               </div>
-              <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">Healthy</span>
+              <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">{t.farmerDashboard.healthy}</span>
             </div>
             <div className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Diagnosis for East Field</p>
-                  <p className="text-xs text-gray-500">1 day ago</p>
+                  <p className="text-sm font-medium text-gray-900">{t.farmerDashboard.diagnosisFor} East Field</p>
+                  <p className="text-xs text-gray-500">1 {t.farmerDashboard.dayAgo}</p>
                 </div>
               </div>
               <span className="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded">
-                Rust Detected
+                {t.farmerDashboard.rustDetected}
               </span>
             </div>
             <div className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Diagnosis for South Field</p>
-                  <p className="text-xs text-gray-500">3 days ago</p>
+                  <p className="text-sm font-medium text-gray-900">{t.farmerDashboard.diagnosisFor} South Field</p>
+                  <p className="text-xs text-gray-500">3 {t.farmerDashboard.daysAgo}</p>
                 </div>
               </div>
-              <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">Healthy</span>
+              <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">{t.farmerDashboard.healthy}</span>
             </div>
           </div>
         </div>
@@ -859,7 +867,7 @@ function FarmerDashboard() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6 relative">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Need help?</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.needHelp}</h2>
               <button
                 type="button"
                 onClick={close_help_modal}
@@ -893,7 +901,7 @@ function FarmerDashboard() {
             <form className="space-y-4" onSubmit={handle_help_submit}>
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="help_subject_farmer">
-                  Subject
+                  {t.farmerDashboard.helpSubject}
                 </label>
                 <input
                   id="help_subject_farmer"
@@ -902,13 +910,13 @@ function FarmerDashboard() {
                   onChange={handle_help_subject_change}
                   disabled={is_sending_help}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Briefly describe your issue"
+                  placeholder={t.farmerDashboard.helpSubjectPlaceholder}
                 />
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="help_message_farmer">
-                  Message
+                  {t.farmerDashboard.helpMessage}
                 </label>
                 <textarea
                   id="help_message_farmer"
@@ -917,7 +925,7 @@ function FarmerDashboard() {
                   onChange={handle_help_message_change}
                   disabled={is_sending_help}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Tell us what you need help with"
+                  placeholder={t.farmerDashboard.helpMessagePlaceholder}
                 />
               </div>
 
@@ -928,7 +936,7 @@ function FarmerDashboard() {
                   disabled={is_sending_help}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-60"
                 >
-                  Close
+                  {t.common.close}
                 </button>
                 <button
                   type="submit"
@@ -957,7 +965,7 @@ function FarmerDashboard() {
                       ></path>
                     </svg>
                   )}
-                  {is_sending_help ? 'Sending...' : 'Send'}
+                  {is_sending_help ? t.common.sending : t.common.send}
                 </button>
               </div>
             </form>
@@ -969,7 +977,7 @@ function FarmerDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6 relative">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Change Password</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.changePassword}</h2>
               <button
                 type="button"
                 onClick={close_change_password_modal}
@@ -1003,7 +1011,7 @@ function FarmerDashboard() {
             <form className="space-y-4" onSubmit={handle_change_password_submit}>
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="old_password_1_farmer">
-                  Old password
+                  {t.farmerDashboard.oldPassword}
                 </label>
                 <input
                   id="old_password_1_farmer"
@@ -1012,13 +1020,13 @@ function FarmerDashboard() {
                   onChange={handle_old_password_first_change}
                   disabled={is_changing_password}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Enter your current password"
+                  placeholder={t.farmerDashboard.oldPasswordPlaceholder}
                 />
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="old_password_2_farmer">
-                  Confirm old password
+                  {t.farmerDashboard.confirmOldPassword}
                 </label>
                 <input
                   id="old_password_2_farmer"
@@ -1027,13 +1035,13 @@ function FarmerDashboard() {
                   onChange={handle_old_password_second_change}
                   disabled={is_changing_password}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="Re-enter your current password"
+                  placeholder={t.farmerDashboard.confirmOldPasswordPlaceholder}
                 />
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="new_password_farmer">
-                  New password
+                  {t.farmerDashboard.newPassword}
                 </label>
                 <input
                   id="new_password_farmer"
@@ -1042,7 +1050,7 @@ function FarmerDashboard() {
                   onChange={handle_new_password_change}
                   disabled={is_changing_password}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100"
-                  placeholder="At least 8 characters"
+                  placeholder={t.farmerDashboard.newPasswordPlaceholder}
                 />
               </div>
 
@@ -1053,7 +1061,7 @@ function FarmerDashboard() {
                   disabled={is_changing_password}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-60"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   type="submit"
@@ -1082,7 +1090,7 @@ function FarmerDashboard() {
                       ></path>
                     </svg>
                   )}
-                  {is_changing_password ? 'Changing...' : 'Change password'}
+                  {is_changing_password ? t.farmerDashboard.changing : t.farmerDashboard.changePasswordButton}
                 </button>
               </div>
             </form>
