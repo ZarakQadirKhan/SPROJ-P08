@@ -199,6 +199,8 @@ try {
   if (chat_exists === true) {
     const chat_router = require(chat_router_path)
     app.use('/api/chat', chat_router)
+    // Also handle trailing slash explicitly
+    app.use('/api/chat/', chat_router)
     chat_mounted = true
   }
 } catch (error) {
@@ -207,6 +209,10 @@ try {
 
 if (chat_mounted === false) {
   app.post('/api/chat', function (request, response) {
+    const payload = { ok: false, message: 'Chat router not mounted' }
+    response.status(501).json(payload)
+  })
+  app.post('/api/chat/', function (request, response) {
     const payload = { ok: false, message: 'Chat router not mounted' }
     response.status(501).json(payload)
   })
