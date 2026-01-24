@@ -9,7 +9,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 
 function Dashboard() {
   const navigate = useNavigate()
-  const { t , direction } = useLanguage()
+  const { t, language, setLanguage, direction } = useLanguage()
   const user_json = localStorage.getItem('user') || '{}'
   const user = JSON.parse(user_json)
 
