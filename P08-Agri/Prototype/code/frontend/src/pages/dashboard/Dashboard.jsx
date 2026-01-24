@@ -9,7 +9,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 
 function Dashboard() {
   const navigate = useNavigate()
-  const { direction } = useLanguage()
+  const { direction, language } = useLanguage()
   const user_json = localStorage.getItem('user') || '{}'
   const user = JSON.parse(user_json)
 
@@ -81,7 +81,7 @@ function Dashboard() {
     set_weather_data(null)
     try {
       const { latitude, longitude } = await get_browser_location()
-      const data = await fetch_weather_by_coords(latitude, longitude)
+      const data = await fetch_weather_by_coords(latitude, longitude, language)
       set_weather_data(data)
     } catch (err) {
       const msg = typeof err === 'string' ? err : (err && err.message ? err.message : 'Failed to get weather')

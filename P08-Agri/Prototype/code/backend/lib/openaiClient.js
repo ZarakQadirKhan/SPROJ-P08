@@ -47,17 +47,27 @@ async function get_llm_weather_advice(context) {
       longitude,
       current,
       today,
-      advice
+      advice,
+      language = 'en'
     } = context || {}
+
+    const isUrdu = language === 'ur'
+    const languageInstruction = isUrdu 
+      ? 'Write clearly in simple Urdu (اردو), using Urdu script. Use proper Urdu agricultural terminology.'
+      : 'Write clearly, in simple English'
 
     const system_message =
       'You are an agricultural expert helping small wheat farmers in Pakistan. ' +
       'You will receive structured weather data (temperature, rain, wind, UV index) ' +
       'and some simple bullet-point recommendations. Your job is to generate a detailed, ' +
       'farmer-friendly explanation of what they should do today. ' +
-      'Write clearly, in simple English, in 2–4 short paragraphs and 5–10 bullet points. ' +
+      languageInstruction + ', in 2–4 short paragraphs and 5–10 bullet points. ' +
       'Focus on irrigation, spraying, fertilizer, and anything to avoid today. ' +
       'Do NOT ask questions back to the user. Just give advice.'
+
+    const languageRequest = isUrdu 
+      ? '\n\nIMPORTANT: Respond entirely in Urdu (اردو). Use Urdu script and proper Urdu agricultural terms.'
+      : ''
 
     const user_message =
       `Location: ${city || 'Unknown'} (lat=${latitude}, lon=${longitude})\n` +
@@ -73,7 +83,8 @@ async function get_llm_weather_advice(context) {
       `Baseline crop-care recommendations:\n` +
       (Array.isArray(advice) ? advice.map((item) => `- ${item}`).join('\n') : '') +
       '\n\nNow generate a detailed but concise explanation for the farmer. ' +
-      'Start with a short summary, then actions to take, then things to avoid.'
+      'Start with a short summary, then actions to take, then things to avoid.' +
+      languageRequest
 
     console.log('[OpenAI] Calling model for weather advice...')
 

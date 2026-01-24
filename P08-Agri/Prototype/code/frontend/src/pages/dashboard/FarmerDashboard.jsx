@@ -81,7 +81,7 @@ function FarmerDashboard() {
     set_weather_data(null)
     try {
       const coords = await get_browser_location()
-      const data = await fetch_weather_by_coords(coords.latitude, coords.longitude)
+      const data = await fetch_weather_by_coords(coords.latitude, coords.longitude, language)
       set_weather_data(data)
     } catch (err) {
       const msg = typeof err === 'string' ? err : (err && err.message ? err.message : t.farmerDashboard.failedToGetWeather)

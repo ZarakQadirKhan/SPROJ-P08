@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './baseUrl'
 
-export async function fetch_weather_by_coords(latitude, longitude) {
-  const url = `${API_BASE_URL}/api/weather?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}`
+export async function fetch_weather_by_coords(latitude, longitude, language = 'en') {
+  const url = `${API_BASE_URL}/api/weather?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&lang=${encodeURIComponent(language)}`
 
   const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } })
 

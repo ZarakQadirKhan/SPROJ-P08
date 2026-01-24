@@ -63,6 +63,7 @@ router.get('/', async function (request, response) {
   try {
     const latitude = Number.parseFloat(request.query.lat)
     const longitude = Number.parseFloat(request.query.lon)
+    const language = request.query.lang || 'en' // Default to English if not provided
 
     if (Number.isNaN(latitude) === true || Number.isNaN(longitude) === true) {
       return response.status(400).json({
@@ -139,7 +140,8 @@ router.get('/', async function (request, response) {
         longitude,
         current,
         today,
-        advice
+        advice,
+        language
       })
       console.log(
         '[Weather] LLM advice result:',
