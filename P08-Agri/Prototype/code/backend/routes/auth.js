@@ -2,63 +2,54 @@ const express = require('express')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
-const nodemailer = require('nodemailer')
+const { Resend } = require('resend')
 const User = require('../models/User')
 
 const router = express.Router()
 
-// ====== Security-related config ======
+const resend = new Resend(process.env.RESEND_API_KEY)
+
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '2h'
 const LOGIN_MAX_FAILED_ATTEMPTS = Number.parseInt(process.env.LOGIN_MAX_FAILED_ATTEMPTS || '5', 10)
 const LOGIN_LOCKOUT_MINUTES = Number.parseInt(process.env.LOGIN_LOCKOUT_MINUTES || '15', 10)
 
-// ====== Mail transport for OTP emails ======
-let mailTransporter = null
-
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-  mailTransporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  })
-} else {
-  console.warn('[Auth] SMTP is not fully configured; OTP emails may not be sent.')
-}
-
 async function sendOtpEmail(email, otp) {
   console.log('[Auth] Generated OTP for', email, '=>', otp)
 
-  if (!mailTransporter) {
-    console.warn('[Auth] No SMTP transporter configured. OTP will not be emailed.')
-    return
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[Auth] RESEND_API_KEY not set; OTP will not be emailed in production.')
+      return
+    }
+    throw new Error('RESEND_API_KEY is not set')
   }
 
-  const from = process.env.MAIL_FROM || process.env.SMTP_USER
+  const from_email = process.env.EMAIL_FROM || 'AgriQual <onboarding@resend.dev>'
 
-  const mailOptions = {
-    from,
-    to: email,
+  const text_message = `Your verification code is: ${otp}\n\nIt will expire in 10 minutes.`
+
+  const html_message = `<p>Your verification code is: <strong>${otp}</strong></p><p>It will expire in 10 minutes.</p>`
+
+  const result = await resend.emails.send({
+    from: from_email,
+    to: [email],
     subject: 'Your AgriQual verification code',
-    text: `Your verification code is: ${otp}\n\nIt will expire in 10 minutes.`,
-    html: `<p>Your verification code is: <strong>${otp}</strong></p><p>It will expire in 10 minutes.</p>`
+    text: text_message,
+    html: html_message
+  })
+
+  if (result && result.error) {
+    throw new Error(String(result.error.message || 'Resend failed'))
   }
 
-  try {
-    await mailTransporter.sendMail(mailOptions)
-    console.log('[Auth] OTP email sent to', email)
-  } catch (error) {
-    const message = error && error.message ? error.message : error
-    console.error('[Auth] Failed to send OTP email:', message)
-    // We still keep the OTP stored; frontend can use debug_otp in non-production
+  if (result && result.id) {
+    console.log('[Auth] Resend email id:', result.id)
   }
+
+  console.log('[Auth] OTP email sent to', email)
 }
 
-// ====== Helpers ======
 function normalizeEmail(email) {
   if (!email) {
     return ''
@@ -108,8 +99,6 @@ function getLockoutSeconds(lockUntil) {
   return Math.round(diffMs / 1000)
 }
 
-// ====== Registration with OTP ======
-// POST /api/auth/register-otp
 router.post('/register-otp', async function (request, response) {
   try {
     const { name, email, phone, password, role } = request.body || {}
@@ -132,9 +121,7 @@ router.post('/register-otp', async function (request, response) {
     let user = await User.findOne({ email: normalizedEmail })
 
     if (user && user.email_verified === true) {
-      return response
-        .status(400)
-        .json({ message: 'An account with this email already exists' })
+      return response.status(400).json({ message: 'An account with this email already exists' })
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
@@ -181,12 +168,10 @@ router.post('/register-otp', async function (request, response) {
   } catch (error) {
     const message = error && error.message ? error.message : error
     console.error('[Auth] /register-otp error:', message)
-    return response.status(500).json({ message: 'Registration failed' })
+    return response.status(502).json({ ok: false, message: 'Failed to send verification code' })
   }
 })
 
-// ====== Verify OTP ======
-// POST /api/auth/verify-otp
 router.post('/verify-otp', async function (request, response) {
   try {
     const { email, otp } = request.body || {}
@@ -246,8 +231,6 @@ router.post('/verify-otp', async function (request, response) {
   }
 })
 
-// ====== Login ======
-// POST /api/auth/login
 router.post('/login', async function (request, response) {
   try {
     const { email, password } = request.body || {}
@@ -303,9 +286,7 @@ router.post('/login', async function (request, response) {
       user.failed_login_attempts = (user.failed_login_attempts || 0) + 1
 
       if (user.failed_login_attempts >= LOGIN_MAX_FAILED_ATTEMPTS) {
-        user.lock_until = new Date(
-          now.getTime() + LOGIN_LOCKOUT_MINUTES * 60 * 1000
-        )
+        user.lock_until = new Date(now.getTime() + LOGIN_LOCKOUT_MINUTES * 60 * 1000)
       }
 
       await user.save()
@@ -359,7 +340,6 @@ router.post('/login', async function (request, response) {
   }
 })
 
-// Optional legacy direct /register (without OTP) – kept for compatibility
 router.post('/register', async function (request, response) {
   try {
     const { name, email, phone, password, role } = request.body || {}
