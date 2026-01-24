@@ -7,7 +7,7 @@ const chat_api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
-export async function send_chat_message({ diagnosis, messages }) {
+export async function send_chat_message({ diagnosis, messages, language = 'en' }) {
   const token = getToken()
   if (!token) {
     throw new Error('You must be logged in to use the assistant')
@@ -20,7 +20,7 @@ export async function send_chat_message({ diagnosis, messages }) {
   try {
     const response = await chat_api.post(
       '/',
-      { diagnosis, messages },
+      { diagnosis, messages, language },
       {
         headers: { Authorization: 'Bearer ' + token }
       }

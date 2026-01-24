@@ -355,7 +355,8 @@ function Dashboard() {
     try {
       const result = await send_chat_message({
         diagnosis: diagnose_result,
-        messages: next_messages
+        messages: next_messages,
+        language
       })
 
       const assistant_message = { role: 'assistant', content: result.content }

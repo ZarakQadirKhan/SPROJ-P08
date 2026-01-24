@@ -25,12 +25,17 @@ function get_auth_user(request) {
   }
 }
 
-function build_system_prompt(diagnosis_payload, auth_user) {
+function build_system_prompt(diagnosis_payload, auth_user, language = 'en') {
   const lines = []
+
+  const isUrdu = language === 'ur'
+  const languageInstruction = isUrdu
+    ? 'IMPORTANT: The user is communicating in Urdu (اردو). You MUST respond entirely in Urdu using Urdu script. Use proper Urdu agricultural terminology. Accept and understand user input in Urdu.'
+    : 'Use simple, clear English language.'
 
   lines.push(
     'You are AgriQual, a helpful assistant for wheat farmers in Pakistan. ' +
-      'Use simple, clear language. Focus on practical field advice that small farmers can follow.'
+      languageInstruction + ' Focus on practical field advice that small farmers can follow.'
   )
 
   if (auth_user && auth_user.email) {
@@ -133,6 +138,7 @@ router.post('/', async function (request, response) {
     const raw_messages = request_body.messages || []
     const diagnosis_payload = request_body.diagnosis || null
     const single_message = request_body.message || null
+    const language = request_body.language || 'en'
 
     let chat_messages = normalize_messages(raw_messages)
 
@@ -151,7 +157,7 @@ router.post('/', async function (request, response) {
       return
     }
 
-    const system_prompt = build_system_prompt(diagnosis_payload, auth_user)
+    const system_prompt = build_system_prompt(diagnosis_payload, auth_user, language)
 
     const model_name = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
 
