@@ -47,7 +47,7 @@ async function send_help_email(payload = {}) {
   const user_email = String(payload?.userEmail || '').trim()
   const ticket_id = String(payload?.ticketId || '').trim()
 
-  const to_email = process.env.SUPPORT_TO_EMAIL || '26100370@lums.edu.pk'
+  const to_email = process.env.SUPPORT_TO_EMAIL || 'zarakqadirkhan02@gmail.com'
 
   if (!process.env.RESEND_API_KEY) {
     if (process.env.NODE_ENV !== 'production') {
