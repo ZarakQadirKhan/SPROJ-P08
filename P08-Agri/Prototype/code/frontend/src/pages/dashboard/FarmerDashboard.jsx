@@ -9,7 +9,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 
 function FarmerDashboard() {
   const navigate = useNavigate()
-  const { direction } = useLanguage()
+  const { t , direction } = useLanguage()
   const user_json = localStorage.getItem('user') || '{}'
   const user = JSON.parse(user_json)
 
