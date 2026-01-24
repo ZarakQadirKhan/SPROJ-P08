@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 
 function Register() {
   const navigate = useNavigate()
-  const { t, language, setLanguage } = useLanguage()
+  const { t, language, setLanguage, direction } = useLanguage()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -91,7 +91,7 @@ function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8">
+    <div dir={direction} className="min-h-screen bg-white flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full space-y-8">
         <div className="absolute top-4 right-4">
           <button

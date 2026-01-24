@@ -13,11 +13,13 @@ export function LanguageProvider({ children }) {
   }
 
   const t = translations[language]
+  const direction = language === 'ur' ? 'rtl' : 'ltr'
 
   const value = {
     language,
     setLanguage,
-    t
+    t,
+    direction
   }
 
   return (

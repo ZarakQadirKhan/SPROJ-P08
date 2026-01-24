@@ -5,7 +5,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 
 function Login() {
   const navigate = useNavigate();
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language, setLanguage, direction } = useLanguage();
   const [email, set_email] = useState("");
   const [password, set_password] = useState("");
   const [show_password, set_show_password] = useState(false);
@@ -46,7 +46,7 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+    <div dir={direction} className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
         <div className="absolute top-4 right-4">
           <button
@@ -98,13 +98,13 @@ function Login() {
                   value={password}
                   onChange={(e) => set_password(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="••••••••"
+                  placeholder={t.login.passwordPlaceholder}
                   disabled={is_loading}
                 />
                 <button
                   type="button"
                   onClick={() => set_show_password(!show_password)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className={`absolute inset-y-0 flex items-center ${direction === 'rtl' ? 'left-0 pl-3' : 'right-0 pr-3'}`}
                   disabled={is_loading}
                 >
                   <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

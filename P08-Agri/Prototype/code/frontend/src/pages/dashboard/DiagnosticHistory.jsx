@@ -35,7 +35,7 @@ function getConfidenceBarColor(confidence) {
 
 function DiagnosticHistory() {
   const navigate = useNavigate()
-  const { t, language, setLanguage } = useLanguage()
+  const { t, language, setLanguage, direction } = useLanguage()
   const [diagnoses, setDiagnoses] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -91,12 +91,12 @@ function DiagnosticHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div dir={direction} className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Header */}
       <div className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center justify-between`}>
+            <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center space-x-4`}>
               <button
                 onClick={handle_back_to_dashboard}
                 className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -107,7 +107,7 @@ function DiagnosticHistory() {
               </button>
               <h1 className="text-2xl font-bold text-gray-900">{t.diagnosticHistory.title}</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-4`}>
               <button
                 onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
                 className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"

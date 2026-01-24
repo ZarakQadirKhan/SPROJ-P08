@@ -9,7 +9,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 
 function FarmerDashboard() {
   const navigate = useNavigate()
-  const { t, language, setLanguage } = useLanguage()
+  const { t, language, setLanguage, direction } = useLanguage()
   const user_json = localStorage.getItem('user') || '{}'
   const user = JSON.parse(user_json)
 
@@ -369,11 +369,11 @@ function FarmerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div dir={direction} className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} justify-between items-center`}>
           <h1 className="text-2xl font-bold text-gray-900">AgriQual - {t.farmerDashboard.welcome}</h1>
-          <div className="flex items-center gap-4">
+          <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-4`}>
             <button
               onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
               className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"

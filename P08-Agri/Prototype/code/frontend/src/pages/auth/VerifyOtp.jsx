@@ -6,7 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 function VerifyOtp() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { t, language, setLanguage } = useLanguage()
+  const { t, language, setLanguage, direction } = useLanguage()
 
   const stateEmail = location.state && location.state.email ? location.state.email : ''
   const storedEmail = localStorage.getItem('pending_signup_email') || ''
@@ -73,7 +73,7 @@ function VerifyOtp() {
 
   if (!email) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div dir={direction} className="min-h-screen bg-white flex items-center justify-center px-4">
         <div className="absolute top-4 right-4">
           <button
             onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
@@ -97,7 +97,7 @@ function VerifyOtp() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+    <div dir={direction} className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
         <div className="absolute top-4 right-4">
           <button
