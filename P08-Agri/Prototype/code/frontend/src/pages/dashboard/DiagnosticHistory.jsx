@@ -45,6 +45,21 @@ function DiagnosticHistory() {
     load_history()
   }, [])
 
+  useEffect(() => {
+    function handle_escape_key(event) {
+      if (event.key === 'Escape' && isDetailModalOpen) {
+        close_detail_modal()
+      }
+    }
+
+    if (isDetailModalOpen) {
+      document.addEventListener('keydown', handle_escape_key)
+      return () => {
+        document.removeEventListener('keydown', handle_escape_key)
+      }
+    }
+  }, [isDetailModalOpen])
+
   async function load_history() {
     setIsLoading(true)
     setError('')
@@ -135,13 +150,11 @@ function DiagnosticHistory() {
         {!isLoading && !error && diagnoses.length > 0 && (
           <div className="space-y-4">
             {diagnoses.map((diagnosis) => (
-              <div
+              <button
                 key={diagnosis._id}
-                role="button"
-                tabIndex={0}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                type="button"
+                className="w-full text-left bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border-0"
                 onClick={() => handle_view_details(diagnosis)}
-                onKeyDown={(e) => e.key === 'Enter' && handle_view_details(diagnosis)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -164,7 +177,7 @@ function DiagnosticHistory() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -175,21 +188,28 @@ function DiagnosticHistory() {
         <div 
           role="dialog" 
           aria-modal="true"
-          className="fixed inset-0 z-50 overflow-y-auto" 
-          onClick={close_detail_modal}
-          onKeyDown={(e) => e.key === 'Escape' && close_detail_modal()}
+          aria-labelledby="diagnosis-detail-title"
+          className="fixed inset-0 z-50 overflow-y-auto"
         >
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
+            <button
+              type="button"
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 border-0 p-0 cursor-pointer"
+              onClick={close_detail_modal}
+              aria-label="Close modal"
+            ></button>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            {/* NOSONAR: stopPropagation prevents clicks inside modal from closing it - not making element interactive */}
             <div
               role="document"
               className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
             >
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-2xl font-bold text-gray-900">Diagnosis Details</h3>
+                  <h3 id="diagnosis-detail-title" className="text-2xl font-bold text-gray-900">Diagnosis Details</h3>
                   <button
                     onClick={close_detail_modal}
                     className="text-gray-400 hover:text-gray-600 transition-colors"

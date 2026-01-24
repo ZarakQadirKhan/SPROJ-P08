@@ -32,16 +32,16 @@ router.get('/', async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized' })
     }
 
-    let limit = parseInt(req.query.limit) || 50
-    if (isNaN(limit) || limit <= 0) {
+    let limit = Number.parseInt(req.query.limit) || 50
+    if (Number.isNaN(limit) || limit <= 0) {
       limit = 50
     }
     if (limit > 50) {
       limit = 50
     }
     
-    let skip = parseInt(req.query.skip) || 0
-    if (isNaN(skip) || skip < 0) {
+    let skip = Number.parseInt(req.query.skip) || 0
+    if (Number.isNaN(skip) || skip < 0) {
       skip = 0
     }
 
