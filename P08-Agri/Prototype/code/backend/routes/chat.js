@@ -2,6 +2,8 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const OpenAI = require('openai')
 
+const { retrieve_chunks, build_evidence_block } = require('../lib/rag')
+
 const router = express.Router()
 
 const openai_client = new OpenAI({
@@ -25,17 +27,12 @@ function get_auth_user(request) {
   }
 }
 
-function build_system_prompt(diagnosis_payload, auth_user, language = 'en') {
+function build_system_prompt(diagnosis_payload, auth_user) {
   const lines = []
-
-  const isUrdu = language === 'ur'
-  const languageInstruction = isUrdu
-    ? 'IMPORTANT: The user is communicating in Urdu (اردو). You MUST respond entirely in Urdu using Urdu script. Use proper Urdu agricultural terminology. Accept and understand user input in Urdu.'
-    : 'Use simple, clear English language.'
 
   lines.push(
     'You are AgriQual, a helpful assistant for wheat farmers in Pakistan. ' +
-      languageInstruction + ' Focus on practical field advice that small farmers can follow.'
+      'Use simple, clear language. Focus on practical field advice that small farmers can follow.'
   )
 
   if (auth_user && auth_user.email) {
@@ -82,9 +79,15 @@ function build_system_prompt(diagnosis_payload, auth_user, language = 'en') {
   }
 
   lines.push(
-    'Always explain that the model can be wrong and that farmers should confirm important decisions with a local ' +
-      'agronomist or extension worker. Avoid giving very precise chemical doses unless the farmer specifically asks; ' +
-      'keep advice generic and safety focused. If you are unsure, say so clearly.'
+    'You will also receive an EVIDENCE block from trusted agriculture documents. ' +
+      'You must answer using ONLY the evidence. ' +
+      'If evidence is missing or insufficient, say so and ask 1-2 short follow-up questions. ' +
+      'Cite claims like [1], [2]. Do not invent citations.'
+  )
+
+  lines.push(
+    'Always include a short safety note: confirm locally with an agronomist or extension worker before chemical use. ' +
+      'Avoid giving precise chemical doses unless evidence explicitly states it.'
   )
 
   return lines.join(' ')
@@ -118,8 +121,7 @@ function normalize_messages(raw_messages) {
   return normalized
 }
 
-// Handle both with and without trailing slash
-router.post(['/', ''], async function (request, response) {
+router.post('/', async function (request, response) {
   try {
     const auth_user = get_auth_user(request)
     if (!auth_user) {
@@ -139,7 +141,6 @@ router.post(['/', ''], async function (request, response) {
     const raw_messages = request_body.messages || []
     const diagnosis_payload = request_body.diagnosis || null
     const single_message = request_body.message || null
-    const language = request_body.language || 'en'
 
     let chat_messages = normalize_messages(raw_messages)
 
@@ -158,22 +159,27 @@ router.post(['/', ''], async function (request, response) {
       return
     }
 
-    const system_prompt = build_system_prompt(diagnosis_payload, auth_user, language)
+    const last_user_message = chat_messages[chat_messages.length - 1].content
+    const diagnosis_label = diagnosis_payload && diagnosis_payload.diagnosis ? String(diagnosis_payload.diagnosis) : ''
 
+    const rag_query = (diagnosis_label ? ('Diagnosis: ' + diagnosis_label + '\n') : '') + 'Question: ' + last_user_message
+    const retrieved_chunks = await retrieve_chunks(rag_query, 6)
+    const evidence_block = build_evidence_block(retrieved_chunks)
+
+    const system_prompt = build_system_prompt(diagnosis_payload, auth_user)
     const model_name = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
 
     const all_messages = [
-      {
-        role: 'system',
-        content: system_prompt
-      }
-    ].concat(chat_messages)
+      { role: 'system', content: system_prompt },
+      { role: 'user', content: 'EVIDENCE:\n' + (evidence_block || 'No evidence found in the knowledge base.') },
+      { role: 'user', content: 'USER QUESTION:\n' + last_user_message }
+    ]
 
     const completion = await openai_client.chat.completions.create({
       model: model_name,
       messages: all_messages,
-      temperature: 0.4,
-      max_tokens: 512
+      temperature: 0.3,
+      max_tokens: 650
     })
 
     const first_choice = completion && completion.choices && completion.choices[0] ? completion.choices[0] : null
@@ -187,13 +193,16 @@ router.post(['/', ''], async function (request, response) {
       return
     }
 
-    const usage_block = completion && completion.usage ? completion.usage : null
-    if (usage_block) {
-      console.log('OpenAI chat usage:', usage_block)
-    }
-
     response.json({
-      reply: assistant_message
+      reply: assistant_message,
+      sources: retrieved_chunks.map(function (c, idx) {
+        return {
+          id: idx + 1,
+          source: c.source,
+          tags: c.tags || [],
+          text: c.text
+        }
+      })
     })
   } catch (error) {
     console.error('Chat route error:', error.message || error)
