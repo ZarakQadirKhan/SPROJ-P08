@@ -174,17 +174,25 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col gap-1">
+          <p className="text-xs font-semibold tracking-wide text-green-700 uppercase">AgriQual Admin</p>
+          <h1 className="text-2xl font-bold text-green-700">Admin Dashboard</h1>
           <p className="text-sm text-gray-600">Manage complaints and contact users</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <section className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
-            <p className="text-sm text-gray-600 mt-1">Send updates to all users or selected emails</p>
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+              <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m0 0l4-4m-4 4l4 4" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
+              <p className="text-sm text-gray-600 mt-1">Send updates to all users or selected emails</p>
+            </div>
           </div>
           <div className="p-6">
           {email_status_text && (
@@ -222,7 +230,7 @@ function AdminDashboard() {
             {email_mode === 'specific' && (
               <div>
                 <label className="text-sm font-medium text-gray-700">Recipient emails</label>
-                <input
+                  <input
                   type="text"
                   value={recipient_list}
                   onChange={(e) => set_recipient_list(e.target.value)}
@@ -278,7 +286,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_show_complaints((prev) => !prev)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600"
               >
                 {show_complaints ? 'Hide Complaints' : 'Complaints'}
               </button>
