@@ -24,6 +24,17 @@ const complaint_schema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    response: {
+      type: String,
+      trim: true
+    },
+    responded_at: {
+      type: Date
+    },
+    responded_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
     status: {
       type: String,
       enum: ['not addressed', 'addressed'],

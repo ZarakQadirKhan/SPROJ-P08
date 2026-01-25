@@ -7,6 +7,7 @@ import VerifyOtp from './pages/auth/VerifyOtp'
 import Dashboard from './pages/dashboard/Dashboard'
 import FarmerDashboard from './pages/dashboard/FarmerDashboard'
 import DiagnosticHistory from './pages/dashboard/DiagnosticHistory'
+import AdminDashboard from './pages/dashboard/AdminDashboard'
 import './App.css'
 
 function App() {
@@ -37,6 +38,8 @@ function App() {
       if (!allowedRoles.includes(userRole)) {
         if (userRole === 'farmer') {
           return <Navigate to="/farmer-dashboard" />
+        } else if (userRole === 'admin') {
+          return <Navigate to="/admin-dashboard" />
         } else if (userRole === 'inspector') {
           return <Navigate to="/inspector-dashboard" />
         } else {
@@ -56,6 +59,8 @@ function App() {
     const userRole = getUserRole()
     if (userRole === 'farmer') {
       return <Navigate to="/farmer-dashboard" />
+    } else if (userRole === 'admin') {
+      return <Navigate to="/admin-dashboard" />
     } else if (userRole === 'inspector') {
       return <Navigate to="/inspector-dashboard" />
     } else {
@@ -71,6 +76,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
 
+<<<<<<< HEAD
           <Route path="/dashboard" element={<DashboardRedirect />} />
           <Route
             path="/farmer-dashboard"
@@ -101,6 +107,44 @@ function App() {
         </Routes>
       </Router>
     </LanguageProvider>
+=======
+        <Route path="/dashboard" element={<DashboardRedirect />} />
+        <Route
+          path="/farmer-dashboard"
+          element={
+            <PrivateRoute allowedRoles={['farmer']}>
+              <FarmerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/diagnostic-history"
+          element={
+            <PrivateRoute allowedRoles={['farmer']}>
+              <DiagnosticHistory />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/inspector-dashboard"
+          element={
+            <PrivateRoute allowedRoles={['inspector']}>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin-dashboard"
+          element={
+            <PrivateRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
+>>>>>>> admin-dashboard
   )
 }
 

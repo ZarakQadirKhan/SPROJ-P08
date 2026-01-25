@@ -5,6 +5,7 @@ const User = require('../models/User')
 const { send_help_email } = require('../email_service')
 
 const router = express.Router()
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 
 // ==== Rate-limit configuration (per user+IP) ====
 const HELP_WINDOW_SECONDS =
@@ -28,7 +29,7 @@ function get_auth_user(request) {
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET)
+    const payload = jwt.verify(token, JWT_SECRET)
     return payload
   } catch (error) {
     console.error('[Help][jwt-verify-error]', error.message || error)
