@@ -76,38 +76,6 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
 
-<<<<<<< HEAD
-          <Route path="/dashboard" element={<DashboardRedirect />} />
-          <Route
-            path="/farmer-dashboard"
-            element={
-              <PrivateRoute allowedRoles={['farmer']}>
-                <FarmerDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/diagnostic-history"
-            element={
-              <PrivateRoute allowedRoles={['farmer']}>
-                <DiagnosticHistory />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/inspector-dashboard"
-            element={
-              <PrivateRoute allowedRoles={['inspector', 'admin']}>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/login" />} /> 
-
-        </Routes>
-      </Router>
-    </LanguageProvider>
-=======
         <Route path="/dashboard" element={<DashboardRedirect />} />
         <Route
           path="/farmer-dashboard"
@@ -144,7 +112,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
->>>>>>> admin-dashboard
+    </LanguageProvider>
   )
 }
 
