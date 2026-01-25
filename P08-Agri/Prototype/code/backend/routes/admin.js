@@ -1,9 +1,16 @@
 const express = require('express')
+const crypto = require('crypto')
+const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 const Complaint = require('../models/Complaint')
 const User = require('../models/User')
-const { send_admin_broadcast_email, send_complaint_response_email } = require('../email_service')
+const PasswordHistory = require('../models/PasswordHistory')
+const {
+  send_admin_broadcast_email,
+  send_complaint_response_email,
+  send_admin_password_reset_email
+} = require('../email_service')
 
 const router = express.Router()
 
@@ -41,6 +48,29 @@ function require_admin(request, response) {
   }
 
   return auth_user
+}
+
+function validate_password_strength(password) {
+  if (typeof password !== 'string') {
+    return 'Password is required'
+  }
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters long'
+  }
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    return 'Password must contain at least one letter and one number'
+  }
+  return null
+}
+
+function generate_temporary_password() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+  const bytes = crypto.randomBytes(12)
+  let result = ''
+  for (let i = 0; i < bytes.length; i += 1) {
+    result += chars[bytes[i] % chars.length]
+  }
+  return result
 }
 
 router.get('/complaints', async function (request, response) {
@@ -177,6 +207,67 @@ router.post('/complaints/:id/respond', async function (request, response) {
   } catch (error) {
     console.error('[Admin] Failed to respond to complaint:', error.message || error)
     response.status(500).json({ message: 'Failed to respond to complaint' })
+  }
+})
+
+router.post('/users/reset-password', async function (request, response) {
+  try {
+    const auth_user = require_admin(request, response)
+    if (!auth_user) {
+      return
+    }
+
+    const email = String(request.body?.email || '').trim().toLowerCase()
+    let new_password = String(request.body?.newPassword || '').trim()
+
+    if (!email) {
+      return response.status(400).json({ message: 'Email is required' })
+    }
+
+    const user = await User.findOne({ email, role: 'farmer' })
+    if (!user) {
+      return response.status(404).json({ message: 'Farmer not found' })
+    }
+
+    if (!new_password) {
+      new_password = generate_temporary_password()
+    }
+
+    const password_error = validate_password_strength(new_password)
+    if (password_error) {
+      return response.status(400).json({ message: password_error })
+    }
+
+    const previous_hash = user.password_hash || user.password || null
+    if (previous_hash) {
+      const history_entry = new PasswordHistory({
+        userId: user._id,
+        passwordHash: previous_hash,
+        createdAt: new Date()
+      })
+      await history_entry.save()
+    }
+
+    const new_hash = await bcrypt.hash(new_password, 10)
+    user.password_hash = new_hash
+    user.password = undefined
+    user.failed_login_attempts = 0
+    user.lock_until = null
+    await user.save()
+
+    try {
+      await send_admin_password_reset_email({
+        recipient_email: user.email,
+        new_password: new_password
+      })
+    } catch (email_error) {
+      console.error('[Admin] Failed to send password reset email:', email_error?.message || email_error)
+    }
+
+    return response.json({ ok: true, message: 'Password updated', email: user.email })
+  } catch (error) {
+    console.error('[Admin] Failed to reset farmer password:', error.message || error)
+    return response.status(500).json({ message: 'Failed to reset password' })
   }
 })
 

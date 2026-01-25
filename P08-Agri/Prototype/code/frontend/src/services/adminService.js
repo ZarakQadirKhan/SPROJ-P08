@@ -98,11 +98,32 @@ export async function respond_to_complaint(id, response) {
   return data
 }
 
+export async function reset_farmer_password({ email, newPassword }) {
+  const res = await fetch(`${API_BASE_URL}/api/admin/users/reset-password`, {
+    method: 'POST',
+    headers: get_auth_headers(),
+    body: JSON.stringify({ email, newPassword })
+  })
+
+  let data = null
+  try {
+    data = await res.json()
+  } catch {}
+
+  if (!res.ok) {
+    const message = (data && (data.message || data.error)) || `Request failed (${res.status})`
+    throw new Error(message)
+  }
+
+  return data
+}
+
 const admin_service = {
   fetch_complaints,
   update_complaint_status,
   send_admin_email,
-  respond_to_complaint
+  respond_to_complaint,
+  reset_farmer_password
 }
 
 export default admin_service
