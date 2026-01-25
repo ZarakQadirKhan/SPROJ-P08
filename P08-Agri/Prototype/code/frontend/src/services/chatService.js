@@ -2,8 +2,8 @@ import axios from 'axios'
 import { getToken } from './authService'
 import { API_BASE_URL } from './baseUrl'
 
-const chat_api = axios.create({
-  baseURL: `${API_BASE_URL}/api/chat`,
+const api = axios.create({
+  baseURL: `${API_BASE_URL}/api`,
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -13,13 +13,17 @@ export async function send_chat_message({ diagnosis, messages, language = 'en' }
     throw new Error('You must be logged in to use the assistant')
   }
 
-  if (!diagnosis || !diagnosis.diagnosis) {
+  if (!diagnosis) {
+    throw new Error('No diagnosis found to discuss')
+  }
+
+  if (!diagnosis.diagnosis) {
     throw new Error('No diagnosis found to discuss')
   }
 
   try {
-    const response = await chat_api.post(
-      '/',
+    const response = await api.post(
+      '/chat',
       { diagnosis, messages, language },
       {
         headers: { Authorization: 'Bearer ' + token }
