@@ -68,8 +68,7 @@ const userSchema = new mongoose.Schema(
   }
 )
 
-// Ensure unique emails
-userSchema.index({ email: 1 }, { unique: true })
+// Unique email enforced by schema "unique: true"
 
 const User = mongoose.model('User', userSchema)
 

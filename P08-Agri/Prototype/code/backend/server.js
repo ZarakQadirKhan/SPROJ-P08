@@ -12,6 +12,10 @@ const mongo_uri = process.env.MONGODB_URI || process.env.MONGO_URI
 
 if (!mongo_uri) {
   console.error('MONGODB_URI / MONGO_URI is not defined in environment variables')
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Missing MongoDB connection string in production. Exiting.')
+    process.exit(1)
+  }
 } else {
   mongoose
     .connect(mongo_uri)
@@ -169,6 +173,27 @@ if (account_mounted === false) {
   })
 }
 
+const admin_router_path = path.resolve(__dirname, 'routes', 'admin.js')
+const admin_exists = fs.existsSync(admin_router_path)
+let admin_mounted = false
+
+try {
+  if (admin_exists === true) {
+    const admin_router = require(admin_router_path)
+    app.use('/api/admin', admin_router)
+    admin_mounted = true
+  }
+} catch (error) {
+  console.error('Failed to mount admin router:', error.message || error)
+}
+
+if (admin_mounted === false) {
+  app.get('/api/admin/complaints', function (request, response) {
+    const payload = { ok: false, message: 'Admin router not mounted' }
+    response.status(501).json(payload)
+  })
+}
+
 const history_router_path = path.resolve(__dirname, 'routes', 'history.js')
 const history_exists = fs.existsSync(history_router_path)
 let history_mounted = false
@@ -225,8 +250,10 @@ app.use(function (error, request, response, next) {
 
 async function start_server() {
   try {
-    await connect_redis()
-    console.log('Redis connected')
+    const redis_connected = await connect_redis()
+    if (redis_connected) {
+      console.log('Redis connected')
+    }
   } catch (error) {
     const message = error.message || error
     console.error('Redis connection error:', message)

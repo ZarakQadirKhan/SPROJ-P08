@@ -8,6 +8,7 @@ const Diagnosis = require('../models/Diagnosis')
 
 const router = express.Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } })
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 
 const diagnose_limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -27,7 +28,7 @@ function get_auth_user(request) {
     return null
   }
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET)
+    const payload = jwt.verify(token, JWT_SECRET)
     return payload
   } catch (error) {
     console.error('JWT verification failed:', error.message)

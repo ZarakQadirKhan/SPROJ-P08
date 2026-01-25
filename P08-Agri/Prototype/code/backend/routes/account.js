@@ -7,6 +7,7 @@ const PasswordSecurity = require('../models/PasswordSecurity')
 const { send_password_change_email } = require('../email_service')
 
 const router = express.Router()
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 
 // How many wrong attempts before lockout
 const MAX_FAILED_ATTEMPTS = 5
@@ -31,7 +32,7 @@ function get_auth_user(request) {
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET)
+    const payload = jwt.verify(token, JWT_SECRET)
     console.log('[Account][jwt-payload]', payload)
 
     const user_id = payload.userId || payload.sub || payload.id || null

@@ -7,7 +7,20 @@ const User = require('../models/User')
 
 const router = express.Router()
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let resend_client = null
+
+function get_resend_client() {
+  if (resend_client) {
+    return resend_client
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+
+  resend_client = new Resend(process.env.RESEND_API_KEY)
+  return resend_client
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '2h'
@@ -31,7 +44,16 @@ async function sendOtpEmail(email, otp) {
 
   const html_message = `<p>Your verification code is: <strong>${otp}</strong></p><p>It will expire in 10 minutes.</p>`
 
-  const result = await resend.emails.send({
+  const client = get_resend_client()
+  if (!client) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[Auth] RESEND_API_KEY not set; OTP will not be emailed in production.')
+      return
+    }
+    throw new Error('RESEND_API_KEY is not set')
+  }
+
+  const result = await client.emails.send({
     from: from_email,
     to: [email],
     subject: 'Your AgriQual verification code',

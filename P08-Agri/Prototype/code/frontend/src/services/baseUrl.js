@@ -1,6 +1,6 @@
 const read_env = (key) => {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key]
+  if (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__[key]) {
+    return window.__ENV__[key]
   }
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key]

@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const Diagnosis = require('../models/Diagnosis')
 
 const router = express.Router()
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 
 function get_auth_user(request) {
   const auth_header = request.headers.authorization || ''
@@ -15,7 +16,7 @@ function get_auth_user(request) {
     return null
   }
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET)
+    const payload = jwt.verify(token, JWT_SECRET)
     return payload
   } catch (error) {
     // Log authentication errors (minimal logging to avoid information leakage)

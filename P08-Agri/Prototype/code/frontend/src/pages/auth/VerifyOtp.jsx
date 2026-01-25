@@ -56,7 +56,9 @@ function VerifyOtp() {
       const role = data && data.user && data.user.role ? data.user.role : null
       if (role === 'farmer') {
         navigate('/farmer-dashboard')
-      } else if (role === 'inspector' || role === 'admin') {
+      } else if (role === 'admin') {
+        navigate('/admin-dashboard')
+      } else if (role === 'inspector') {
         navigate('/inspector-dashboard')
       } else {
         navigate('/dashboard')

@@ -3,10 +3,25 @@ const jwt = require('jsonwebtoken')
 const OpenAI = require('openai')
 
 const router = express.Router()
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 
-const openai_client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+let openai_client = null
+
+function get_openai_client() {
+  if (openai_client) {
+    return openai_client
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    return null
+  }
+
+  openai_client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  })
+
+  return openai_client
+}
 
 function get_auth_user(request) {
   const auth_header = request.headers.authorization || ''
@@ -18,7 +33,7 @@ function get_auth_user(request) {
     return null
   }
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET)
+    const payload = jwt.verify(token, JWT_SECRET)
     return payload
   } catch (error) {
     return null
@@ -121,7 +136,8 @@ router.post('/', async function (request, response) {
       return
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    const client = get_openai_client()
+    if (!client) {
       response.status(501).json({
         message: 'Chat service not configured',
         detail: 'Set OPENAI_API_KEY in the backend environment'
@@ -162,7 +178,7 @@ router.post('/', async function (request, response) {
       }
     ].concat(chat_messages)
 
-    const completion = await openai_client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: model_name,
       messages: all_messages,
       temperature: 0.4,
