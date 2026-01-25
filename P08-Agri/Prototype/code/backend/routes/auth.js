@@ -509,4 +509,63 @@ router.post('/seed-admin', async function (request, response) {
   }
 })
 
+router.post('/seed-admin-reset', async function (request, response) {
+  try {
+    const { email, password, name, code } = request.body || {}
+
+    const seed_code = String(process.env.ADMIN_SEED_CODE || '').trim()
+    if (!seed_code) {
+      return response.status(501).json({ message: 'Admin seeding not configured' })
+    }
+
+    if (String(code || '').trim() !== seed_code) {
+      return response.status(403).json({ message: 'Invalid seed code' })
+    }
+
+    const normalizedEmail = normalizeEmail(email)
+    if (!validateEmail(normalizedEmail)) {
+      return response.status(400).json({ message: 'Valid email is required' })
+    }
+
+    const passwordError = validatePasswordStrength(password)
+    if (passwordError) {
+      return response.status(400).json({ message: passwordError })
+    }
+
+    await User.deleteMany({ role: 'admin' })
+    await AdminSeed.deleteMany({})
+
+    const passwordHash = await bcrypt.hash(password, 10)
+
+    const admin_user = new User({
+      name: String(name || 'Admin').trim() || 'Admin',
+      email: normalizedEmail,
+      phone: null,
+      role: 'admin',
+      password_hash: passwordHash,
+      email_verified: true,
+      failed_login_attempts: 0,
+      lock_until: null
+    })
+
+    await admin_user.save()
+
+    const seed_doc = new AdminSeed({
+      usedAt: new Date(),
+      createdAdminId: admin_user._id
+    })
+    await seed_doc.save()
+
+    return response.status(201).json({
+      ok: true,
+      message: 'Admin account reset',
+      adminId: admin_user._id.toString()
+    })
+  } catch (error) {
+    const message = error?.message || error
+    console.error('[Auth] /seed-admin-reset error:', message)
+    return response.status(500).json({ message: 'Failed to reset admin account' })
+  }
+})
+
 module.exports = router
