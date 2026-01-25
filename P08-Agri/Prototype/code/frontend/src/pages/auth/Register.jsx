@@ -192,7 +192,6 @@ function Register() {
               >
                 <option value="farmer">{t.register.roleFarmer}</option>
                 <option value="inspector">{t.register.roleInspector}</option>
-                <option value="admin">{t.register.roleAdmin || 'Admin'}</option>
               </select>
             </div>
 

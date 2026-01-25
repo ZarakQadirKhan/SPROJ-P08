@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const { Resend } = require('resend')
 const User = require('../models/User')
+const AdminSeed = require('../models/AdminSeed')
 
 const router = express.Router()
 
@@ -26,6 +27,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '2h'
 const LOGIN_MAX_FAILED_ATTEMPTS = Number.parseInt(process.env.LOGIN_MAX_FAILED_ATTEMPTS || '5', 10)
 const LOGIN_LOCKOUT_MINUTES = Number.parseInt(process.env.LOGIN_LOCKOUT_MINUTES || '15', 10)
+const ALLOWED_ROLES = ['farmer', 'inspector']
+
+function normalize_role(role) {
+  const value = String(role || '').trim().toLowerCase()
+  if (ALLOWED_ROLES.includes(value)) {
+    return value
+  }
+  return 'farmer'
+}
 
 async function sendOtpEmail(email, otp) {
   console.log('[Auth] Generated OTP for', email, '=>', otp)
@@ -124,6 +134,7 @@ function getLockoutSeconds(lockUntil) {
 router.post('/register-otp', async function (request, response) {
   try {
     const { name, email, phone, password, role } = request.body || {}
+    const safe_role = normalize_role(role)
 
     const normalizedEmail = normalizeEmail(email)
 
@@ -153,14 +164,14 @@ router.post('/register-otp', async function (request, response) {
         name: String(name).trim(),
         email: normalizedEmail,
         phone: phone || null,
-        role: role || 'farmer',
+        role: safe_role,
         password_hash: passwordHash,
         email_verified: false
       })
     } else {
       user.name = String(name).trim()
       user.phone = phone || user.phone || null
-      user.role = role || user.role || 'farmer'
+      user.role = safe_role
       user.password_hash = passwordHash
       user.email_verified = false
     }
@@ -365,6 +376,7 @@ router.post('/login', async function (request, response) {
 router.post('/register', async function (request, response) {
   try {
     const { name, email, phone, password, role } = request.body || {}
+    const safe_role = normalize_role(role)
 
     const normalizedEmail = normalizeEmail(email)
 
@@ -392,7 +404,7 @@ router.post('/register', async function (request, response) {
       name: String(name).trim(),
       email: normalizedEmail,
       phone: phone || null,
-      role: role || 'farmer',
+      role: safe_role,
       password_hash: passwordHash,
       email_verified: true,
       failed_login_attempts: 0,
@@ -418,6 +430,82 @@ router.post('/register', async function (request, response) {
     const message = error && error.message ? error.message : error
     console.error('[Auth] /register error:', message)
     return response.status(500).json({ message: 'Registration failed' })
+  }
+})
+
+router.post('/seed-admin', async function (request, response) {
+  try {
+    const { email, password, name, code } = request.body || {}
+
+    const seed_code = String(process.env.ADMIN_SEED_CODE || '').trim()
+    if (!seed_code) {
+      return response.status(501).json({ message: 'Admin seeding not configured' })
+    }
+
+    if (String(code || '').trim() !== seed_code) {
+      return response.status(403).json({ message: 'Invalid seed code' })
+    }
+
+    const existing_admin = await User.findOne({ role: 'admin' })
+    if (existing_admin) {
+      return response.status(409).json({ message: 'Admin already exists' })
+    }
+
+    const seed_state = await AdminSeed.findOne({})
+    if (seed_state && seed_state.usedAt) {
+      return response.status(409).json({ message: 'Seed code already used' })
+    }
+
+    const normalizedEmail = normalizeEmail(email)
+    if (!validateEmail(normalizedEmail)) {
+      return response.status(400).json({ message: 'Valid email is required' })
+    }
+
+    const passwordError = validatePasswordStrength(password)
+    if (passwordError) {
+      return response.status(400).json({ message: passwordError })
+    }
+
+    const existing_email = await User.findOne({ email: normalizedEmail })
+    if (existing_email) {
+      return response.status(400).json({ message: 'An account with this email already exists' })
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10)
+
+    const admin_user = new User({
+      name: String(name || 'Admin').trim() || 'Admin',
+      email: normalizedEmail,
+      phone: null,
+      role: 'admin',
+      password_hash: passwordHash,
+      email_verified: true,
+      failed_login_attempts: 0,
+      lock_until: null
+    })
+
+    await admin_user.save()
+
+    const seed_doc =
+      seed_state ||
+      new AdminSeed({
+        usedAt: null,
+        createdAdminId: null
+      })
+
+    seed_doc.usedAt = new Date()
+    seed_doc.createdAdminId = admin_user._id
+    await seed_doc.save()
+
+    return response.status(201).json({
+      ok: true,
+      message: 'Admin account created',
+      adminId: admin_user._id.toString()
+    })
+  } catch (error) {
+    const message = error?.message || error
+    console.error('[Auth] /seed-admin error:', message)
+    return response.status(500).json({ message: 'Failed to seed admin account' })
   }
 })
 
