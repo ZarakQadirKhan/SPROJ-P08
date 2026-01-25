@@ -36,6 +36,7 @@
     "roleLabel": "I am a",
     "roleFarmer": "Farmer",
     "roleInspector": "Quality Inspector",
+    "roleAdmin": "Admin",
     "passwordLabel": "Password",
     "passwordPlaceholder": "••••••••",
     "confirmPasswordLabel": "Confirm Password",
