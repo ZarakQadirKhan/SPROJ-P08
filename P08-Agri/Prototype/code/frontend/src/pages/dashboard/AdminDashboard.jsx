@@ -174,15 +174,19 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-sm text-gray-600">Manage complaints and contact users</p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Email Users</h2>
+        <section className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
+            <p className="text-sm text-gray-600 mt-1">Send updates to all users or selected emails</p>
+          </div>
+          <div className="p-6">
           {email_status_text && (
             <div className="mb-4 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded">
               {email_status_text}
@@ -223,7 +227,7 @@ function AdminDashboard() {
                   value={recipient_list}
                   onChange={(e) => set_recipient_list(e.target.value)}
                   placeholder="user1@example.com, user2@example.com"
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   disabled={is_sending_email}
                 />
               </div>
@@ -235,7 +239,7 @@ function AdminDashboard() {
                 type="text"
                 value={email_subject}
                 onChange={(e) => set_email_subject(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 disabled={is_sending_email}
               />
             </div>
@@ -246,7 +250,7 @@ function AdminDashboard() {
                 rows={4}
                 value={email_message}
                 onChange={(e) => set_email_message(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 disabled={is_sending_email}
               />
             </div>
@@ -254,26 +258,27 @@ function AdminDashboard() {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-60"
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60"
                 disabled={is_sending_email}
               >
                 {is_sending_email ? 'Sending...' : 'Send Email'}
               </button>
             </div>
           </form>
+          </div>
         </section>
 
-        <section className="bg-white rounded-lg shadow p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <section className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Complaints</h2>
               <p className="text-sm text-gray-600">{total} total complaints</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => set_show_complaints((prev) => !prev)}
-                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800"
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600"
               >
                 {show_complaints ? 'Hide Complaints' : 'Complaints'}
               </button>
@@ -282,7 +287,7 @@ function AdminDashboard() {
                   <select
                     value={status_filter}
                     onChange={(e) => set_status_filter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">All statuses</option>
                     <option value="not addressed">Not addressed</option>
@@ -291,7 +296,7 @@ function AdminDashboard() {
                   <button
                     type="button"
                     onClick={load_complaints}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     disabled={is_loading}
                   >
                     Refresh
@@ -302,7 +307,7 @@ function AdminDashboard() {
           </div>
 
           {show_complaints && (
-            <>
+            <div className="p-6">
               {error_text && (
                 <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded">
                   {error_text}
@@ -349,7 +354,7 @@ function AdminDashboard() {
                             <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
-                                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                                 onClick={() => handle_mark_addressed(complaint._id)}
                                 disabled={complaint.status === 'addressed'}
                               >
@@ -357,7 +362,7 @@ function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300"
                                 onClick={() => handle_mark_unaddressed(complaint._id)}
                                 disabled={complaint.status === 'not addressed'}
                               >
@@ -365,7 +370,7 @@ function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                className="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                                className="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                                 onClick={() => handle_start_response(complaint._id)}
                               >
                                 Respond
@@ -386,13 +391,13 @@ function AdminDashboard() {
                               rows={4}
                               value={response_text}
                               onChange={(e) => set_response_text(e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               disabled={is_sending_response}
                             />
                             <div className="mt-3 flex justify-end gap-2">
                               <button
                                 type="button"
-                                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
                                 onClick={handle_cancel_response}
                                 disabled={is_sending_response}
                               >
@@ -400,7 +405,7 @@ function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                                className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600"
                                 onClick={() => handle_send_response(complaint)}
                                 disabled={is_sending_response}
                               >
@@ -414,7 +419,7 @@ function AdminDashboard() {
                   })}
                 </div>
               )}
-            </>
+            </div>
           )}
         </section>
       </main>
