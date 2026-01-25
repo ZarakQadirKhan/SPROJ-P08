@@ -3,7 +3,8 @@ import {
   fetch_complaints,
   update_complaint_status,
   send_admin_email,
-  respond_to_complaint
+  respond_to_complaint,
+  reset_farmer_password
 } from '../../services/adminService'
 
 function format_date(dateString) {
@@ -39,6 +40,10 @@ function AdminDashboard() {
   const [recipient_list, set_recipient_list] = useState('')
   const [email_status_text, set_email_status_text] = useState('')
   const [is_sending_email, set_is_sending_email] = useState(false)
+  const [reset_email, set_reset_email] = useState('')
+  const [reset_password, set_reset_password] = useState('')
+  const [reset_status_text, set_reset_status_text] = useState('')
+  const [is_resetting_password, set_is_resetting_password] = useState(false)
 
   const load_complaints = useCallback(async () => {
     set_is_loading(true)
@@ -171,6 +176,35 @@ function AdminDashboard() {
     }
   }
 
+  async function handle_reset_password(e) {
+    e.preventDefault()
+    if (is_resetting_password) {
+      return
+    }
+
+    const email = reset_email.trim().toLowerCase()
+    const newPassword = reset_password.trim()
+
+    if (!email) {
+      set_reset_status_text('Farmer email is required')
+      return
+    }
+
+    set_is_resetting_password(true)
+    set_reset_status_text('')
+
+    try {
+      await reset_farmer_password({ email, newPassword: newPassword || undefined })
+      set_reset_status_text('Password updated and emailed to farmer')
+      set_reset_email('')
+      set_reset_password('')
+    } catch (error) {
+      set_reset_status_text(error?.message || 'Failed to reset password')
+    } finally {
+      set_is_resetting_password(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
@@ -273,6 +307,60 @@ function AdminDashboard() {
               </button>
             </div>
           </form>
+          </div>
+        </section>
+
+        <section className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+              <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11V7m0 8h.01M5.07 18a7 7 0 1113.86 0H5.07z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Reset Farmer Password</h2>
+              <p className="text-sm text-gray-600 mt-1">Set a new password and email it to the farmer</p>
+            </div>
+          </div>
+          <div className="p-6">
+            {reset_status_text && (
+              <div className="mb-4 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded">
+                {reset_status_text}
+              </div>
+            )}
+            <form className="space-y-4" onSubmit={handle_reset_password}>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Farmer email</label>
+                <input
+                  type="email"
+                  value={reset_email}
+                  onChange={(e) => set_reset_email(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="farmer@example.com"
+                  disabled={is_resetting_password}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">New password (optional)</label>
+                <input
+                  type="text"
+                  value={reset_password}
+                  onChange={(e) => set_reset_password(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Leave blank to auto-generate"
+                  disabled={is_resetting_password}
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60"
+                  disabled={is_resetting_password}
+                >
+                  {is_resetting_password ? 'Resetting...' : 'Reset Password'}
+                </button>
+              </div>
+            </form>
           </div>
         </section>
 
