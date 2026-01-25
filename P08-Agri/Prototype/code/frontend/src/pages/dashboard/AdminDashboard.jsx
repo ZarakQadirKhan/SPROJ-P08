@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   fetch_complaints,
   update_complaint_status,
@@ -40,7 +40,7 @@ function AdminDashboard() {
   const [email_status_text, set_email_status_text] = useState('')
   const [is_sending_email, set_is_sending_email] = useState(false)
 
-  async function load_complaints() {
+  const load_complaints = useCallback(async () => {
     set_is_loading(true)
     set_error_text('')
     try {
@@ -52,13 +52,13 @@ function AdminDashboard() {
     } finally {
       set_is_loading(false)
     }
-  }
+  }, [status_filter])
 
   useEffect(() => {
     if (show_complaints) {
       load_complaints()
     }
-  }, [status_filter, show_complaints])
+  }, [load_complaints, show_complaints])
 
   async function handle_mark_addressed(id) {
     try {
