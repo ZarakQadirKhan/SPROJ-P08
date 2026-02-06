@@ -5,7 +5,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 
 function Login() {
   const navigate = useNavigate();
-  const { t, language, setLanguage, direction } = useLanguage();
+  const { t } = useLanguage();
   const [email, set_email] = useState("");
   const [password, set_password] = useState("");
   const [error_text, set_error_text] = useState("");
