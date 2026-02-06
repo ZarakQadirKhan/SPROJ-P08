@@ -7,6 +7,49 @@ import { changePassword } from '../../services/authService'
 import { send_chat_message } from '../../services/chatService'
 import { useLanguage } from '../../contexts/LanguageContext'
 
+/* Helper functions to reduce cognitive complexity */
+function buildChatIntroMessage(diagnoseResult, t) {
+  const confidence = typeof diagnoseResult.confidence === 'number' 
+    ? (diagnoseResult.confidence * 100).toFixed(1) 
+    : 'unknown'
+  
+  const confidenceText = confidence !== 'unknown' 
+    ? `${t.farmerDashboard.withConfidence} ${confidence}${t.farmerDashboard.confidencePercent} `
+    : ''
+  
+  return {
+    role: 'assistant',
+    content: `${t.farmerDashboard.analyzedWheatImage} "${diagnoseResult.diagnosis}" ${confidenceText}${t.farmerDashboard.askFollowUp}`
+  }
+}
+
+function validateHelpForm(subject, message, t) {
+  const subjectTrimmed = subject.trim()
+  const messageTrimmed = message.trim()
+  
+  if (!subjectTrimmed || !messageTrimmed) {
+    return { isValid: false, error: t.farmerDashboard.subjectAndMessageRequired }
+  }
+  
+  return { isValid: true, subject: subjectTrimmed, message: messageTrimmed }
+}
+
+function validatePasswordChange(old1, old2, newPass, t) {
+  if (!old1 || !old2 || !newPass) {
+    return { isValid: false, error: t.register.passwordRequired }
+  }
+  
+  if (old1 !== old2) {
+    return { isValid: false, error: t.farmerDashboard.passwordsDoNotMatch }
+  }
+  
+  if (newPass.length < 8) {
+    return { isValid: false, error: t.farmerDashboard.newPasswordTooShort }
+  }
+  
+  return { isValid: true }
+}
+
 function FarmerDashboard() {
   const navigate = useNavigate()
   const { t, language, setLanguage, direction } = useLanguage()
@@ -124,15 +167,9 @@ function FarmerDashboard() {
 
   useEffect(() => {
     if (diagnose_result) {
-      const confidence = typeof diagnose_result.confidence === 'number' ? (diagnose_result.confidence * 100).toFixed(1) : 'unknown'
-      const intro_message = {
-        role: 'assistant',
-        content: `${t.farmerDashboard.analyzedWheatImage} "${diagnose_result.diagnosis}" ` +
-          (confidence !== 'unknown' ? `${t.farmerDashboard.withConfidence} ${confidence}${t.farmerDashboard.confidencePercent} ` : '') +
-          t.farmerDashboard.askFollowUp
-      }
+      const introMessage = buildChatIntroMessage(diagnose_result, t)
       set_is_chat_open(true)
-      set_chat_messages([intro_message])
+      set_chat_messages([introMessage])
       set_chat_input('')
       set_chat_error_text('')
     } else {
@@ -141,25 +178,49 @@ function FarmerDashboard() {
       set_chat_input('')
       set_chat_error_text('')
     }
-  }, [diagnose_result, t.farmerDashboard.analyzedWheatImage, t.farmerDashboard.askFollowUp, t.farmerDashboard.confidencePercent, t.farmerDashboard.withConfidence])
+  }, [diagnose_result, t])
 
   function open_help_modal() {
-    set_help_subject(''); set_help_message(''); set_help_error_text(''); set_help_success_text(''); set_is_sending_help(false); set_is_help_open(true)
+    set_help_subject('')
+    set_help_message('')
+    set_help_error_text('')
+    set_help_success_text('')
+    set_is_sending_help(false)
+    set_is_help_open(true)
   }
-  function close_help_modal() { if (is_sending_help) return; set_is_help_open(false) }
-  function handle_help_subject_change(e) { set_help_subject(e.target.value); if (help_error_text) set_help_error_text(''); if (help_success_text) set_help_success_text('') }
-  function handle_help_message_change(e) { set_help_message(e.target.value); if (help_error_text) set_help_error_text(''); if (help_success_text) set_help_success_text('') }
+  function close_help_modal() {
+    if (is_sending_help) return
+    set_is_help_open(false)
+  }
+  function handle_help_subject_change(e) {
+    set_help_subject(e.target.value)
+    if (help_error_text) set_help_error_text('')
+    if (help_success_text) set_help_success_text('')
+  }
+  function handle_help_message_change(e) {
+    set_help_message(e.target.value)
+    if (help_error_text) set_help_error_text('')
+    if (help_success_text) set_help_success_text('')
+  }
 
   async function handle_help_submit(e) {
     e.preventDefault()
     if (is_sending_help) return
-    const subject_trimmed = help_subject.trim()
-    const message_trimmed = help_message.trim()
-    if (!subject_trimmed || !message_trimmed) { set_help_error_text(t.farmerDashboard.subjectAndMessageRequired); return }
-    set_is_sending_help(true); set_help_error_text(''); set_help_success_text('')
+    
+    const validation = validateHelpForm(help_subject, help_message, t)
+    if (!validation.isValid) {
+      set_help_error_text(validation.error)
+      return
+    }
+    
+    set_is_sending_help(true)
+    set_help_error_text('')
+    set_help_success_text('')
     try {
-      await send_complaint({ subject: subject_trimmed, message: message_trimmed })
-      set_help_success_text(t.farmerDashboard.helpSubmitSuccess); set_help_subject(''); set_help_message('')
+      await send_complaint({ subject: validation.subject, message: validation.message })
+      set_help_success_text(t.farmerDashboard.helpSubmitSuccess)
+      set_help_subject('')
+      set_help_message('')
     } catch (error) {
       set_help_error_text(error && error.message ? error.message : t.farmerDashboard.helpSubmitFailed)
     } finally { set_is_sending_help(false) }
@@ -168,28 +229,59 @@ function FarmerDashboard() {
   function toggle_profile_menu() { set_is_profile_menu_open((prev) => !prev) }
 
   function open_change_password_modal() {
-    set_is_profile_menu_open(false); set_old_password_first(''); set_old_password_second(''); set_new_password('')
-    set_cp_error_text(''); set_cp_success_text(''); set_is_changing_password(false); set_is_change_password_open(true)
+    set_is_profile_menu_open(false)
+    set_old_password_first('')
+    set_old_password_second('')
+    set_new_password('')
+    set_cp_error_text('')
+    set_cp_success_text('')
+    set_is_changing_password(false)
+    set_is_change_password_open(true)
   }
-  function close_change_password_modal() { if (is_changing_password) return; set_is_change_password_open(false) }
-  function handle_old_password_first_change(e) { set_old_password_first(e.target.value); if (cp_error_text) set_cp_error_text(''); if (cp_success_text) set_cp_success_text('') }
-  function handle_old_password_second_change(e) { set_old_password_second(e.target.value); if (cp_error_text) set_cp_error_text(''); if (cp_success_text) set_cp_success_text('') }
-  function handle_new_password_change(e) { set_new_password(e.target.value); if (cp_error_text) set_cp_error_text(''); if (cp_success_text) set_cp_success_text('') }
+  function close_change_password_modal() {
+    if (is_changing_password) return
+    set_is_change_password_open(false)
+  }
+  function handle_old_password_first_change(e) {
+    set_old_password_first(e.target.value)
+    if (cp_error_text) set_cp_error_text('')
+    if (cp_success_text) set_cp_success_text('')
+  }
+  function handle_old_password_second_change(e) {
+    set_old_password_second(e.target.value)
+    if (cp_error_text) set_cp_error_text('')
+    if (cp_success_text) set_cp_success_text('')
+  }
+  function handle_new_password_change(e) {
+    set_new_password(e.target.value)
+    if (cp_error_text) set_cp_error_text('')
+    if (cp_success_text) set_cp_success_text('')
+  }
 
   async function handle_change_password_submit(e) {
     e.preventDefault()
     if (is_changing_password) return
-    const old1 = old_password_first, old2 = old_password_second, new_pass = new_password
-    if (!old1 || !old2 || !new_pass) { set_cp_error_text(t.register.passwordRequired); return }
-    if (old1 !== old2) { set_cp_error_text(t.farmerDashboard.passwordsDoNotMatch); return }
-    if (new_pass.length < 8) { set_cp_error_text(t.farmerDashboard.newPasswordTooShort); return }
-    set_is_changing_password(true); set_cp_error_text(''); set_cp_success_text('')
+    
+    const validation = validatePasswordChange(old_password_first, old_password_second, new_password, t)
+    if (!validation.isValid) {
+      set_cp_error_text(validation.error)
+      return
+    }
+    
+    set_is_changing_password(true)
+    set_cp_error_text('')
+    set_cp_success_text('')
     try {
-      await changePassword({ oldPassword: old1, newPassword: new_pass })
-      set_cp_success_text(t.farmerDashboard.passwordChangeSuccess); set_old_password_first(''); set_old_password_second(''); set_new_password('')
+      await changePassword({ oldPassword: old_password_first, newPassword: new_password })
+      set_cp_success_text(t.farmerDashboard.passwordChangeSuccess)
+      set_old_password_first('')
+      set_old_password_second('')
+      set_new_password('')
     } catch (error) {
       set_cp_error_text(error && error.message ? error.message : t.farmerDashboard.passwordChangeFailed)
-    } finally { set_is_changing_password(false) }
+    } finally {
+      set_is_changing_password(false)
+    }
   }
 
   function handle_chat_input_change(e) { set_chat_input(e.target.value); if (chat_error_text) set_chat_error_text('') }
@@ -357,7 +449,7 @@ function FarmerDashboard() {
                         <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-[#8A9A82] mb-2">{t.farmerDashboard.recommendations}</p>
                         <div className="space-y-1.5">
                           {diagnose_result.recommendations.map((r, i) => (
-                            <p key={i} className="text-[13px] text-[#3D5A3C] leading-relaxed">{r}</p>
+                            <p key={`rec-${i}-${r.substring(0, 10)}`} className="text-[13px] text-[#3D5A3C] leading-relaxed">{r}</p>
                           ))}
                         </div>
                       </div>
@@ -368,7 +460,7 @@ function FarmerDashboard() {
                         <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-[#8A9A82] mb-2">{t.farmerDashboard.alternatives}</p>
                         <div className="flex gap-2 flex-wrap">
                           {diagnose_result.alternatives.map((a, i) => (
-                            <span key={i} className="px-3 py-1.5 bg-[#EDF2E8] rounded-lg text-[12px] font-medium text-[#3D5A3C] capitalize">
+                            <span key={`alt-${a.label}-${i}`} className="px-3 py-1.5 bg-[#EDF2E8] rounded-lg text-[12px] font-medium text-[#3D5A3C] capitalize">
                               {a.label} {(a.confidence * 100).toFixed(0)}%
                             </span>
                           ))}
@@ -386,7 +478,7 @@ function FarmerDashboard() {
                     <p className="text-[12px] font-semibold text-[#3D5A3C] mb-3">{t.farmerDashboard.aiAssistant}</p>
                     <div className="h-44 bg-white border border-[#E0E7DD] rounded-xl p-3 overflow-y-auto mb-3 space-y-2">
                       {chat_messages.map((msg, index) => (
-                        <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div key={`msg-${index}-${msg.content.substring(0, 20)}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[80%] rounded-xl px-3.5 py-2 text-[13px] leading-relaxed ${
                             msg.role === 'user' ? 'bg-[#2D6A4F] text-white' : 'bg-white border border-[#D5DDD0] text-[#1B3A2D]'
                           }`}>
@@ -410,10 +502,11 @@ function FarmerDashboard() {
               </div>
             ) : (
               /* ── Upload Dropzone ── */
-              <div
+              <button
+                type="button"
                 onClick={handle_click_upload_button}
-                className="p-10 flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-all duration-200 min-h-[300px] group">
-              >
+                onKeyDown={(e) => e.key === 'Enter' && handle_click_upload_button()}
+                className="w-full p-10 flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-all duration-200 min-h-[300px] group border-0 bg-transparent">
                 <div className="w-16 h-16 rounded-2xl bg-[#EDF2E8] flex items-center justify-center mb-4 group-hover:bg-[#D5DDD0] group-hover:scale-105 transition-all duration-200">
                   <svg className="w-7 h-7 text-[#52B788]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -421,7 +514,7 @@ function FarmerDashboard() {
                 </div>
                 <p className="text-[16px] font-semibold text-[#1B3A2D]">{t.farmerDashboard.uploadImage}</p>
                 <p className="text-[13px] text-[#8A9A82] mt-1">Drop an image or click to browse</p>
-              </div>
+              </button>
             )}
           </div>
 
@@ -586,7 +679,7 @@ function FarmerDashboard() {
             <div className="grid grid-cols-6 gap-2 mb-5">
               {scan_history.map((scan, idx) => (
                 <div
-                  key={idx}
+                  key={`scan-${idx}-${scan.status}`}
                   className="aspect-square rounded-lg"
                   style={{
                     backgroundColor: scan.status === 'healthy' ? '#DCFCE7' : '#FEE2E2',
