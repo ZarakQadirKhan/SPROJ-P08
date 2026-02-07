@@ -89,7 +89,6 @@ function FarmerDashboard() {
   const [is_sending_chat, set_is_sending_chat] = useState(false)
   const [chat_error_text, set_chat_error_text] = useState('')
 
-  /* ─── ALL HANDLERS (unchanged) ─── */
 
   function handle_logout() {
     localStorage.removeItem('token')

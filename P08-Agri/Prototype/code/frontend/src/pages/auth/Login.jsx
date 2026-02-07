@@ -5,7 +5,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 
 function Login() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language, setLanguage, direction } = useLanguage();
   const [email, set_email] = useState("");
   const [password, set_password] = useState("");
   const [error_text, set_error_text] = useState("");
@@ -48,12 +48,21 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFDF7] flex">
+    <div className="min-h-screen bg-[#FAFDF7] flex relative">
+      <div className="absolute top-4 left-4 z-10">
+        <button
+          onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+          className="px-2.5 py-1 text-[12px] bg-[#EDF2E8] text-[#5A6E52] rounded-md hover:bg-[#D5DDD0] transition-colors"
+        >
+          {language === 'en' ? '\u0627\u0631\u062f\u0648' : 'English'}
+        </button>
+      </div>
+
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6">
+        <div dir={direction} className="max-w-md w-full space-y-6">
           <div>
-            <h1 className="text-[28px] font-semibold text-[#1B1B1B]">Welcome back</h1>
-            <p className="mt-2 text-[15px] text-[#6B7280]">Sign in to your AgriQual account</p>
+            <h1 className="text-[28px] font-semibold text-[#1B1B1B]">{t.login.title}</h1>
+            <p className="mt-2 text-[15px] text-[#6B7280]">{t.login.subtitle}</p>
           </div>
 
           {error_text && (
@@ -65,7 +74,7 @@ function Login() {
           <form className="space-y-5" onSubmit={handle_submit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[#1B1B1B] mb-1.5">
-                Email address
+                {t.login.emailLabel}
               </label>
               <input
                 id="email"
@@ -74,14 +83,14 @@ function Login() {
                 onChange={(e) => set_email(e.target.value)}
                 disabled={is_loading}
                 className="w-full px-3 py-2.5 border border-[#D1D5DB] rounded-lg text-[#1B1B1B] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent transition-all duration-150 disabled:bg-gray-50"
-                placeholder="you@example.com"
+                placeholder={t.login.emailPlaceholder}
                 required
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-[#1B1B1B] mb-1.5">
-                Password
+                {t.login.passwordLabel}
               </label>
               <div className="relative">
                 <input
@@ -91,7 +100,7 @@ function Login() {
                   onChange={(e) => set_password(e.target.value)}
                   disabled={is_loading}
                   className="w-full px-3 py-2.5 pr-10 border border-[#D1D5DB] rounded-lg text-[#1B1B1B] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent transition-all duration-150 disabled:bg-gray-50"
-                  placeholder="Enter your password"
+                  placeholder={t.login.passwordPlaceholder}
                   required
                 />
                 <button
@@ -115,7 +124,7 @@ function Login() {
 
             <div className="flex items-center justify-between">
               <Link to="/forgot-password" className="text-sm text-[#2D6A4F] hover:text-[#52B788] transition-colors">
-                Forgot password?
+                {t.login.forgotPassword}
               </Link>
             </div>
 
@@ -124,7 +133,7 @@ function Login() {
               disabled={is_loading}
               className="w-full bg-[#F4A261] text-white rounded-lg px-5 py-2.5 font-medium transition-all duration-150 hover:bg-[#e89451] active:scale-[0.98] disabled:opacity-50 shadow-sm"
             >
-              {is_loading ? 'Signing in...' : 'Sign in'}
+              {is_loading ? t.login.loggingIn : t.login.loginButton}
             </button>
 
             <div className="relative my-6">
@@ -132,7 +141,7 @@ function Login() {
                 <div className="w-full border-t border-[#E0E7DD]"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-[#FAFDF7] text-[#6B7280]">or continue with</span>
+                <span className="px-3 bg-[#FAFDF7] text-[#6B7280]">{t.login.orDivider}</span>
               </div>
             </div>
 
@@ -147,14 +156,14 @@ function Login() {
                 <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              Sign in with Google
+              {t.login.continueWithGoogle}
             </button>
           </form>
 
           <p className="text-center text-sm text-[#6B7280]">
-            Don't have an account?{' '}
+            {t.login.noAccount}{' '}
             <Link to="/register" className="text-[#2D6A4F] hover:text-[#52B788] font-medium transition-colors">
-              Sign up
+              {t.login.signUp}
             </Link>
           </p>
         </div>
@@ -164,28 +173,28 @@ function Login() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#2D6A4F] to-[#1a4d35] opacity-90"></div>
         <div className="relative h-full flex items-center justify-center p-12">
           <div className="max-w-md text-white space-y-6">
-            <h2 className="text-[28px] font-semibold leading-tight">Monitor crop health with confidence</h2>
+            <h2 className="text-[28px] font-semibold leading-tight">{t.login.heroTitle}</h2>
             <p className="text-[#B8E0D2] leading-relaxed text-[15px]">
-              AgriQual helps wheat farmers in Pakistan detect diseases early, get actionable recommendations, and improve yields through AI-powered analysis.
+              {t.login.heroDescription}
             </p>
             <div className="space-y-3 pt-4">
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-[#52B788] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm">Instant disease detection from field images</span>
+                <span className="text-sm">{t.login.heroFeature1}</span>
               </div>
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-[#52B788] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm">Weather-based farming recommendations</span>
+                <span className="text-sm">{t.login.heroFeature2}</span>
               </div>
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-[#52B788] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm">Track diagnosis history and field reports</span>
+                <span className="text-sm">{t.login.heroFeature3}</span>
               </div>
             </div>
           </div>
