@@ -41,7 +41,6 @@ function AdminDashboard() {
 
   const [view, set_view] = useState(VIEW_HOME)
   const [user_dropdown_open, set_user_dropdown_open] = useState(false)
-  const [filter_dropdown_open, set_filter_dropdown_open] = useState(false)
 
   const [complaints, set_complaints] = useState([])
   const [total, set_total] = useState(0)
@@ -464,69 +463,15 @@ function AdminDashboard() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => set_filter_dropdown_open((prev) => !prev)}
-                    className="inline-flex items-center gap-1 p-2 pl-2.5 pr-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
-                    title="Filter by status"
-                  >
-                    <svg className="h-5 w-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    <svg className="h-4 w-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {filter_dropdown_open && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => set_filter_dropdown_open(false)}
-                      />
-                      <div
-                        className="absolute left-0 top-full mt-1 z-20 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            set_status_filter('')
-                            set_filter_dropdown_open(false)
-                          }}
-                          className={`block w-full px-4 py-2 text-left text-sm focus:outline-none focus:bg-green-100 hover:bg-green-100 ${
-                            status_filter === '' ? 'bg-green-100 text-green-800 font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          All statuses
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            set_status_filter('not addressed')
-                            set_filter_dropdown_open(false)
-                          }}
-                          className={`block w-full px-4 py-2 text-left text-sm focus:outline-none focus:bg-green-100 hover:bg-green-100 ${
-                            status_filter === 'not addressed' ? 'bg-green-100 text-green-800 font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          Not addressed
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            set_status_filter('addressed')
-                            set_filter_dropdown_open(false)
-                          }}
-                          className={`block w-full px-4 py-2 text-left text-sm focus:outline-none focus:bg-green-100 hover:bg-green-100 ${
-                            status_filter === 'addressed' ? 'bg-green-100 text-green-800 font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          Addressed
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <select
+                  value={status_filter}
+                  onChange={(e) => set_status_filter(e.target.value)}
+                  className="p-2 pl-2.5 pr-8 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer text-sm min-w-[140px]"
+                >
+                  <option value="">All statuses</option>
+                  <option value="not addressed">Not addressed</option>
+                  <option value="addressed">Addressed</option>
+                </select>
                 <button
                   type="button"
                   onClick={load_complaints}
