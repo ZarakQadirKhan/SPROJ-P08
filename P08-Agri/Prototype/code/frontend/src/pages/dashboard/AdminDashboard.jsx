@@ -297,7 +297,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_EMAIL)}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-green-200 transition-all flex flex-col items-start"
+                className="bg-white rounded-xl shadow-sm border-2 border-green-500 p-6 text-left hover:shadow-md hover:border-green-600 transition-all flex flex-col items-start"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,7 +306,7 @@ function AdminDashboard() {
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
                 <p className="text-sm text-gray-500 mt-1">Send updates to all users or selected emails</p>
-                <span className="mt-4 ml-auto text-gray-400">
+                <span className="mt-4 ml-auto text-green-600">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -494,6 +494,7 @@ function AdminDashboard() {
                         <button
                           type="button"
                           role="option"
+                          aria-selected={status_filter === ''}
                           onClick={() => {
                             set_status_filter('')
                             set_filter_dropdown_open(false)
@@ -507,6 +508,7 @@ function AdminDashboard() {
                         <button
                           type="button"
                           role="option"
+                          aria-selected={status_filter === 'not addressed'}
                           onClick={() => {
                             set_status_filter('not addressed')
                             set_filter_dropdown_open(false)
@@ -520,6 +522,7 @@ function AdminDashboard() {
                         <button
                           type="button"
                           role="option"
+                          aria-selected={status_filter === 'addressed'}
                           onClick={() => {
                             set_status_filter('addressed')
                             set_filter_dropdown_open(false)
