@@ -98,15 +98,6 @@ function AdminDashboard() {
     }
   }
 
-  async function handle_mark_unaddressed(id) {
-    try {
-      await update_complaint_status(id, 'not addressed')
-      await load_complaints()
-    } catch (error) {
-      set_error_text(error?.message || 'Failed to update complaint')
-    }
-  }
-
   async function handle_send_email(e) {
     e.preventDefault()
     if (is_sending_email) return
