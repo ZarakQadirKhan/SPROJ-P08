@@ -231,9 +231,11 @@ function AdminDashboard() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-emerald-800 flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <img
+              src="/agriqual-logo.png"
+              alt="AgriQual"
+              className="h-10 w-10 object-contain flex-shrink-0"
+            />
             <span className="text-lg font-bold text-gray-900 tracking-tight">AgriQual ADMIN</span>
           </div>
           <div className="relative">
@@ -450,13 +452,6 @@ function AdminDashboard() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => set_view(VIEW_HOME)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 font-medium"
-                >
-                  Hide Complaints
-                </button>
                 <select
                   value={status_filter}
                   onChange={(e) => set_status_filter(e.target.value)}
@@ -469,10 +464,14 @@ function AdminDashboard() {
                 <button
                   type="button"
                   onClick={load_complaints}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-60 font-medium"
+                  className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-60"
                   disabled={is_loading}
+                  title="Refresh"
+                  aria-label="Refresh"
                 >
-                  Refresh
+                  <svg className={`h-5 w-5 ${is_loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
                 </button>
               </div>
             </div>
