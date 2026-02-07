@@ -468,9 +468,9 @@ function AdminDashboard() {
                   onChange={(e) => set_status_filter(e.target.value)}
                   className="p-2 pl-2.5 pr-8 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer text-sm min-w-[140px]"
                 >
-                  <option value="">All statuses</option>
-                  <option value="not addressed">Not addressed</option>
-                  <option value="addressed">Addressed</option>
+                  <option value="" aria-selected={status_filter === '' ? 'true' : 'false'}>All statuses</option>
+                  <option value="not addressed" aria-selected={status_filter === 'not addressed' ? 'true' : 'false'}>Not addressed</option>
+                  <option value="addressed" aria-selected={status_filter === 'addressed' ? 'true' : 'false'}>Addressed</option>
                 </select>
                 <button
                   type="button"
