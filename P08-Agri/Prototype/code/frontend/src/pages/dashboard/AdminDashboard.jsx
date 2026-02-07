@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   fetch_complaints,
   update_complaint_status,
@@ -7,10 +8,13 @@ import {
   reset_farmer_password
 } from '../../services/adminService'
 
+const VIEW_HOME = 'home'
+const VIEW_EMAIL = 'email'
+const VIEW_COMPLAINTS = 'complaints'
+const VIEW_RESET = 'reset'
+
 function format_date(dateString) {
-  if (!dateString) {
-    return 'Unknown'
-  }
+  if (!dateString) return 'Unknown'
   const date = new Date(dateString)
   return date.toLocaleString('en-US', {
     month: 'short',
@@ -23,12 +27,26 @@ function format_date(dateString) {
 }
 
 function AdminDashboard() {
+  const navigate = useNavigate()
+  const userJson = localStorage.getItem('user') || '{}'
+  const user = (() => {
+    try {
+      return JSON.parse(userJson)
+    } catch {
+      return {}
+    }
+  })()
+  const userName = user?.name || 'Admin'
+  const userInitial = (userName.charAt(0) || 'A').toUpperCase()
+
+  const [view, set_view] = useState(VIEW_HOME)
+  const [user_dropdown_open, set_user_dropdown_open] = useState(false)
+
   const [complaints, set_complaints] = useState([])
   const [total, set_total] = useState(0)
   const [is_loading, set_is_loading] = useState(true)
   const [error_text, set_error_text] = useState('')
   const [status_filter, set_status_filter] = useState('')
-  const [show_complaints, set_show_complaints] = useState(false)
   const [active_response_id, set_active_response_id] = useState(null)
   const [response_text, set_response_text] = useState('')
   const [response_status_text, set_response_status_text] = useState('')
@@ -60,10 +78,16 @@ function AdminDashboard() {
   }, [status_filter])
 
   useEffect(() => {
-    if (show_complaints) {
+    if (view === VIEW_COMPLAINTS) {
       load_complaints()
     }
-  }, [load_complaints, show_complaints])
+  }, [view, load_complaints])
+
+  function handle_logout() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    navigate('/login')
+  }
 
   async function handle_mark_addressed(id) {
     try {
@@ -85,17 +109,13 @@ function AdminDashboard() {
 
   async function handle_send_email(e) {
     e.preventDefault()
-    if (is_sending_email) {
-      return
-    }
-
+    if (is_sending_email) return
     const subject = email_subject.trim()
     const message = email_message.trim()
     if (!subject || !message) {
       set_email_status_text('Subject and message are required')
       return
     }
-
     let recipients = []
     if (email_mode === 'specific') {
       recipients = recipient_list
@@ -107,10 +127,8 @@ function AdminDashboard() {
         return
       }
     }
-
     set_is_sending_email(true)
     set_email_status_text('')
-
     try {
       const result = await send_admin_email({
         subject,
@@ -133,36 +151,29 @@ function AdminDashboard() {
     }
   }
 
-  async function handle_start_response(complaint_id) {
+  function handle_start_response(complaint_id) {
     set_active_response_id(complaint_id)
     set_response_text('')
     set_response_status_text('')
   }
 
   function handle_cancel_response() {
-    if (is_sending_response) {
-      return
-    }
+    if (is_sending_response) return
     set_active_response_id(null)
     set_response_text('')
     set_response_status_text('')
   }
 
   async function handle_send_response(complaint) {
-    if (is_sending_response) {
-      return
-    }
-
+    if (is_sending_response) return
     const trimmed = response_text.trim()
     if (!trimmed) {
       set_response_status_text('Response message is required')
       return
     }
-
     set_is_sending_response(true)
     set_response_status_text('')
     set_error_text('')
-
     try {
       await respond_to_complaint(complaint._id, trimmed)
       set_response_status_text('Response sent successfully')
@@ -178,21 +189,15 @@ function AdminDashboard() {
 
   async function handle_reset_password(e) {
     e.preventDefault()
-    if (is_resetting_password) {
-      return
-    }
-
+    if (is_resetting_password) return
     const email = reset_email.trim().toLowerCase()
     const newPassword = reset_password.trim()
-
     if (!email) {
       set_reset_status_text('Farmer email is required')
       return
     }
-
     set_is_resetting_password(true)
     set_reset_status_text('')
-
     try {
       await reset_farmer_password({ email, newPassword: newPassword || undefined })
       set_reset_status_text('Password updated and emailed to farmer')
@@ -205,219 +210,284 @@ function AdminDashboard() {
     }
   }
 
+  function BackButton({ onClick }) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+        aria-label="Back"
+      >
+        <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col gap-1">
-          <p className="text-xs font-semibold tracking-wide text-green-700 uppercase">AgriQual Admin</p>
-          <h1 className="text-2xl font-bold text-green-700">Admin Dashboard</h1>
-          <p className="text-sm text-gray-600">Manage complaints and contact users</p>
+    <div className="min-h-screen bg-slate-100">
+      {/* Header: AgriQual ADMIN + User */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-emerald-800 flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-lg">A</span>
+            </div>
+            <span className="text-lg font-bold text-gray-900 tracking-tight">AgriQual ADMIN</span>
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => set_user_dropdown_open((prev) => !prev)}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-green-700 font-semibold text-sm">{userInitial}</span>
+              </div>
+              <span className="text-sm font-medium text-gray-700 hidden sm:inline">{userName}</span>
+              <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {user_dropdown_open && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  aria-hidden="true"
+                  onClick={() => set_user_dropdown_open(false)}
+                />
+                <div className="absolute right-0 mt-1 w-48 py-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      set_user_dropdown_open(false)
+                      handle_logout()
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <section className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m0 0l4-4m-4 4l4 4" />
-              </svg>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ---------- HOME: 3 cards ---------- */}
+        {view === VIEW_HOME && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-emerald-800">Admin Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-1">Manage complaints and contact users</p>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
-              <p className="text-sm text-gray-600 mt-1">Send updates to all users or selected emails</p>
-            </div>
-          </div>
-          <div className="p-6">
-          {email_status_text && (
-            <div className="mb-4 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded">
-              {email_status_text}
-            </div>
-          )}
-          <form className="space-y-4" onSubmit={handle_send_email}>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Send to</label>
-              <div className="mt-2 flex gap-4 text-sm text-gray-700">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="email_mode"
-                    value="all"
-                    checked={email_mode === 'all'}
-                    onChange={() => set_email_mode('all')}
-                  />
-                  All users
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="email_mode"
-                    value="specific"
-                    checked={email_mode === 'specific'}
-                    onChange={() => set_email_mode('specific')}
-                  />
-                  Specific users
-                </label>
-              </div>
-            </div>
-
-            {email_mode === 'specific' && (
-              <div>
-                <label className="text-sm font-medium text-gray-700">Recipient emails</label>
-                  <input
-                  type="text"
-                  value={recipient_list}
-                  onChange={(e) => set_recipient_list(e.target.value)}
-                  placeholder="user1@example.com, user2@example.com"
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  disabled={is_sending_email}
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="text-sm font-medium text-gray-700">Subject</label>
-              <input
-                type="text"
-                value={email_subject}
-                onChange={(e) => set_email_subject(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                disabled={is_sending_email}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700">Message</label>
-              <textarea
-                rows={4}
-                value={email_message}
-                onChange={(e) => set_email_message(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                disabled={is_sending_email}
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60"
-                disabled={is_sending_email}
-              >
-                {is_sending_email ? 'Sending...' : 'Send Email'}
-              </button>
-            </div>
-          </form>
-          </div>
-        </section>
-
-        <section className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11V7m0 8h.01M5.07 18a7 7 0 1113.86 0H5.07z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Reset Farmer Password</h2>
-              <p className="text-sm text-gray-600 mt-1">Set a new password and email it to the farmer</p>
-            </div>
-          </div>
-          <div className="p-6">
-            {reset_status_text && (
-              <div className="mb-4 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded">
-                {reset_status_text}
-              </div>
-            )}
-            <form className="space-y-4" onSubmit={handle_reset_password}>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Farmer email</label>
-                <input
-                  type="email"
-                  value={reset_email}
-                  onChange={(e) => set_reset_email(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="farmer@example.com"
-                  disabled={is_resetting_password}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">New password (optional)</label>
-                <input
-                  type="text"
-                  value={reset_password}
-                  onChange={(e) => set_reset_password(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Leave blank to auto-generate"
-                  disabled={is_resetting_password}
-                />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60"
-                  disabled={is_resetting_password}
-                >
-                  {is_resetting_password ? 'Resetting...' : 'Reset Password'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <section className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Complaints</h2>
-              <p className="text-sm text-gray-600">{total} total complaints</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Email Users card */}
               <button
                 type="button"
-                onClick={() => set_show_complaints((prev) => !prev)}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600"
+                onClick={() => set_view(VIEW_EMAIL)}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-green-200 transition-all flex flex-col items-start"
               >
-                {show_complaints ? 'Hide Complaints' : 'Complaints'}
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                  <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
+                <p className="text-sm text-gray-500 mt-1">Send updates to all users or selected emails</p>
+                <span className="mt-4 ml-auto text-gray-400">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
               </button>
-              {show_complaints && (
-                <>
-                  <select
-                    value={status_filter}
-                    onChange={(e) => set_status_filter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="">All statuses</option>
-                    <option value="not addressed">Not addressed</option>
-                    <option value="addressed">Addressed</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={load_complaints}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                    disabled={is_loading}
-                  >
-                    Refresh
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
 
-          {show_complaints && (
+              {/* Complaints card */}
+              <button
+                type="button"
+                onClick={() => set_view(VIEW_COMPLAINTS)}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-orange-200 transition-all flex flex-col items-start"
+              >
+                <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center mb-4">
+                  <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Complaints</h2>
+                <p className="text-sm text-gray-500 mt-1">View, filter, and respond to complaints</p>
+                <span className="mt-4 ml-auto text-gray-400">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </button>
+
+              {/* Reset Password card */}
+              <button
+                type="button"
+                onClick={() => set_view(VIEW_RESET)}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-green-200 transition-all flex flex-col items-start"
+              >
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                  <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Reset Password</h2>
+                <p className="text-sm text-gray-500 mt-1">Reset farmer password and email it</p>
+                <span className="mt-4 ml-auto text-gray-400">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ---------- EMAIL USERS screen ---------- */}
+        {view === VIEW_EMAIL && (
+          <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+              <BackButton onClick={() => set_view(VIEW_HOME)} />
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Email Users</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Send updates to all users or selected emails</p>
+              </div>
+            </div>
+            <div className="p-6">
+              {email_status_text && (
+                <div className="mb-4 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
+                  {email_status_text}
+                </div>
+              )}
+              <form className="space-y-4" onSubmit={handle_send_email}>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Send to</label>
+                  <div className="mt-2 flex gap-6 text-sm text-gray-700">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="email_mode"
+                        value="all"
+                        checked={email_mode === 'all'}
+                        onChange={() => set_email_mode('all')}
+                        className="text-green-600 focus:ring-green-500"
+                      />
+                      All users
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="email_mode"
+                        value="specific"
+                        checked={email_mode === 'specific'}
+                        onChange={() => set_email_mode('specific')}
+                        className="text-green-600 focus:ring-green-500"
+                      />
+                      Specific users
+                    </label>
+                  </div>
+                </div>
+                {email_mode === 'specific' && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Recipient emails</label>
+                    <input
+                      type="text"
+                      value={recipient_list}
+                      onChange={(e) => set_recipient_list(e.target.value)}
+                      placeholder="user1@example.com, user2@example.com"
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      disabled={is_sending_email}
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Subject</label>
+                  <input
+                    type="text"
+                    value={email_subject}
+                    onChange={(e) => set_email_subject(e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    disabled={is_sending_email}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Message</label>
+                  <textarea
+                    rows={4}
+                    value={email_message}
+                    onChange={(e) => set_email_message(e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-y"
+                    disabled={is_sending_email}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60 font-medium"
+                    disabled={is_sending_email}
+                  >
+                    {is_sending_email ? 'Sending...' : 'Send Email'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        )}
+
+        {/* ---------- COMPLAINTS screen ---------- */}
+        {view === VIEW_COMPLAINTS && (
+          <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <BackButton onClick={() => set_view(VIEW_HOME)} />
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Complaints</h2>
+                  <p className="text-sm text-gray-500">{total} total complaints</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => set_view(VIEW_HOME)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 font-medium"
+                >
+                  Hide Complaints
+                </button>
+                <select
+                  value={status_filter}
+                  onChange={(e) => set_status_filter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">All statuses</option>
+                  <option value="not addressed">Not addressed</option>
+                  <option value="addressed">Addressed</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={load_complaints}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-60 font-medium"
+                  disabled={is_loading}
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
             <div className="p-6">
               {error_text && (
-                <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded">
+                <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
                   {error_text}
                 </div>
               )}
-
               {is_loading && (
-                <div className="text-sm text-gray-500">Loading complaints...</div>
+                <div className="text-sm text-gray-500 py-4">Loading complaints...</div>
               )}
-
               {!is_loading && complaints.length === 0 && (
-                <div className="text-sm text-gray-500">No complaints found.</div>
+                <div className="text-sm text-gray-500 py-4">No complaints found.</div>
               )}
-
               {!is_loading && complaints.length > 0 && (
                 <div className="space-y-4">
                   {complaints.map((complaint) => {
@@ -427,19 +497,19 @@ function AdminDashboard() {
                       <div
                         key={complaint._id}
                         className={`border rounded-lg p-4 ${
-                          is_unanswered ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                          is_unanswered ? 'border-red-200 bg-red-50/50' : 'border-gray-200 bg-white'
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm text-gray-500">{format_date(complaint.createdAt)}</p>
-                            <h3 className="text-base font-semibold text-gray-900">{complaint.subject}</h3>
+                            <h3 className="text-base font-semibold text-gray-900 mt-1">{complaint.subject}</h3>
                             <p className="text-sm text-gray-700 mt-2 whitespace-pre-line">{complaint.message}</p>
                             <p className="text-xs text-gray-500 mt-2">From: {complaint.userEmail}</p>
                           </div>
-                          <div className="flex flex-col gap-2 items-start sm:items-end">
+                          <div className="flex flex-col gap-2 items-start sm:items-end flex-shrink-0">
                             <span
-                              className={`px-2 py-1 text-xs rounded ${
+                              className={`px-2 py-1 text-xs font-medium rounded ${
                                 complaint.status === 'addressed'
                                   ? 'bg-green-100 text-green-700'
                                   : 'bg-red-100 text-red-700'
@@ -450,7 +520,7 @@ function AdminDashboard() {
                             <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
-                                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium"
                                 onClick={() => handle_mark_addressed(complaint._id)}
                                 disabled={complaint.status === 'addressed'}
                               >
@@ -458,7 +528,7 @@ function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                className="px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 font-medium"
                                 onClick={() => handle_mark_unaddressed(complaint._id)}
                                 disabled={complaint.status === 'not addressed'}
                               >
@@ -466,7 +536,7 @@ function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                className="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                                className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium"
                                 onClick={() => handle_start_response(complaint._id)}
                               >
                                 Respond
@@ -474,11 +544,10 @@ function AdminDashboard() {
                             </div>
                           </div>
                         </div>
-
                         {show_response_box && (
-                          <div className="mt-4 border-t border-red-200 pt-4">
+                          <div className="mt-4 border-t border-gray-200 pt-4">
                             {response_status_text && (
-                              <div className="mb-3 text-sm text-gray-700 bg-white border border-gray-200 px-3 py-2 rounded">
+                              <div className="mb-3 text-sm text-gray-700 bg-white border border-gray-200 px-3 py-2 rounded-lg">
                                 {response_status_text}
                               </div>
                             )}
@@ -487,13 +556,13 @@ function AdminDashboard() {
                               rows={4}
                               value={response_text}
                               onChange={(e) => set_response_text(e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               disabled={is_sending_response}
                             />
                             <div className="mt-3 flex justify-end gap-2">
                               <button
                                 type="button"
-                                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 font-medium"
                                 onClick={handle_cancel_response}
                                 disabled={is_sending_response}
                               >
@@ -501,7 +570,7 @@ function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600"
+                                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 font-medium"
                                 onClick={() => handle_send_response(complaint)}
                                 disabled={is_sending_response}
                               >
@@ -516,8 +585,66 @@ function AdminDashboard() {
                 </div>
               )}
             </div>
-          )}
-        </section>
+          </section>
+        )}
+
+        {/* ---------- RESET PASSWORD screen ---------- */}
+        {view === VIEW_RESET && (
+          <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+              <BackButton onClick={() => set_view(VIEW_HOME)} />
+              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Reset Farmer Password</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Set a new password and email it to the farmer</p>
+              </div>
+            </div>
+            <div className="p-6">
+              {reset_status_text && (
+                <div className="mb-4 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
+                  {reset_status_text}
+                </div>
+              )}
+              <form className="space-y-4" onSubmit={handle_reset_password}>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Farmer email</label>
+                  <input
+                    type="email"
+                    value={reset_email}
+                    onChange={(e) => set_reset_email(e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="farmer@example.com"
+                    disabled={is_resetting_password}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">New password (optional)</label>
+                  <input
+                    type="text"
+                    value={reset_password}
+                    onChange={(e) => set_reset_password(e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Leave blank to auto-generate"
+                    disabled={is_resetting_password}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60 font-medium"
+                    disabled={is_resetting_password}
+                  >
+                    {is_resetting_password ? 'Resetting...' : 'Reset Password'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   )
