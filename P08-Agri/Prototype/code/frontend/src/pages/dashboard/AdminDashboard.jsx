@@ -442,15 +442,19 @@ function AdminDashboard() {
                   <p className="text-sm text-gray-500">{total} total complaints</p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative inline-flex items-center gap-1 p-2 pl-2.5 pr-2 border border-gray-300 rounded-lg bg-white cursor-pointer">
                   <svg className="h-5 w-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <svg className="h-4 w-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                   <select
                     value={status_filter}
                     onChange={(e) => set_status_filter(e.target.value)}
-                    className="text-sm text-gray-700 focus:outline-none focus:ring-0 border-0 bg-transparent pr-1"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    aria-label="Filter by status"
                   >
                     <option value="">All statuses</option>
                     <option value="not addressed">Not addressed</option>
