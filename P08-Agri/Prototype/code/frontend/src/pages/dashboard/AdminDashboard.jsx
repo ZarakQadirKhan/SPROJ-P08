@@ -443,19 +443,24 @@ function AdminDashboard() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <select
-                  value={status_filter}
-                  onChange={(e) => set_status_filter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">All statuses</option>
-                  <option value="not addressed">Not addressed</option>
-                  <option value="addressed">Addressed</option>
-                </select>
+                <div className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                  <svg className="h-5 w-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <select
+                    value={status_filter}
+                    onChange={(e) => set_status_filter(e.target.value)}
+                    className="text-sm text-gray-700 focus:outline-none focus:ring-0 border-0 bg-transparent pr-1"
+                  >
+                    <option value="">All statuses</option>
+                    <option value="not addressed">Not addressed</option>
+                    <option value="addressed">Addressed</option>
+                  </select>
+                </div>
                 <button
                   type="button"
                   onClick={load_complaints}
-                  className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-60"
+                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60"
                   disabled={is_loading}
                   title="Refresh"
                   aria-label="Refresh"
