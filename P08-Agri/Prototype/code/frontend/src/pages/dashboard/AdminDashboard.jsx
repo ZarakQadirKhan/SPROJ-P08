@@ -507,40 +507,33 @@ function AdminDashboard() {
                             <p className="text-xs text-gray-500 mt-2">From: {complaint.userEmail}</p>
                           </div>
                           <div className="flex flex-col gap-2 items-start sm:items-end flex-shrink-0">
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded ${
-                                complaint.status === 'addressed'
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-red-100 text-red-700'
-                              }`}
-                            >
-                              {complaint.status}
-                            </span>
-                            <div className="flex flex-wrap gap-2">
+                            {complaint.status === 'addressed' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
+                                <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Addressed
+                              </span>
+                            ) : (
                               <button
                                 type="button"
-                                className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium"
                                 onClick={() => handle_mark_addressed(complaint._id)}
-                                disabled={complaint.status === 'addressed'}
+                                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+                                title="Click to mark as addressed"
                               >
-                                Mark addressed
+                                <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Not addressed
                               </button>
-                              <button
-                                type="button"
-                                className="px-3 py-1.5 text-xs bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 font-medium"
-                                onClick={() => handle_mark_unaddressed(complaint._id)}
-                                disabled={complaint.status === 'not addressed'}
-                              >
-                                Mark open
-                              </button>
-                              <button
-                                type="button"
-                                className="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium"
-                                onClick={() => handle_start_response(complaint._id)}
-                              >
-                                Respond
-                              </button>
-                            </div>
+                            )}
+                            <button
+                              type="button"
+                              className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium"
+                              onClick={() => handle_start_response(complaint._id)}
+                            >
+                              Respond
+                            </button>
                           </div>
                         </div>
                         {show_response_box && (
