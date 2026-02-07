@@ -489,12 +489,11 @@ function AdminDashboard() {
                       />
                       <div
                         className="absolute left-0 top-full mt-1 z-20 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-                        role="listbox"
+                        role="menu"
                       >
                         <button
                           type="button"
-                          role="option"
-                          aria-selected={status_filter === '' ? 'true' : 'false'}
+                          role="menuitem"
                           onClick={() => {
                             set_status_filter('')
                             set_filter_dropdown_open(false)
@@ -507,8 +506,7 @@ function AdminDashboard() {
                         </button>
                         <button
                           type="button"
-                          role="option"
-                          aria-selected={status_filter === 'not addressed' ? 'true' : 'false'}
+                          role="menuitem"
                           onClick={() => {
                             set_status_filter('not addressed')
                             set_filter_dropdown_open(false)
@@ -521,8 +519,7 @@ function AdminDashboard() {
                         </button>
                         <button
                           type="button"
-                          role="option"
-                          aria-selected={status_filter === 'addressed' ? 'true' : 'false'}
+                          role="menuitem"
                           onClick={() => {
                             set_status_filter('addressed')
                             set_filter_dropdown_open(false)
