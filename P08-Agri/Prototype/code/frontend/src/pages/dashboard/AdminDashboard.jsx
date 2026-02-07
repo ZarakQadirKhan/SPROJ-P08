@@ -318,7 +318,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_COMPLAINTS)}
-                className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-orange-200 transition-all flex flex-col items-start"
+                className="relative bg-white rounded-xl shadow-sm border-2 border-green-500 p-6 text-left hover:shadow-md hover:border-green-600 transition-all flex flex-col items-start"
               >
                 {unaddressed_count > 0 && (
                   <span className="absolute top-3 left-3 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
@@ -332,7 +332,7 @@ function AdminDashboard() {
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900">Complaints</h2>
                 <p className="text-sm text-gray-500 mt-1">View, filter, and respond to complaints</p>
-                <span className="mt-4 ml-auto text-gray-400">
+                <span className="mt-4 ml-auto text-green-600">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -343,7 +343,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_RESET)}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-green-200 transition-all flex flex-col items-start"
+                className="bg-white rounded-xl shadow-sm border-2 border-green-500 p-6 text-left hover:shadow-md hover:border-green-600 transition-all flex flex-col items-start"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -352,7 +352,7 @@ function AdminDashboard() {
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900">Reset Password</h2>
                 <p className="text-sm text-gray-500 mt-1">Reset farmer password and email it</p>
-                <span className="mt-4 ml-auto text-gray-400">
+                <span className="mt-4 ml-auto text-green-600">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -455,7 +455,7 @@ function AdminDashboard() {
 
         {/* ---------- COMPLAINTS screen ---------- */}
         {view === VIEW_COMPLAINTS && (
-          <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible">
             <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <BackButton onClick={() => set_view(VIEW_HOME)} />
@@ -528,7 +528,7 @@ function AdminDashboard() {
                 <button
                   type="button"
                   onClick={load_complaints}
-                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60"
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60 cursor-pointer"
                   disabled={is_loading}
                   title="Refresh"
                 >
