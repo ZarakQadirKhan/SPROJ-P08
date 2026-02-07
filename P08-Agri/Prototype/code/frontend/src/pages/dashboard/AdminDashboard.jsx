@@ -41,9 +41,11 @@ function AdminDashboard() {
 
   const [view, set_view] = useState(VIEW_HOME)
   const [user_dropdown_open, set_user_dropdown_open] = useState(false)
+  const [filter_dropdown_open, set_filter_dropdown_open] = useState(false)
 
   const [complaints, set_complaints] = useState([])
   const [total, set_total] = useState(0)
+  const [unaddressed_count, set_unaddressed_count] = useState(0)
   const [is_loading, set_is_loading] = useState(true)
   const [error_text, set_error_text] = useState('')
   const [status_filter, set_status_filter] = useState('')
@@ -82,6 +84,21 @@ function AdminDashboard() {
       load_complaints()
     }
   }, [view, load_complaints])
+
+  const load_unaddressed_count = useCallback(async () => {
+    try {
+      const data = await fetch_complaints({ status: 'not addressed' })
+      set_unaddressed_count(data.total || 0)
+    } catch {
+      set_unaddressed_count(0)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (view === VIEW_HOME) {
+      load_unaddressed_count()
+    }
+  }, [view, load_unaddressed_count])
 
   function handle_logout() {
     localStorage.removeItem('token')
@@ -274,7 +291,6 @@ function AdminDashboard() {
           <>
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-emerald-800">Admin Dashboard</h1>
-              <p className="text-sm text-gray-500 mt-1">Manage complaints and contact users</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Email Users card */}
@@ -301,8 +317,13 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_COMPLAINTS)}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-orange-200 transition-all flex flex-col items-start"
+                className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-orange-200 transition-all flex flex-col items-start"
               >
+                {unaddressed_count > 0 && (
+                  <span className="absolute top-3 left-3 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
+                    {unaddressed_count > 99 ? '99+' : unaddressed_count}
+                  </span>
+                )}
                 <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center mb-4">
                   <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -443,23 +464,75 @@ function AdminDashboard() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <div className="relative inline-flex items-center gap-1 p-2 pl-2.5 pr-2 border border-gray-300 rounded-lg bg-white cursor-pointer">
-                  <svg className="h-5 w-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                  <svg className="h-4 w-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                  <select
-                    value={status_filter}
-                    onChange={(e) => set_status_filter(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => set_filter_dropdown_open((prev) => !prev)}
+                    className="inline-flex items-center gap-1 p-2 pl-2.5 pr-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
                     aria-label="Filter by status"
+                    aria-expanded={filter_dropdown_open}
+                    aria-haspopup="listbox"
                   >
-                    <option value="">All statuses</option>
-                    <option value="not addressed">Not addressed</option>
-                    <option value="addressed">Addressed</option>
-                  </select>
+                    <svg className="h-5 w-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    <svg className="h-4 w-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {filter_dropdown_open && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        aria-hidden="true"
+                        onClick={() => set_filter_dropdown_open(false)}
+                      />
+                      <div
+                        className="absolute left-0 top-full mt-1 z-20 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                        role="listbox"
+                      >
+                        <button
+                          type="button"
+                          role="option"
+                          onClick={() => {
+                            set_status_filter('')
+                            set_filter_dropdown_open(false)
+                          }}
+                          className={`block w-full px-4 py-2 text-left text-sm focus:outline-none focus:bg-green-100 hover:bg-green-100 ${
+                            status_filter === '' ? 'bg-green-100 text-green-800 font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          All statuses
+                        </button>
+                        <button
+                          type="button"
+                          role="option"
+                          onClick={() => {
+                            set_status_filter('not addressed')
+                            set_filter_dropdown_open(false)
+                          }}
+                          className={`block w-full px-4 py-2 text-left text-sm focus:outline-none focus:bg-green-100 hover:bg-green-100 ${
+                            status_filter === 'not addressed' ? 'bg-green-100 text-green-800 font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          Not addressed
+                        </button>
+                        <button
+                          type="button"
+                          role="option"
+                          onClick={() => {
+                            set_status_filter('addressed')
+                            set_filter_dropdown_open(false)
+                          }}
+                          className={`block w-full px-4 py-2 text-left text-sm focus:outline-none focus:bg-green-100 hover:bg-green-100 ${
+                            status_filter === 'addressed' ? 'bg-green-100 text-green-800 font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          Addressed
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -585,11 +658,6 @@ function AdminDashboard() {
           <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
               <BackButton onClick={() => set_view(VIEW_HOME)} />
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                </svg>
-              </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Reset Farmer Password</h2>
                 <p className="text-sm text-gray-500 mt-0.5">Set a new password and email it to the farmer</p>
