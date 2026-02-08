@@ -395,7 +395,7 @@ function FarmerDashboard() {
           <button
             type="button"
             onClick={handle_click_upload_button}
-            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left flex flex-row items-center gap-4 cursor-pointer"
           >
             <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
               <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -420,7 +420,7 @@ function FarmerDashboard() {
               type="button"
               onClick={handle_get_weather}
               disabled={is_getting_weather}
-              className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer disabled:opacity-60"
+              className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left flex flex-row items-center gap-4 cursor-pointer disabled:opacity-60"
             >
             <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
               <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -544,7 +544,7 @@ function FarmerDashboard() {
           <button
             type="button"
             onClick={() => navigate('/diagnostic-history')}
-            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left flex flex-row items-center gap-4 cursor-pointer"
           >
             <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
               <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -567,7 +567,7 @@ function FarmerDashboard() {
           <button
             type="button"
             onClick={open_help_modal}
-            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left flex flex-row items-center gap-4 cursor-pointer"
           >
             <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
               <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
