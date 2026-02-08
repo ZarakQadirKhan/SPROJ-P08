@@ -34,7 +34,6 @@ services:
       SMTP_PASS: ${SMTP_PASS}
       EMAIL_FROM: ${EMAIL_FROM}
       SUPPORT_TO_EMAIL: ${SUPPORT_TO_EMAIL}
-      RESEND_API_KEY: ${RESEND_API_KEY}
     depends_on:
       - mongo
       - redis
