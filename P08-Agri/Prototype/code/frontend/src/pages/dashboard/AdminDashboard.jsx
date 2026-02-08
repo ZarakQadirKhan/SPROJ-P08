@@ -80,6 +80,12 @@ function AdminDashboard() {
     }
   }, [status_filter])
 
+  function handle_logout() {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    navigate('/login')
+  }
+
   useEffect(() => {
     if (view === VIEW_COMPLAINTS) {
       load_complaints()
@@ -100,12 +106,6 @@ function AdminDashboard() {
       load_unaddressed_count()
     }
   }, [view, load_unaddressed_count])
-
-  function handle_logout() {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    navigate('/login')
-  }
 
   async function handle_mark_addressed(id) {
     try {
@@ -236,7 +236,6 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7fdf9]">
-      {/* Header: AgriQual ADMIN + User - same dark green as login page right side */}
       <header className="bg-[#2D6A4F] shadow-sm border-b border-[#1a4d35]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { registerWithOtp } from '../../services/authService'
+import { GoogleLogin } from '@react-oauth/google'
+import { registerWithOtp, googleSignIn } from '../../services/authService'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 function Register() {
@@ -57,6 +58,47 @@ function Register() {
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  function redirectByRole() {
+    const userJson = localStorage.getItem('user')
+    if (!userJson) {
+      navigate('/dashboard')
+      return
+    }
+    try {
+      const user = JSON.parse(userJson)
+      const role = user?.role
+      if (role === 'farmer') navigate('/farmer-dashboard')
+      else if (role === 'admin') navigate('/admin-dashboard')
+      else if (role === 'inspector') navigate('/inspector-dashboard')
+      else navigate('/dashboard')
+    } catch {
+      navigate('/dashboard')
+    }
+  }
+
+  async function handleGoogleSuccess(credentialResponse) {
+    setApiError('')
+    setLoading(true)
+    try {
+      const token = credentialResponse?.credential
+      if (!token) {
+        setApiError('Google sign-up did not return a credential.')
+        return
+      }
+      await googleSignIn(token, formData.role)
+      redirectByRole()
+    } catch (err) {
+      const msg = typeof err === 'string' ? err : (err && err.message ? err.message : 'Google sign-up failed.')
+      setApiError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleGoogleFailure() {
+    setApiError('Google sign-up was cancelled or failed.')
   }
 
   async function handleSubmit(e) {
@@ -249,6 +291,35 @@ function Register() {
             >
               {loading ? t.register.sendingOtp : t.register.createAccountButton}
             </button>
+
+          {process.env.REACT_APP_GOOGLE_CLIENT_ID && (
+            <>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">or sign up with Google</span>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleFailure}
+                  useOneTap={false}
+                  theme="outline"
+                  size="large"
+                  type="standard"
+                  shape="rectangular"
+                  text="signup_with"
+                  width="320"
+                />
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                Uses the role selected above ({formData.role}) for new accounts.
+              </p>
+            </>
+          )}
 
             <p className="text-xs text-[#6B7280] text-center">
               {t.register.termsText}{' '}

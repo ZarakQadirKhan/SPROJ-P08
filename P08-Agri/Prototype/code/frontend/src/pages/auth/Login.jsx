@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login as login_api } from "../../services/authService";
+import { GoogleLogin } from "@react-oauth/google";
+import { login as login_api, googleSignIn } from "../../services/authService";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 function Login() {
@@ -12,39 +13,60 @@ function Login() {
   const [is_loading, set_is_loading] = useState(false);
   const [show_password, set_show_password] = useState(false);
 
+  function redirect_by_role() {
+    const userJson = localStorage.getItem("user");
+    if (!userJson) {
+      navigate("/dashboard");
+      return;
+    }
+    try {
+      const user = JSON.parse(userJson);
+      const role = user?.role;
+      if (role === "farmer") navigate("/farmer-dashboard");
+      else if (role === "admin") navigate("/admin-dashboard");
+      else if (role === "inspector") navigate("/inspector-dashboard");
+      else navigate("/dashboard");
+    } catch {
+      navigate("/dashboard");
+    }
+  }
+
   async function handle_submit(e) {
     e.preventDefault();
     set_error_text("");
     set_is_loading(true);
     try {
       await login_api({ email, password });
-      // Get user role from localStorage to determine redirect
-      const userJson = localStorage.getItem('user');
-      if (userJson) {
-        try {
-          const user = JSON.parse(userJson);
-          const role = user?.role;
-          if (role === 'farmer') {
-            navigate("/farmer-dashboard");
-          } else if (role === 'admin') {
-            navigate("/admin-dashboard");
-          } else if (role === 'inspector') {
-            navigate("/inspector-dashboard");
-          } else {
-            navigate("/dashboard");
-          }
-        } catch {
-          navigate("/dashboard");
-        }
-      } else {
-        navigate("/dashboard");
-      }
+      redirect_by_role();
     } catch (err) {
       const message = err && err.message ? err.message : t.login.loginFailed;
       set_error_text(message);
     } finally {
       set_is_loading(false);
     }
+  }
+
+  async function handle_google_success(credentialResponse) {
+    set_error_text("");
+    set_is_loading(true);
+    try {
+      const token = credentialResponse?.credential;
+      if (!token) {
+        set_error_text("Google sign-in did not return a credential.");
+        return;
+      }
+      await googleSignIn(token);
+      redirect_by_role();
+    } catch (err) {
+      const message = err && err.message ? err.message : "Google sign-in failed.";
+      set_error_text(message);
+    } finally {
+      set_is_loading(false);
+    }
+  }
+
+  function handle_google_failure() {
+    set_error_text("Google sign-in was cancelled or failed.");
   }
 
   return (
@@ -145,19 +167,26 @@ function Login() {
               </div>
             </div>
 
-            <button
-              type="button"
-              className="w-full bg-transparent text-[#2D6A4F] border border-[#2D6A4F] rounded-lg px-5 py-2.5 font-medium transition-all duration-150 hover:bg-[#F3F7F0] active:scale-[0.98] flex items-center justify-center gap-2"
-              disabled={is_loading}
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              {t.login.continueWithGoogle}
-            </button>
+            {process.env.REACT_APP_GOOGLE_CLIENT_ID ? (
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handle_google_success}
+                  onError={handle_google_failure}
+                  useOneTap={false}
+                  theme="outline"
+                  size="large"
+                  type="standard"
+                  shape="rectangular"
+                  text="signin_with"
+                  width="320"
+                  disabled={is_loading}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-[#6B7280] text-center py-2">
+                Google sign-in is not configured (REACT_APP_GOOGLE_CLIENT_ID).
+              </p>
+            )}
           </form>
 
           <p className="text-center text-sm text-[#6B7280]">
