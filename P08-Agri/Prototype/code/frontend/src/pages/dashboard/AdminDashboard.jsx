@@ -295,24 +295,27 @@ function AdminDashboard() {
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-emerald-800">Admin Dashboard</h1>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {/* Email Users card */}
               <button
                 type="button"
                 onClick={() => set_view(VIEW_EMAIL)}
-                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-1 transition-all flex flex-col items-start cursor-pointer"
+                className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
               >
-                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
-                <p className="text-sm text-gray-500 mt-1">Send updates to all users or selected emails</p>
-                <span className="mt-4 ml-auto text-green-600">
+                <div className="flex-1 min-w-0 text-left">
+                  <h2 className="text-lg font-semibold text-gray-900">Email Users</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">Send updates to all users or selected emails</p>
+                </div>
+                <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
+                  Open
                 </span>
               </button>
 
@@ -320,24 +323,27 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_COMPLAINTS)}
-                className="relative bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-1 transition-all flex flex-col items-start cursor-pointer"
+                className="relative w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
               >
                 {unaddressed_count > 0 && (
                   <span className="absolute top-3 left-3 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
                     {unaddressed_count > 99 ? '99+' : unaddressed_count}
                   </span>
                 )}
-                <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center mb-4">
+                <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
                   <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Complaints</h2>
-                <p className="text-sm text-gray-500 mt-1">View, filter, and respond to complaints</p>
-                <span className="mt-4 ml-auto text-green-600">
+                <div className="flex-1 min-w-0 text-left">
+                  <h2 className="text-lg font-semibold text-gray-900">Complaints</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">View, filter, and respond to complaints</p>
+                </div>
+                <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
+                  Open
                 </span>
               </button>
 
@@ -345,19 +351,22 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_RESET)}
-                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-1 transition-all flex flex-col items-start cursor-pointer"
+                className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
               >
-                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Reset Password</h2>
-                <p className="text-sm text-gray-500 mt-1">Reset farmer password and email it</p>
-                <span className="mt-4 ml-auto text-green-600">
+                <div className="flex-1 min-w-0 text-left">
+                  <h2 className="text-lg font-semibold text-gray-900">Reset Password</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">Reset farmer password and email it</p>
+                </div>
+                <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
+                  Open
                 </span>
               </button>
             </div>
