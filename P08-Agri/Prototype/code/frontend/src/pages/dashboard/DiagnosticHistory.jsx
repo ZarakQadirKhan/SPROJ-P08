@@ -93,7 +93,7 @@ function DiagnosticHistory() {
             <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-3`}>
               <button
                 onClick={handle_back_to_dashboard}
-                className="text-white hover:text-white/80 transition-colors"
+                className="text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -104,7 +104,7 @@ function DiagnosticHistory() {
             <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-4`}>
               <button
                 onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
-                className="px-2 py-1 text-sm bg-white/20 text-white rounded-md hover:bg-white/30 transition-colors"
+                className="px-2 py-1 text-sm bg-white/20 text-white rounded-md"
               >
                 {language === 'en' ? '\u0627\u0631\u062f\u0648' : 'English'}
               </button>
@@ -146,7 +146,7 @@ function DiagnosticHistory() {
             <p className="mt-1 text-sm text-gray-500">{t.diagnosticHistory.noHistoryMessage}</p>
             <button
               onClick={handle_back_to_dashboard}
-              className="mt-4 px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] font-medium transition-colors"
+              className="mt-4 px-4 py-2 bg-[#2D6A4F] text-white rounded-lg font-medium"
             >
               {t.diagnosticHistory.goToDashboard}
             </button>
@@ -161,7 +161,7 @@ function DiagnosticHistory() {
                 <button
                   key={diagnosis._id}
                   type="button"
-                  className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+                  className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left flex flex-row items-center gap-4 cursor-pointer"
                   onClick={() => handle_view_details(diagnosis)}
                 >
                   <div className={`h-12 w-12 rounded-lg ${isHighConfidence ? 'bg-green-100' : 'bg-orange-100'} flex items-center justify-center flex-shrink-0`}>
@@ -228,7 +228,7 @@ function DiagnosticHistory() {
                   <h3 id="diagnosis-detail-title" className="text-2xl font-bold text-gray-900">{t.diagnosticHistory.diagnosisDetails}</h3>
                   <button
                     onClick={close_detail_modal}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -303,7 +303,7 @@ function DiagnosticHistory() {
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   onClick={close_detail_modal}
-                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-[#2D6A4F] text-base font-medium text-white hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-[#2D6A4F] text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   {t.diagnosticHistory.close}
                 </button>
