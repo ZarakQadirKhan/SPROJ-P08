@@ -300,7 +300,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_EMAIL)}
-                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-md hover:border-[#1a4d35] transition-all flex flex-col items-start"
+                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-1 transition-all flex flex-col items-start cursor-pointer"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -320,7 +320,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_COMPLAINTS)}
-                className="relative bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-md hover:border-[#1a4d35] transition-all flex flex-col items-start"
+                className="relative bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-1 transition-all flex flex-col items-start cursor-pointer"
               >
                 {unaddressed_count > 0 && (
                   <span className="absolute top-3 left-3 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
@@ -345,7 +345,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_RESET)}
-                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-md hover:border-[#1a4d35] transition-all flex flex-col items-start"
+                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-1 transition-all flex flex-col items-start cursor-pointer"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -583,7 +583,7 @@ function AdminDashboard() {
                             )}
                           </div>
                         </div>
-                        <div className="mt-3 flex justify-start gap-2">
+                        <div className="mt-3 flex justify-between items-center">
                           <button
                             type="button"
                             className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
