@@ -41,8 +41,3 @@ npm run dev
 
 Farmers and inspectors can sign in or sign up with their Google (Gmail) account.
 
-1. **Google Cloud Console**: Create a project, enable the "Google+ API" / Identity Services, and create an OAuth 2.0 Client ID (Web application). Add authorized JavaScript origins (e.g. `http://localhost:3000`, your production URL).
-
-2. **Backend** (`backend/.env`): set `GOOGLE_CLIENT_ID` to the same Web client ID.
-
-3. **Frontend**: set `REACT_APP_GOOGLE_CLIENT_ID` to the same Web client ID (e.g. in `.env.local` or your host’s env). Restart the dev server after changing env.
