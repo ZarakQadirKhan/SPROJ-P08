@@ -240,7 +240,7 @@ function AdminDashboard() {
       <header className="bg-[#2D6A4F] shadow-sm border-b border-[#1a4d35]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+            <div className="h-14 w-14 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1.5">
               <img
                 src="/agriqual-logo.png"
                 alt="AgriQual"
@@ -300,7 +300,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_EMAIL)}
-                className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+                className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -323,7 +323,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_COMPLAINTS)}
-                className="relative w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+                className="relative w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
               >
                 {unaddressed_count > 0 && (
                   <span className="absolute top-3 left-3 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
@@ -351,7 +351,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_RESET)}
-                className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+                className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
