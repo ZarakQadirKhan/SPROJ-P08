@@ -133,13 +133,6 @@ function FarmerDashboard() {
     }
   }
 
-  function open_weather_modal() {
-    set_is_weather_modal_open(true)
-    if (!weather_data && !is_getting_weather) {
-      handle_get_weather()
-    }
-  }
-
   function close_weather_modal() {
     set_is_weather_modal_open(false)
   }
