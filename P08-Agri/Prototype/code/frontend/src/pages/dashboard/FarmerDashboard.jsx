@@ -329,8 +329,12 @@ function FarmerDashboard() {
       <header className="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-[#D5DDD0]">
         <div className={`max-w-[1200px] mx-auto px-8 py-3.5 flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} justify-between items-center`}>
           <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-2`}>
-            <div className="w-8 h-8 rounded-lg bg-[#2D6A4F] flex items-center justify-center">
-              <span className="text-white text-sm font-bold">A</span>
+            <div className="h-10 w-10 rounded-lg bg-white border border-[#D5DDD0] flex items-center justify-center flex-shrink-0 p-1">
+              <img
+                src="/agriqual-logo.png"
+                alt="AgriQual"
+                className="h-full w-full object-contain"
+              />
             </div>
             <span className="text-[16px] font-semibold text-[#1B3A2D]">AgriQual</span>
           </div>
