@@ -236,28 +236,28 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7fdf9]">
-      {/* Header: AgriQual ADMIN + User */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      {/* Header: AgriQual ADMIN + User - same dark green as login page right side */}
+      <header className="bg-[#2D6A4F] shadow-sm border-b border-[#1a4d35]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
               src="/agriqual-logo.png"
               alt="AgriQual"
-              className="h-10 w-10 object-contain flex-shrink-0"
+              className="h-10 w-10 object-contain flex-shrink-0 brightness-0 invert"
             />
-            <span className="text-lg font-bold text-gray-900 tracking-tight">AgriQual ADMIN</span>
+            <span className="text-lg font-bold text-white tracking-tight">AgriQual ADMIN</span>
           </div>
           <div className="relative">
             <button
               type="button"
               onClick={() => set_user_dropdown_open((prev) => !prev)}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
             >
-              <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-green-700 font-semibold text-sm">{userInitial}</span>
+              <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                <span className="text-[#2D6A4F] font-semibold text-sm">{userInitial}</span>
               </div>
-              <span className="text-sm font-medium text-gray-700 hidden sm:inline">{userName}</span>
-              <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <span className="text-sm font-medium text-white hidden sm:inline">{userName}</span>
+              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -442,7 +442,7 @@ function AdminDashboard() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-2 focus:border-green-400 disabled:opacity-60 font-medium border border-green-300"
+                    className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-2 focus:border-[#2D6A4F] disabled:opacity-60 font-medium border border-[#1a4d35]"
                     disabled={is_sending_email}
                   >
                     {is_sending_email ? 'Sending...' : 'Send Email'}
@@ -592,7 +592,7 @@ function AdminDashboard() {
                             )}
                             <button
                               type="button"
-                              className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium"
+                              className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
                               onClick={() => handle_start_response(complaint._id)}
                             >
                               Respond
@@ -625,7 +625,7 @@ function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 font-medium"
+                                className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
                                 onClick={() => handle_send_response(complaint)}
                                 disabled={is_sending_response}
                               >
@@ -685,7 +685,7 @@ function AdminDashboard() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-60 font-medium"
+                    className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium"
                     disabled={is_resetting_password}
                   >
                     {is_resetting_password ? 'Resetting...' : 'Reset Password'}
