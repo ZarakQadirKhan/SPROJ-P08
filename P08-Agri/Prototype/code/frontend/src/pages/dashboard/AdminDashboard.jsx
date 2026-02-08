@@ -592,24 +592,28 @@ function AdminDashboard() {
                             )}
                           </div>
                         </div>
-                        <div className="mt-3 flex justify-between items-center">
-                          <button
-                            type="button"
-                            className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
-                            onClick={() => handle_start_response(complaint._id)}
-                          >
-                            Respond
-                          </button>
-                          {complaint.status !== 'addressed' && (
-                            <button
-                              type="button"
-                              className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
-                              onClick={() => handle_mark_addressed(complaint._id)}
-                            >
-                              Mark as addressed
-                            </button>
-                          )}
-                        </div>
+                        {(!complaint.response?.trim() || complaint.status !== 'addressed') && (
+                          <div className="mt-3 flex justify-between items-center">
+                            {!complaint.response?.trim() && (
+                              <button
+                                type="button"
+                                className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
+                                onClick={() => handle_start_response(complaint._id)}
+                              >
+                                Respond
+                              </button>
+                            )}
+                            {complaint.status !== 'addressed' && (
+                              <button
+                                type="button"
+                                className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
+                                onClick={() => handle_mark_addressed(complaint._id)}
+                              >
+                                Mark as addressed
+                              </button>
+                            )}
+                          </div>
+                        )}
                         {show_response_box && (
                           <div className="mt-4 border-t border-[#2D6A4F] pt-4">
                             {response_status_text && (
