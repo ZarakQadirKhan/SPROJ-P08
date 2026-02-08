@@ -24,29 +24,27 @@ function buildChatIntroMessage(diagnoseResult, t) {
 }
 
 function validateHelpForm(subject, message, t) {
-  const subjectTrimmed = subject.trim()
-  const messageTrimmed = message.trim()
-  
-  if (!subjectTrimmed || !messageTrimmed) {
-    return { isValid: false, error: t.farmerDashboard.subjectAndMessageRequired }
+  const trimmedSubject = subject.trim()
+  const trimmedMessage = message.trim()
+  if (!trimmedSubject || !trimmedMessage) {
+    return { isValid: false, error: t.farmerDashboard.helpFieldsRequired }
   }
-  
-  return { isValid: true, subject: subjectTrimmed, message: messageTrimmed }
+  return { isValid: true, subject: trimmedSubject, message: trimmedMessage }
 }
 
 function validatePasswordChange(old1, old2, newPass, t) {
-  if (!old1 || !old2 || !newPass) {
-    return { isValid: false, error: t.register.passwordRequired }
+  const trimmedOld1 = old1.trim()
+  const trimmedOld2 = old2.trim()
+  const trimmedNew = newPass.trim()
+  if (!trimmedOld1 || !trimmedOld2 || !trimmedNew) {
+    return { isValid: false, error: t.farmerDashboard.passwordFieldsRequired }
   }
-  
-  if (old1 !== old2) {
-    return { isValid: false, error: t.farmerDashboard.passwordsDoNotMatch }
+  if (trimmedOld1 !== trimmedOld2) {
+    return { isValid: false, error: t.farmerDashboard.oldPasswordMismatch }
   }
-  
-  if (newPass.length < 8) {
+  if (trimmedNew.length < 6) {
     return { isValid: false, error: t.farmerDashboard.newPasswordTooShort }
   }
-  
   return { isValid: true }
 }
 
@@ -89,6 +87,8 @@ function FarmerDashboard() {
   const [is_sending_chat, set_is_sending_chat] = useState(false)
   const [chat_error_text, set_chat_error_text] = useState('')
 
+  const [is_scan_modal_open, set_is_scan_modal_open] = useState(false)
+
 
   function handle_logout() {
     localStorage.removeItem('token')
@@ -112,16 +112,15 @@ function FarmerDashboard() {
 
   async function handle_get_weather() {
     if (is_getting_weather) return
-    set_weather_error('')
     set_is_getting_weather(true)
+    set_weather_error('')
     set_weather_data(null)
     try {
       const coords = await get_browser_location()
-      const data = await fetch_weather_by_coords(coords.latitude, coords.longitude, language)
+      const data = await fetch_weather_by_coords(coords.latitude, coords.longitude)
       set_weather_data(data)
-    } catch (err) {
-      const msg = typeof err === 'string' ? err : (err && err.message ? err.message : t.farmerDashboard.failedToGetWeather)
-      set_weather_error(msg)
+    } catch (error) {
+      set_weather_error(error && error.message ? error.message : t.farmerDashboard.weatherFetchFailed)
     } finally {
       set_is_getting_weather(false)
     }
@@ -142,6 +141,7 @@ function FarmerDashboard() {
       set_chat_messages([])
       set_chat_input('')
       set_chat_error_text('')
+      set_is_scan_modal_open(true)
     }
   }
 
@@ -287,24 +287,25 @@ function FarmerDashboard() {
 
   async function handle_chat_submit(e) {
     e.preventDefault()
-    if (is_sending_chat) return
-    const trimmed = chat_input.trim()
-    if (!trimmed) return
-    if (!diagnose_result) { set_chat_error_text(t.farmerDashboard.selectImageFirst); return }
-    const user_message = { role: 'user', content: trimmed }
-    const next_messages = [...chat_messages, user_message]
-    set_chat_messages(next_messages); set_chat_input(''); set_is_sending_chat(true); set_chat_error_text('')
+    if (is_sending_chat || !chat_input.trim()) return
+    const userMessage = chat_input.trim()
+    set_chat_messages((prev) => [...prev, { role: 'user', content: userMessage }])
+    set_chat_input('')
+    set_is_sending_chat(true)
+    set_chat_error_text('')
     try {
-      const result = await send_chat_message({ diagnosis: diagnose_result, messages: next_messages, language })
-      set_chat_messages((prev) => [...prev, { role: 'assistant', content: result.content }])
+      const response = await send_chat_message(userMessage, diagnose_result)
+      set_chat_messages((prev) => [...prev, { role: 'assistant', content: response.reply }])
     } catch (error) {
-      set_chat_error_text(error && error.message ? error.message : t.dashboard.helpSubmitFailed)
+      set_chat_error_text(error && error.message ? error.message : t.farmerDashboard.chatSendFailed)
     } finally { set_is_sending_chat(false) }
   }
 
   function clear_diagnosis() {
     set_selected_file(null); set_preview_url(''); set_diagnose_result(null); set_diagnose_error('')
     set_is_chat_open(false); set_chat_messages([]); set_chat_input(''); set_chat_error_text('')
+    set_is_scan_modal_open(false)
+    if (file_input_ref.current) file_input_ref.current.value = ''
   }
 
   /* ─── DATA ─── */
@@ -314,34 +315,29 @@ function FarmerDashboard() {
     { name: 'South Field', status: 'healthy', area: '7 acres', variety: 'Sehar-2006', sowing: 'Oct 2024', location: 'Lahore, Punjab', health: 88 },
   ]
 
-  const scan_history = [
-    { status: 'healthy' }, { status: 'healthy' }, { status: 'issue' },
-    { status: 'healthy' }, { status: 'healthy' }, { status: 'healthy' },
-    { status: 'issue' }, { status: 'healthy' }, { status: 'healthy' },
-    { status: 'issue' }, { status: 'healthy' }, { status: 'healthy' },
-  ]
+  const userName = user?.name || 'Farmer'
+  const userInitial = (userName.charAt(0) || 'F').toUpperCase()
 
   /* ─── RENDER ─── */
   return (
-    <div dir={direction} className="min-h-screen bg-[#F9FAFB]">
-
-      {/* ─── MINIMAL NAVBAR ─── */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-[#D5DDD0]">
-        <div className={`max-w-[1200px] mx-auto px-8 py-3.5 flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} justify-between items-center`}>
-          <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-2`}>
-            <div className="h-10 w-10 rounded-lg bg-white border border-[#D5DDD0] flex items-center justify-center flex-shrink-0 p-1">
+    <div dir={direction} className="min-h-screen bg-[#f7fdf9]">
+      {/* ─── NAVBAR ─── */}
+      <header className="bg-[#2D6A4F] shadow-sm border-b border-[#1a4d35]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-14 w-14 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1.5">
               <img
                 src="/agriqual-logo.png"
                 alt="AgriQual"
                 className="h-full w-full object-contain"
               />
             </div>
-            <span className="text-[16px] font-semibold text-[#1B3A2D]">AgriQual</span>
+            <span className="text-lg font-bold text-white tracking-tight">AgriQual</span>
           </div>
           <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-4`}>
             <button
               onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
-              className="px-2.5 py-1 text-[12px] bg-[#EDF2E8] text-[#5A6E52] rounded-md hover:bg-[#D5DDD0] transition-colors"
+              className="px-2 py-1 text-sm bg-white/20 text-white rounded-md hover:bg-white/30 transition-colors"
             >
               {language === 'en' ? '\u0627\u0631\u062f\u0648' : 'English'}
             </button>
@@ -349,29 +345,32 @@ function FarmerDashboard() {
               <button
                 type="button"
                 onClick={toggle_profile_menu}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-[#EDF2E8] transition-colors"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
               >
-                <div className="w-7 h-7 rounded-full bg-[#D5DDD0] flex items-center justify-center">
-                  <span className="text-[12px] font-semibold text-[#3D5A3C]">{(user.name || 'F')[0].toUpperCase()}</span>
+                <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                  <span className="text-[#2D6A4F] font-semibold text-sm">{userInitial}</span>
                 </div>
-                <span className="text-[13px] text-[#5A6E52] hidden sm:inline">{user.name || 'Farmer'}</span>
-                <svg className="w-3.5 h-3.5 text-[#8A9A82]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span className="text-sm font-medium text-white hidden sm:inline">{userName}</span>
+                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               {is_profile_menu_open && (
-                <div className="absolute right-0 mt-1.5 w-48 bg-white border border-[#D5DDD0] rounded-xl shadow-lg z-50 overflow-hidden">
-                  <button type="button" onClick={open_change_password_modal} className="block w-full text-left px-4 py-2.5 text-[13px] text-[#1B3A2D] hover:bg-[#EDF2E8]">
-                    {t.farmerDashboard.changePassword}
-                  </button>
-                  <button type="button" onClick={open_help_modal} className="block w-full text-left px-4 py-2.5 text-[13px] text-[#1B3A2D] hover:bg-[#EDF2E8]">
-                    {t.farmerDashboard.needHelp}
-                  </button>
-                  <div className="border-t border-[#EDF2E8]"></div>
-                  <button onClick={handle_logout} className="block w-full text-left px-4 py-2.5 text-[13px] text-[#B44A4A] hover:bg-[#FEF2F2]">
-                    {t.farmerDashboard.logout}
-                  </button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => set_is_profile_menu_open(false)} />
+                  <div className="absolute right-0 mt-1 w-48 py-1 bg-white rounded-lg shadow-lg border border-[#2D6A4F] z-20">
+                    <button type="button" onClick={open_change_password_modal} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      {t.farmerDashboard.changePassword}
+                    </button>
+                    <button type="button" onClick={open_help_modal} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      {t.farmerDashboard.needHelp}
+                    </button>
+                    <div className="border-t border-gray-200"></div>
+                    <button onClick={handle_logout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                      {t.farmerDashboard.logout}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -381,361 +380,242 @@ function FarmerDashboard() {
       <input ref={file_input_ref} type="file" accept="image/*" className="hidden" onChange={handle_file_change} />
 
       {/* ─── MAIN ─── */}
-      <main className="max-w-[1200px] mx-auto px-8 py-8">
-
-        {/* ─── GREETING ROW ─── */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ─── HEADING ─── */}
         <div className="mb-8">
-          <h1 className="text-[26px] font-bold text-[#1B3A2D] tracking-tight">
-            {t.farmerDashboard.welcome}, {user.name || 'Farmer'}
+          <h1 className="text-2xl font-bold text-emerald-800">
+            {t.farmerDashboard.welcome}, {userName}
           </h1>
-          <p className="text-[14px] text-[#6B7F64] mt-1">Manage your fields, scan crops, and track your harvest health.</p>
+          <p className="text-sm text-gray-500 mt-0.5">{t.farmerDashboard.manageFarmsSubtitle || 'Manage your fields, scan crops, and track your harvest health.'}</p>
         </div>
 
-        {/* ─── TOP ROW: Scan + Weather ─── */}
-        <div className="grid gap-6 mb-6" style={{ gridTemplateColumns: '1fr 380px' }}>
+        {/* ─── ACTION CARDS ─── */}
+        <div className="space-y-4">
+          {/* CARD 1: Upload Wheat Image */}
+          <button
+            type="button"
+            onClick={handle_click_upload_button}
+            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+          >
+            <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+              <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.uploadImage}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">{t.farmerDashboard.dropImageText || 'Drop an image or click to browse'}</p>
+            </div>
+            <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Open
+            </span>
+          </button>
 
-          {/* ── SCAN CARD ── */}
-          <div className="bg-white rounded-2xl border border-[#D5DDD0] overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)' }}>
-            {selected_file ? (
-              <div>
-                {/* Image + controls */}
-                <div className="relative">
-                  {preview_url && (
-                    <img src={preview_url} alt="preview" className="w-full h-[300px] object-cover" />
-                  )}
-                  <div className="absolute top-3 right-3 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={clear_diagnosis}
-                      className="px-3 py-1.5 text-[12px] font-medium bg-white/90 backdrop-blur-sm text-[#5A6E52] rounded-lg hover:bg-white transition-colors shadow-sm"
-                    >
-                      {t.common.close}
-                    </button>
+          {/* CARD 2: Current Weather */}
+          {!weather_data && (
+            <button
+              type="button"
+              onClick={handle_get_weather}
+              disabled={is_getting_weather}
+              className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer disabled:opacity-60"
+            >
+            <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+              <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
+              </svg>
+            </div>
+              <div className="flex-1 min-w-0 text-left">
+                <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.currentWeather}</h2>
+                <p className="text-sm text-gray-500 mt-0.5">{t.farmerDashboard.checkWeatherSubtitle || 'Check today\'s conditions for your area'}</p>
+              </div>
+              <div className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg text-sm font-medium hover:bg-[#1a4d35]">
+                {is_getting_weather ? t.farmerDashboard.gettingWeather : t.farmerDashboard.getWeather}
+              </div>
+            </button>
+          )}
+
+          {/* CARD 2 EXPANDED: Weather Details */}
+          {weather_data && (
+            <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => set_weather_data(null)}
+                  className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  aria-label="Close"
+                >
+                  <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.currentWeather}</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">{weather_data.city}</p>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-4 gap-3 mb-4">
+                  <div className="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                    <p className="text-xs uppercase text-gray-500 font-medium mb-1">Temp</p>
+                    <p className="text-2xl font-bold text-gray-900">{weather_data.current.temperature_c}°</p>
+                    <p className="text-xs text-gray-500 mt-1">{weather_data.current.condition}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                    <p className="text-xs uppercase text-gray-500 font-medium mb-1">{t.farmerDashboard.windSpeed || 'Wind'}</p>
+                    <p className="text-2xl font-bold text-gray-900">{weather_data.current.wind_speed_kmh}</p>
+                    <p className="text-xs text-gray-500 mt-1">km/h</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                    <p className="text-xs uppercase text-gray-500 font-medium mb-1">{t.farmerDashboard.humidity || 'Humidity'}</p>
+                    <p className="text-2xl font-bold text-gray-900">{weather_data.current.humidity}</p>
+                    <p className="text-xs text-gray-500 mt-1">%</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                    <p className="text-xs uppercase text-gray-500 font-medium mb-1">{t.farmerDashboard.uvIndex || 'UV'}</p>
+                    <p className="text-2xl font-bold text-gray-900">{weather_data.today.uv_index_max}</p>
+                    <p className="text-xs text-gray-500 mt-1">Index</p>
                   </div>
                 </div>
-
-                {/* Action bar */}
-                <div className="px-6 py-4 border-t border-[#EDF2E8]">
-                  <button
-                    type="button"
-                    onClick={handle_analyze_click}
-                    className="w-full py-3 text-[14px] font-semibold bg-[#2D6A4F] text-white rounded-xl hover:bg-[#245840] active:scale-[0.99] transition-all duration-150 disabled:opacity-50"
-                    disabled={is_uploading}
-                  >
-                    {is_uploading ? t.farmerDashboard.analyzing : t.farmerDashboard.analyzeImage}
-                  </button>
-                </div>
-
-                {/* Error */}
-                {diagnose_error && (
-                  <div className="mx-6 mb-4 bg-[#FEF2F2] text-[#B44A4A] px-4 py-2.5 rounded-lg text-[13px]">{diagnose_error}</div>
-                )}
-
-                {/* Results */}
-                {diagnose_result && (
-                  <div className="px-6 pb-5">
-                    <div className="flex items-start gap-6">
-                      <div className="flex-1">
-                        <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-[#8A9A82] mb-1">{t.farmerDashboard.diagnosis}</p>
-                        <p className="text-[20px] font-bold text-[#1B3A2D] capitalize leading-tight">{diagnose_result.diagnosis}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-[#8A9A82] mb-1">{t.farmerDashboard.confidence}</p>
-                        <p className="text-[22px] font-bold text-[#2D6A4F]">
-                          {typeof diagnose_result.confidence === 'number' ? (diagnose_result.confidence * 100).toFixed(0) + '%' : 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {Array.isArray(diagnose_result.recommendations) && diagnose_result.recommendations.length > 0 && (
-                      <div className="mt-4 bg-[#F5F8F2] rounded-xl p-4">
-                        <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-[#8A9A82] mb-2">{t.farmerDashboard.recommendations}</p>
-                        <div className="space-y-1.5">
-                          {diagnose_result.recommendations.map((r, i) => (
-                            <p key={`rec-${i}-${r.substring(0, 10)}`} className="text-[13px] text-[#3D5A3C] leading-relaxed">{r}</p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {Array.isArray(diagnose_result.alternatives) && diagnose_result.alternatives.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-[#8A9A82] mb-2">{t.farmerDashboard.alternatives}</p>
-                        <div className="flex gap-2 flex-wrap">
-                          {diagnose_result.alternatives.map((a, i) => (
-                            <span key={`alt-${a.label}-${i}`} className="px-3 py-1.5 bg-[#EDF2E8] rounded-lg text-[12px] font-medium text-[#3D5A3C] capitalize">
-                              {a.label} {(a.confidence * 100).toFixed(0)}%
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <p className="mt-3 text-[11px] text-[#8A9A82]">{t.farmerDashboard.processingTime}: {diagnose_result.processing_ms}ms</p>
+                {weather_data.advice && weather_data.advice.length > 0 && (
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <p className="text-sm font-semibold text-yellow-900 mb-1">Tip</p>
+                    <p className="text-sm text-yellow-800 leading-relaxed">{weather_data.advice[0]}</p>
                   </div>
                 )}
-
-                {/* Chat */}
-                {is_chat_open && (
-                  <div className="px-6 pb-5 border-t border-[#EDF2E8] pt-4">
-                    <p className="text-[12px] font-semibold text-[#3D5A3C] mb-3">{t.farmerDashboard.aiAssistant}</p>
-                    <div className="h-44 bg-white border border-[#E0E7DD] rounded-xl p-3 overflow-y-auto mb-3 space-y-2">
-                      {chat_messages.map((msg, index) => (
-                        <div key={`msg-${index}-${msg.content.substring(0, 20)}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[80%] rounded-xl px-3.5 py-2 text-[13px] leading-relaxed ${
-                            msg.role === 'user' ? 'bg-[#2D6A4F] text-white' : 'bg-white border border-[#D5DDD0] text-[#1B3A2D]'
-                          }`}>
-                            {msg.content}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {chat_error_text && <div className="mb-2 bg-[#FEF2F2] text-[#B44A4A] px-3 py-2 rounded-lg text-[12px]">{chat_error_text}</div>}
-                    <form className="flex gap-2" onSubmit={handle_chat_submit}>
-                      <input type="text" value={chat_input} onChange={handle_chat_input_change} disabled={is_sending_chat}
-                        className="flex-1 px-3.5 py-2.5 border border-[#D5DDD0] rounded-xl text-[13px] text-[#1B3A2D] placeholder-[#8A9A82] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent disabled:bg-gray-50"
-                        placeholder={t.farmerDashboard.chatPlaceholder} />
-                      <button type="submit" disabled={is_sending_chat || !chat_input.trim()}
-                        className="px-4 py-2.5 bg-[#2D6A4F] text-white rounded-xl text-[13px] font-medium hover:bg-[#245840] disabled:opacity-50 transition-colors">
-                        {is_sending_chat ? t.common.sending : t.common.send}
-                      </button>
-                    </form>
+                {weather_data.llm_advice && (
+                  <div className="mt-3 bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-[#2D6A4F] mb-1">{t.farmerDashboard.aiAssistant}</p>
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{weather_data.llm_advice}</p>
                   </div>
                 )}
               </div>
-            ) : (
-              /* ── Upload Dropzone ── */
-              <button
-                type="button"
-                onClick={handle_click_upload_button}
-                onKeyDown={(e) => e.key === 'Enter' && handle_click_upload_button()}
-                className="w-full p-10 flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-all duration-200 min-h-[300px] group border-0 bg-transparent">
-                <div className="w-16 h-16 rounded-2xl bg-[#EDF2E8] flex items-center justify-center mb-4 group-hover:bg-[#D5DDD0] group-hover:scale-105 transition-all duration-200">
-                  <svg className="w-7 h-7 text-[#52B788]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                </div>
-                <p className="text-[16px] font-semibold text-[#1B3A2D]">{t.farmerDashboard.uploadImage}</p>
-                <p className="text-[13px] text-[#8A9A82] mt-1">Drop an image or click to browse</p>
-              </button>
-            )}
-          </div>
+            </section>
+          )}
 
-          {/* ── WEATHER + QUICK ACTIONS CARD ── */}
-          <div className="flex flex-col gap-6">
-            {/* Weather */}
-            <div className="bg-white rounded-2xl border border-[#D5DDD0] p-5 flex-1" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)' }}>
-              {weather_data ? (
-                <div>
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-[#8A9A82]">{t.farmerDashboard.currentWeather}</p>
-                      <p className="text-[13px] text-[#5A6E52] mt-0.5">{weather_data.city}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[36px] font-bold text-[#1B3A2D] leading-none">{weather_data.current.temperature_c}°</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="bg-[#F5F8F2] rounded-xl p-3 text-center">
-                      <p className="text-[10px] uppercase tracking-wider text-[#8A9A82] font-medium">{t.farmerDashboard.windSpeed.replace(' ', '')}</p>
-                      <p className="text-[15px] font-semibold text-[#1B3A2D] mt-0.5">{weather_data.current.wind_speed_kmh}<span className="text-[11px] font-normal text-[#8A9A82]"> km/h</span></p>
-                    </div>
-                    <div className="bg-[#F5F8F2] rounded-xl p-3 text-center">
-                      <p className="text-[10px] uppercase tracking-wider text-[#8A9A82] font-medium">Rain</p>
-                      <p className="text-[15px] font-semibold text-[#1B3A2D] mt-0.5">{weather_data.today.precipitation_mm}<span className="text-[11px] font-normal text-[#8A9A82]"> mm</span></p>
-                    </div>
-                    <div className="bg-[#F5F8F2] rounded-xl p-3 text-center">
-                      <p className="text-[10px] uppercase tracking-wider text-[#8A9A82] font-medium">UV</p>
-                      <p className="text-[15px] font-semibold text-[#1B3A2D] mt-0.5">{weather_data.today.uv_index_max}</p>
-                    </div>
-                  </div>
-                  {weather_data.advice && weather_data.advice.length > 0 && (
-                    <div className="bg-[#FFFBEB] rounded-xl p-3.5">
-                      <p className="text-[12px] font-semibold text-[#92710A] mb-1">Tip</p>
-                      <p className="text-[12px] text-[#78650F] leading-relaxed">{weather_data.advice[0]}</p>
-                    </div>
-                  )}
-                  {weather_data.llm_advice && (
-                    <div className="mt-3 bg-white border border-[#E0E7DD] rounded-xl p-3.5">
-                      <p className="text-[12px] font-semibold text-[#2D6A4F] mb-1">{t.farmerDashboard.aiAssistant}</p>
-                      <p className="text-[12px] text-[#3D5A3C] leading-relaxed whitespace-pre-line">{weather_data.llm_advice}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-[#EDF2E8] flex items-center justify-center mb-3">
-                    <svg className="w-6 h-6 text-[#52B788]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
-                    </svg>
-                  </div>
-                  <p className="text-[14px] font-semibold text-[#1B3A2D] mb-1">{t.farmerDashboard.currentWeather}</p>
-                  <p className="text-[12px] text-[#8A9A82] mb-4">Check today's conditions for your area</p>
-                  {weather_error && <p className="text-[12px] text-[#B44A4A] mb-3">{weather_error}</p>}
-                  <button
-                    type="button"
-                    onClick={handle_get_weather}
-                    disabled={is_getting_weather}
-                    className="px-5 py-2.5 text-[13px] font-medium bg-[#2D6A4F] text-white rounded-xl hover:bg-[#245840] active:scale-[0.98] transition-all disabled:opacity-50"
-                  >
-                    {is_getting_weather ? t.farmerDashboard.gettingWeather : t.farmerDashboard.getWeather}
-                  </button>
-                </div>
-              )}
-            </div>
+          {weather_error && (
+            <div className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{weather_error}</div>
+          )}
 
-            {/* Quick links */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => navigate('/diagnostic-history')}
-                className="bg-white rounded-xl border border-[#D5DDD0] p-4 text-left hover:bg-[#F8FAF5] hover:border-[#B8C7B0] transition-all group"
-                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-              >
-                <div className="w-8 h-8 rounded-lg bg-[#EDF2E8] flex items-center justify-center mb-2 group-hover:bg-[#D5DDD0] transition-colors">
-                  <svg className="w-4 h-4 text-[#52B788]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <p className="text-[13px] font-semibold text-[#1B3A2D]">{t.farmerDashboard.viewHistory}</p>
-                <p className="text-[11px] text-[#8A9A82] mt-0.5">Past scans</p>
-              </button>
-              <button
-                type="button"
-                onClick={open_help_modal}
-                className="bg-white rounded-xl border border-[#D5DDD0] p-4 text-left hover:bg-[#F8FAF5] hover:border-[#B8C7B0] transition-all group"
-                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-              >
-                <div className="w-8 h-8 rounded-lg bg-[#EDF2E8] flex items-center justify-center mb-2 group-hover:bg-[#D5DDD0] transition-colors">
-                  <svg className="w-4 h-4 text-[#52B788]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-                  </svg>
-                </div>
-                <p className="text-[13px] font-semibold text-[#1B3A2D]">{t.farmerDashboard.needHelp}</p>
-                <p className="text-[11px] text-[#8A9A82] mt-0.5">Contact support</p>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ─── BOTTOM ROW: Fields + Scan History ─── */}
-        <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 380px' }}>
-
-          {/* ── FIELD HEALTH ── */}
-          <div className="bg-white rounded-2xl border border-[#D5DDD0] p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)' }}>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[16px] font-bold text-[#1B3A2D]">{t.farmerDashboard.myWheatFields}</h2>
-              <button type="button" className="px-3.5 py-1.5 text-[12px] font-medium bg-[#EDF2E8] text-[#3D5A3C] rounded-lg hover:bg-[#D5DDD0] transition-colors">
+          {/* CARD 3: My Wheat Fields (always expanded) */}
+          <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.myWheatFields}</h2>
+              <button type="button" className="text-sm text-[#2D6A4F] font-medium hover:underline">
                 + {t.farmerDashboard.addNewField}
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="p-6 divide-y divide-gray-100">
               {fields.map((field) => {
                 const isAlert = field.status === 'attention'
-                const barColor = isAlert ? '#F59E0B' : '#52B788'
-                const barBg = isAlert ? '#FEF3C7' : '#DCFCE7'
                 return (
-                  <div key={field.name} className="group cursor-pointer">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-[14px] font-semibold text-[#1B3A2D]">{field.name}</span>
+                  <div key={field.name} className="py-4 first:pt-0 last:pb-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-900">{field.name}</span>
                         {isAlert ? (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#FEF3C7] text-[#B7840A]">
+                          <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-800">
                             {t.farmerDashboard.needsAttention}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#DCFCE7] text-[#16A34A]">
+                          <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-green-100 text-green-700">
                             {t.farmerDashboard.healthy}
                           </span>
                         )}
                       </div>
-                      <span className="text-[12px] text-[#8A9A82]">{field.area} · {field.variety}</span>
+                      <span className="text-xs text-gray-500">{field.area} · {field.variety}</span>
                     </div>
                     {/* Health bar */}
-                    <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: barBg }}>
+                    <div className="w-full h-2 rounded-full bg-gray-100">
                       <div
-                        className="h-full rounded-full transition-all duration-500 group-hover:opacity-80"
-                        style={{ width: `${field.health}%`, backgroundColor: barColor }}
+                        className={`h-full rounded-full transition-all duration-500 ${isAlert ? 'bg-[#F59E0B]' : 'bg-[#2D6A4F]'}`}
+                        style={{ width: `${field.health}%` }}
                       ></div>
                     </div>
                   </div>
                 )
               })}
             </div>
-          </div>
+          </section>
 
-          {/* ── SCAN HISTORY VISUAL ── */}
-          <div className="bg-white rounded-2xl border border-[#D5DDD0] p-6" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)' }}>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[16px] font-bold text-[#1B3A2D]">Recent Scans</h2>
-              <button
-                type="button"
-                onClick={() => navigate('/diagnostic-history')}
-                className="text-[12px] font-medium text-[#2D6A4F] hover:underline"
-              >
-                View all
-              </button>
+          {/* CARD 4: View History */}
+          <button
+            type="button"
+            onClick={() => navigate('/diagnostic-history')}
+            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+          >
+            <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+              <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
+            <div className="flex-1 min-w-0 text-left">
+              <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.viewHistory}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">{t.farmerDashboard.pastScans}</p>
+            </div>
+            <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Open
+            </span>
+          </button>
 
-            {/* Mini scan grid */}
-            <div className="grid grid-cols-6 gap-2 mb-5">
-              {scan_history.map((scan, idx) => (
-                <div
-                  key={`scan-${idx}-${scan.status}`}
-                  className="aspect-square rounded-lg"
-                  style={{
-                    backgroundColor: scan.status === 'healthy' ? '#DCFCE7' : '#FEE2E2',
-                    border: `1px solid ${scan.status === 'healthy' ? '#BBF7D0' : '#FECACA'}`,
-                  }}
-                  title={scan.status === 'healthy' ? 'Healthy' : 'Issue detected'}
-                ></div>
-              ))}
+          {/* CARD 5: Need Help */}
+          <button
+            type="button"
+            onClick={open_help_modal}
+            className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+          >
+            <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+              <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+              </svg>
             </div>
-
-            {/* Summary */}
-            <div className="flex gap-4">
-              <div className="flex-1 bg-[#F0FAF0] rounded-xl p-3.5 text-center">
-                <p className="text-[22px] font-bold text-[#16A34A]">9</p>
-                <p className="text-[11px] text-[#5A6E52] font-medium mt-0.5">{t.farmerDashboard.healthy}</p>
-              </div>
-              <div className="flex-1 bg-[#FEF8F0] rounded-xl p-3.5 text-center">
-                <p className="text-[22px] font-bold text-[#F59E0B]">3</p>
-                <p className="text-[11px] text-[#78650F] font-medium mt-0.5">Issues</p>
-              </div>
+            <div className="flex-1 min-w-0 text-left">
+              <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.needHelp}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">{t.farmerDashboard.contactSupport}</p>
             </div>
-          </div>
+            <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Open
+            </span>
+          </button>
         </div>
       </main>
 
       {/* ─── HELP MODAL ─── */}
       {is_help_open && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[16px] font-bold text-[#1B3A2D]">{t.farmerDashboard.needHelp}</h2>
-              <button type="button" onClick={close_help_modal} className="text-[#8A9A82] hover:text-[#5A6E52]" disabled={is_sending_help}>
+              <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.needHelp}</h2>
+              <button type="button" onClick={close_help_modal} className="text-gray-400 hover:text-gray-600" disabled={is_sending_help}>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            {help_success_text && <div className="mb-4 bg-[#DCFCE7] text-[#16A34A] px-3 py-2.5 rounded-xl text-[13px]">{help_success_text}</div>}
-            {help_error_text && <div className="mb-4 bg-[#FEF2F2] text-[#B44A4A] px-3 py-2.5 rounded-xl text-[13px]">{help_error_text}</div>}
+            {help_success_text && <div className="mb-4 bg-green-50 text-green-700 px-3 py-2 rounded-lg text-sm border border-green-200">{help_success_text}</div>}
+            {help_error_text && <div className="mb-4 bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm border border-red-200">{help_error_text}</div>}
             <form className="space-y-4" onSubmit={handle_help_submit}>
               <div>
-                <label className="text-[12px] font-semibold text-[#5A6E52]" htmlFor="help_subject_farmer">{t.farmerDashboard.helpSubject}</label>
+                <label className="text-sm font-medium text-gray-700" htmlFor="help_subject_farmer">{t.farmerDashboard.helpSubject}</label>
                 <input id="help_subject_farmer" type="text" value={help_subject} onChange={handle_help_subject_change} disabled={is_sending_help}
-                  className="mt-1.5 w-full px-3.5 py-2.5 border border-[#D5DDD0] rounded-xl text-[14px] text-[#1B3A2D] placeholder-[#8A9A82] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent disabled:bg-gray-50"
+                  className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
                   placeholder={t.farmerDashboard.helpSubjectPlaceholder} />
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[#5A6E52]" htmlFor="help_message_farmer">{t.farmerDashboard.helpMessage}</label>
+                <label className="text-sm font-medium text-gray-700" htmlFor="help_message_farmer">{t.farmerDashboard.helpMessage}</label>
                 <textarea id="help_message_farmer" rows={4} value={help_message} onChange={handle_help_message_change} disabled={is_sending_help}
-                  className="mt-1.5 w-full px-3.5 py-2.5 border border-[#D5DDD0] rounded-xl text-[14px] text-[#1B3A2D] placeholder-[#8A9A82] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent disabled:bg-gray-50"
-                  placeholder={t.farmerDashboard.helpMessagePlaceholder} />
+                  className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50 resize-y"
+                  placeholder={t.farmerDashboard.helpMessagePlaceholder}></textarea>
               </div>
               <div className="flex justify-end gap-3 pt-1">
-                <button type="button" onClick={close_help_modal} disabled={is_sending_help} className="px-4 py-2.5 text-[13px] text-[#5A6E52] bg-[#EDF2E8] rounded-xl hover:bg-[#D5DDD0] disabled:opacity-60">{t.common.close}</button>
-                <button type="submit" disabled={is_sending_help} className="px-5 py-2.5 text-[13px] font-semibold bg-[#2D6A4F] text-white rounded-xl hover:bg-[#245840] disabled:opacity-50 flex items-center">
+                <button type="button" onClick={close_help_modal} disabled={is_sending_help} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-60 font-medium">{t.common.close}</button>
+                <button type="submit" disabled={is_sending_help} className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] disabled:opacity-50 flex items-center font-medium">
                   {is_sending_help && <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>}
                   {is_sending_help ? t.common.sending : t.common.send}
                 </button>
@@ -748,42 +628,163 @@ function FarmerDashboard() {
       {/* ─── CHANGE PASSWORD MODAL ─── */}
       {is_change_password_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[16px] font-bold text-[#1B3A2D]">{t.farmerDashboard.changePassword}</h2>
-              <button type="button" onClick={close_change_password_modal} className="text-[#8A9A82] hover:text-[#5A6E52]" disabled={is_changing_password}>
+              <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.changePassword}</h2>
+              <button type="button" onClick={close_change_password_modal} className="text-gray-400 hover:text-gray-600" disabled={is_changing_password}>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            {cp_success_text && <div className="mb-4 bg-[#DCFCE7] text-[#16A34A] px-3 py-2.5 rounded-xl text-[13px]">{cp_success_text}</div>}
-            {cp_error_text && <div className="mb-4 bg-[#FEF2F2] text-[#B44A4A] px-3 py-2.5 rounded-xl text-[13px]">{cp_error_text}</div>}
+            {cp_success_text && <div className="mb-4 bg-green-50 text-green-700 px-3 py-2 rounded-lg text-sm border border-green-200">{cp_success_text}</div>}
+            {cp_error_text && <div className="mb-4 bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm border border-red-200">{cp_error_text}</div>}
             <form className="space-y-4" onSubmit={handle_change_password_submit}>
               <div>
-                <label className="text-[12px] font-semibold text-[#5A6E52]" htmlFor="old_password_1_farmer">{t.farmerDashboard.oldPassword}</label>
+                <label className="text-sm font-medium text-gray-700" htmlFor="old_password_1_farmer">{t.farmerDashboard.oldPassword}</label>
                 <input id="old_password_1_farmer" type="password" value={old_password_first} onChange={handle_old_password_first_change} disabled={is_changing_password}
-                  className="mt-1.5 w-full px-3.5 py-2.5 border border-[#D5DDD0] rounded-xl text-[14px] text-[#1B3A2D] placeholder-[#8A9A82] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent disabled:bg-gray-50"
+                  className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
                   placeholder={t.farmerDashboard.oldPasswordPlaceholder} />
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[#5A6E52]" htmlFor="old_password_2_farmer">{t.farmerDashboard.confirmOldPassword}</label>
+                <label className="text-sm font-medium text-gray-700" htmlFor="old_password_2_farmer">{t.farmerDashboard.confirmOldPassword}</label>
                 <input id="old_password_2_farmer" type="password" value={old_password_second} onChange={handle_old_password_second_change} disabled={is_changing_password}
-                  className="mt-1.5 w-full px-3.5 py-2.5 border border-[#D5DDD0] rounded-xl text-[14px] text-[#1B3A2D] placeholder-[#8A9A82] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent disabled:bg-gray-50"
+                  className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
                   placeholder={t.farmerDashboard.confirmOldPasswordPlaceholder} />
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[#5A6E52]" htmlFor="new_password_farmer">{t.farmerDashboard.newPassword}</label>
+                <label className="text-sm font-medium text-gray-700" htmlFor="new_password_farmer">{t.farmerDashboard.newPassword}</label>
                 <input id="new_password_farmer" type="password" value={new_password} onChange={handle_new_password_change} disabled={is_changing_password}
-                  className="mt-1.5 w-full px-3.5 py-2.5 border border-[#D5DDD0] rounded-xl text-[14px] text-[#1B3A2D] placeholder-[#8A9A82] focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-transparent disabled:bg-gray-50"
+                  className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
                   placeholder={t.farmerDashboard.newPasswordPlaceholder} />
               </div>
               <div className="flex justify-end gap-3 pt-1">
-                <button type="button" onClick={close_change_password_modal} disabled={is_changing_password} className="px-4 py-2.5 text-[13px] text-[#5A6E52] bg-[#EDF2E8] rounded-xl hover:bg-[#D5DDD0] disabled:opacity-60">{t.common.cancel}</button>
-                <button type="submit" disabled={is_changing_password} className="px-5 py-2.5 text-[13px] font-semibold bg-[#2D6A4F] text-white rounded-xl hover:bg-[#245840] disabled:opacity-50 flex items-center">
+                <button type="button" onClick={close_change_password_modal} disabled={is_changing_password} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-60 font-medium">{t.common.cancel}</button>
+                <button type="submit" disabled={is_changing_password} className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] disabled:opacity-50 flex items-center font-medium">
                   {is_changing_password && <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>}
                   {is_changing_password ? t.farmerDashboard.changing : t.farmerDashboard.changePasswordButton}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ─── SCAN MODAL ─── */}
+      {is_scan_modal_open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between rounded-t-xl">
+              <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.diagnosisResults || 'Diagnosis Results'}</h2>
+              <button
+                type="button"
+                onClick={clear_diagnosis}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Image Preview */}
+            {preview_url && (
+              <img src={preview_url} alt="preview" className="w-full max-h-[300px] object-cover" />
+            )}
+
+            <div className="p-6">
+              {/* Analyze Button */}
+              {!diagnose_result && (
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={handle_analyze_click}
+                    disabled={is_uploading}
+                    className="w-full py-3 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium text-base"
+                  >
+                    {is_uploading ? t.farmerDashboard.analyzing : t.farmerDashboard.analyzeImage}
+                  </button>
+                </div>
+              )}
+
+              {/* Error */}
+              {diagnose_error && (
+                <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                  {diagnose_error}
+                </div>
+              )}
+
+              {/* Results */}
+              {diagnose_result && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">{t.farmerDashboard.diagnosis}</div>
+                      <p className="text-lg font-semibold text-gray-900 capitalize">{diagnose_result.diagnosis}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-700">{t.farmerDashboard.confidence}</div>
+                      <p className="text-xl font-bold text-[#2D6A4F]">
+                        {typeof diagnose_result.confidence === 'number' ? (diagnose_result.confidence * 100).toFixed(0) + '%' : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {Array.isArray(diagnose_result.recommendations) && diagnose_result.recommendations.length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium text-gray-700 mb-2">{t.farmerDashboard.recommendations}</div>
+                      <div className="space-y-2">
+                        {diagnose_result.recommendations.map((r, i) => (
+                          <p key={`rec-${i}-${r.substring(0, 10)}`} className="text-sm text-gray-700 leading-relaxed">{r}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {Array.isArray(diagnose_result.alternatives) && diagnose_result.alternatives.length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium text-gray-700 mb-2">{t.farmerDashboard.alternatives}</div>
+                      <div className="flex gap-2 flex-wrap">
+                        {diagnose_result.alternatives.map((a, i) => (
+                          <span key={`alt-${a.label}-${i}`} className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium text-gray-700 capitalize">
+                            {a.label} {(a.confidence * 100).toFixed(0)}%
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">{t.farmerDashboard.processingTime}: {diagnose_result.processing_ms}ms</p>
+                </div>
+              )}
+
+              {/* Chat */}
+              {is_chat_open && (
+                <div className="mt-6 border-t border-gray-200 pt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">{t.farmerDashboard.aiAssistant}</p>
+                  <div className="h-48 bg-gray-50 rounded-lg p-3 overflow-y-auto mb-3 space-y-2 border border-gray-200">
+                    {chat_messages.map((msg, index) => (
+                      <div key={`msg-${index}-${msg.content.substring(0, 20)}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
+                          msg.role === 'user' ? 'bg-[#2D6A4F] text-white' : 'bg-white border border-gray-200 text-gray-900'
+                        }`}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {chat_error_text && <div className="mb-2 bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm border border-red-200">{chat_error_text}</div>}
+                  <form className="flex gap-2" onSubmit={handle_chat_submit}>
+                    <input type="text" value={chat_input} onChange={handle_chat_input_change} disabled={is_sending_chat}
+                      className="flex-1 px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
+                      placeholder={t.farmerDashboard.chatPlaceholder} />
+                    <button type="submit" disabled={is_sending_chat || !chat_input.trim()}
+                      className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg font-medium hover:bg-[#1a4d35] disabled:opacity-50 transition-colors">
+                      {is_sending_chat ? t.common.sending : t.common.send}
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
