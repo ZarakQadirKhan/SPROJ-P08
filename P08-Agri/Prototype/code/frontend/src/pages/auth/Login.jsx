@@ -158,34 +158,31 @@ function Login() {
               {is_loading ? t.login.loggingIn : t.login.loginButton}
             </button>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E0E7DD]"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-[#FAFDF7] text-[#6B7280]">{t.login.orDivider}</span>
-              </div>
-            </div>
-
-            {process.env.REACT_APP_GOOGLE_CLIENT_ID ? (
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={handle_google_success}
-                  onError={handle_google_failure}
-                  useOneTap={false}
-                  theme="outline"
-                  size="large"
-                  type="standard"
-                  shape="rectangular"
-                  text="signin_with"
-                  width="320"
-                  disabled={is_loading}
-                />
-              </div>
-            ) : (
-              <p className="text-sm text-[#6B7280] text-center py-2">
-                Google sign-in is not configured (REACT_APP_GOOGLE_CLIENT_ID).
-              </p>
+            {process.env.REACT_APP_GOOGLE_CLIENT_ID && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-[#E0E7DD]"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-3 bg-[#FAFDF7] text-[#6B7280]">{t.login.orDivider}</span>
+                  </div>
+                </div>
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handle_google_success}
+                    onError={handle_google_failure}
+                    useOneTap={false}
+                    theme="outline"
+                    size="large"
+                    type="standard"
+                    shape="rectangular"
+                    text="signin_with"
+                    width="320"
+                    disabled={is_loading}
+                  />
+                </div>
+              </>
             )}
           </form>
 
