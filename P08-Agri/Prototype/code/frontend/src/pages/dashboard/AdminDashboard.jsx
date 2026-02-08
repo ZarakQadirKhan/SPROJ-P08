@@ -235,7 +235,7 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-green-50">
+    <div className="min-h-screen bg-[#f7fdf9]">
       {/* Header: AgriQual ADMIN + User */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -364,8 +364,8 @@ function AdminDashboard() {
 
         {/* ---------- EMAIL USERS screen ---------- */}
         {view === VIEW_EMAIL && (
-          <section className="bg-white rounded-xl shadow-sm border border-green-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-green-200 flex items-center gap-3">
+          <section className="bg-white rounded-xl shadow-sm border border-green-300 overflow-hidden">
+            <div className="px-6 py-4 border-b border-green-300 flex items-center gap-3">
               <BackButton onClick={() => set_view(VIEW_HOME)} />
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Email Users</h2>
@@ -414,7 +414,7 @@ function AdminDashboard() {
                       value={recipient_list}
                       onChange={(e) => set_recipient_list(e.target.value)}
                       placeholder="user1@example.com, user2@example.com"
-                      className="mt-1 w-full px-3 py-2 border border-green-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-300"
+                      className="mt-1 w-full px-3 py-2 border border-green-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400"
                       disabled={is_sending_email}
                     />
                   </div>
@@ -425,7 +425,7 @@ function AdminDashboard() {
                     type="text"
                     value={email_subject}
                     onChange={(e) => set_email_subject(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-green-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-300"
+                    className="mt-1 w-full px-3 py-2 border border-green-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400"
                     disabled={is_sending_email}
                   />
                 </div>
@@ -435,14 +435,14 @@ function AdminDashboard() {
                     rows={4}
                     value={email_message}
                     onChange={(e) => set_email_message(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-green-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-300 resize-y"
+                    className="mt-1 w-full px-3 py-2 border border-green-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 resize-y"
                     disabled={is_sending_email}
                   />
                 </div>
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-2 focus:border-green-300 disabled:opacity-60 font-medium border border-green-200"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-2 focus:border-green-400 disabled:opacity-60 font-medium border border-green-300"
                     disabled={is_sending_email}
                   >
                     {is_sending_email ? 'Sending...' : 'Send Email'}
