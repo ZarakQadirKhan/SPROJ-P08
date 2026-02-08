@@ -240,12 +240,14 @@ function AdminDashboard() {
       <header className="bg-[#2D6A4F] shadow-sm border-b border-[#1a4d35]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src="/agriqual-logo.png"
-              alt="AgriQual"
-              className="h-10 w-10 object-contain flex-shrink-0 brightness-0 invert"
-            />
-            <span className="text-lg font-bold text-white tracking-tight">AgriQual ADMIN</span>
+            <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+              <img
+                src="/agriqual-logo.png"
+                alt="AgriQual"
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <span className="text-lg font-bold text-white tracking-tight">AgriQual</span>
           </div>
           <div className="relative">
             <button
@@ -268,7 +270,7 @@ function AdminDashboard() {
                   aria-hidden="true"
                   onClick={() => set_user_dropdown_open(false)}
                 />
-                <div className="absolute right-0 mt-1 w-48 py-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                <div className="absolute right-0 mt-1 w-48 py-1 bg-white rounded-lg shadow-lg border border-[#2D6A4F] z-20">
                   <button
                     type="button"
                     onClick={() => {
@@ -298,7 +300,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_EMAIL)}
-                className="bg-white rounded-xl shadow-sm border-2 border-green-500 p-6 text-left hover:shadow-md hover:border-green-600 transition-all flex flex-col items-start"
+                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-md hover:border-[#1a4d35] transition-all flex flex-col items-start"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -318,7 +320,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_COMPLAINTS)}
-                className="relative bg-white rounded-xl shadow-sm border-2 border-green-500 p-6 text-left hover:shadow-md hover:border-green-600 transition-all flex flex-col items-start"
+                className="relative bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-md hover:border-[#1a4d35] transition-all flex flex-col items-start"
               >
                 {unaddressed_count > 0 && (
                   <span className="absolute top-3 left-3 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
@@ -343,7 +345,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => set_view(VIEW_RESET)}
-                className="bg-white rounded-xl shadow-sm border-2 border-green-500 p-6 text-left hover:shadow-md hover:border-green-600 transition-all flex flex-col items-start"
+                className="bg-white rounded-xl shadow-sm border-2 border-[#2D6A4F] p-6 text-left hover:shadow-md hover:border-[#1a4d35] transition-all flex flex-col items-start"
               >
                 <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center mb-4">
                   <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -364,8 +366,8 @@ function AdminDashboard() {
 
         {/* ---------- EMAIL USERS screen ---------- */}
         {view === VIEW_EMAIL && (
-          <section className="bg-white rounded-xl shadow-sm border border-green-300 overflow-hidden">
-            <div className="px-6 py-4 border-b border-green-300 flex items-center gap-3">
+          <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
               <BackButton onClick={() => set_view(VIEW_HOME)} />
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Email Users</h2>
@@ -414,7 +416,7 @@ function AdminDashboard() {
                       value={recipient_list}
                       onChange={(e) => set_recipient_list(e.target.value)}
                       placeholder="user1@example.com, user2@example.com"
-                      className="mt-1 w-full px-3 py-2 border border-green-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400"
+                      className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
                       disabled={is_sending_email}
                     />
                   </div>
@@ -435,7 +437,7 @@ function AdminDashboard() {
                     rows={4}
                     value={email_message}
                     onChange={(e) => set_email_message(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-green-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 resize-y"
+                    className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] resize-y"
                     disabled={is_sending_email}
                   />
                 </div>
@@ -455,8 +457,8 @@ function AdminDashboard() {
 
         {/* ---------- COMPLAINTS screen ---------- */}
         {view === VIEW_COMPLAINTS && (
-          <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible">
-            <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-visible">
+            <div className="px-6 py-4 border-b border-[#2D6A4F] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <BackButton onClick={() => set_view(VIEW_HOME)} />
                 <div>
@@ -483,7 +485,7 @@ function AdminDashboard() {
                         onClick={() => set_filter_dropdown_open(false)}
                       />
                       <div
-                        className="absolute left-0 top-full mt-1 z-20 min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                        className="absolute left-0 top-full mt-1 z-20 min-w-[140px] rounded-lg border border-[#2D6A4F] bg-white py-1 shadow-lg"
                       >
                         <button
                           type="button"
@@ -559,7 +561,7 @@ function AdminDashboard() {
                       <div
                         key={complaint._id}
                         className={`border rounded-lg p-4 ${
-                          is_unanswered ? 'border-red-200 bg-red-50/50' : 'border-gray-200 bg-white'
+                          is_unanswered ? 'border-red-200 bg-red-50/50' : 'border-[#2D6A4F] bg-white'
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
@@ -600,9 +602,9 @@ function AdminDashboard() {
                           </div>
                         </div>
                         {show_response_box && (
-                          <div className="mt-4 border-t border-gray-200 pt-4">
+                          <div className="mt-4 border-t border-[#2D6A4F] pt-4">
                             {response_status_text && (
-                              <div className="mb-3 text-sm text-gray-700 bg-white border border-gray-200 px-3 py-2 rounded-lg">
+                              <div className="mb-3 text-sm text-gray-700 bg-white border border-[#2D6A4F] px-3 py-2 rounded-lg">
                                 {response_status_text}
                               </div>
                             )}
@@ -611,7 +613,7 @@ function AdminDashboard() {
                               rows={4}
                               value={response_text}
                               onChange={(e) => set_response_text(e.target.value)}
-                              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
                               disabled={is_sending_response}
                             />
                             <div className="mt-3 flex justify-end gap-2">
@@ -645,8 +647,8 @@ function AdminDashboard() {
 
         {/* ---------- RESET PASSWORD screen ---------- */}
         {view === VIEW_RESET && (
-          <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+          <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
               <BackButton onClick={() => set_view(VIEW_HOME)} />
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Reset Farmer Password</h2>
@@ -666,7 +668,7 @@ function AdminDashboard() {
                     type="email"
                     value={reset_email}
                     onChange={(e) => set_reset_email(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
                     placeholder="farmer@example.com"
                     disabled={is_resetting_password}
                   />
@@ -677,7 +679,7 @@ function AdminDashboard() {
                     type="text"
                     value={reset_password}
                     onChange={(e) => set_reset_password(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
                     placeholder="Leave blank to auto-generate"
                     disabled={is_resetting_password}
                   />
