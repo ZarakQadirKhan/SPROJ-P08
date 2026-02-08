@@ -427,7 +427,7 @@ function AdminDashboard() {
                     type="text"
                     value={email_subject}
                     onChange={(e) => set_email_subject(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-green-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400"
+                    className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
                     disabled={is_sending_email}
                   />
                 </div>
@@ -471,7 +471,7 @@ function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => set_filter_dropdown_open((prev) => !prev)}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
+                    className="p-2 text-[#2D6A4F] hover:bg-[#2D6A4F]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 cursor-pointer"
                     title="Filter by status"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -530,7 +530,7 @@ function AdminDashboard() {
                 <button
                   type="button"
                   onClick={load_complaints}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60 cursor-pointer"
+                  className="p-2 text-[#2D6A4F] hover:bg-[#2D6A4F]/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 cursor-pointer"
                   disabled={is_loading}
                   title="Refresh"
                 >
@@ -573,33 +573,33 @@ function AdminDashboard() {
                           </div>
                           <div className="flex flex-col gap-2 items-start sm:items-end flex-shrink-0">
                             {complaint.status === 'addressed' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
-                                <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
+                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
                                 Addressed
                               </span>
                             ) : (
-                              <button
-                                type="button"
-                                onClick={() => handle_mark_addressed(complaint._id)}
-                                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
-                                title="Click to mark as addressed"
-                              >
-                                <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
+                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700">
                                 Not addressed
-                              </button>
+                              </span>
                             )}
+                          </div>
+                        </div>
+                        <div className="mt-3 flex justify-start gap-2">
+                          <button
+                            type="button"
+                            className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
+                            onClick={() => handle_start_response(complaint._id)}
+                          >
+                            Respond
+                          </button>
+                          {complaint.status !== 'addressed' && (
                             <button
                               type="button"
                               className="px-3 py-1.5 text-xs bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 font-medium"
-                              onClick={() => handle_start_response(complaint._id)}
+                              onClick={() => handle_mark_addressed(complaint._id)}
                             >
-                              Respond
+                              Mark as addressed
                             </button>
-                          </div>
+                          )}
                         </div>
                         {show_response_box && (
                           <div className="mt-4 border-t border-[#2D6A4F] pt-4">
