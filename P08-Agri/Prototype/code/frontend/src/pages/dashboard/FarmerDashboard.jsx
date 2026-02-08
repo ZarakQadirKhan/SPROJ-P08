@@ -337,7 +337,7 @@ function FarmerDashboard() {
           <div className={`flex ${direction === 'rtl' ? 'flex-row-reverse' : 'flex-row'} items-center gap-4`}>
             <button
               onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
-              className="px-2 py-1 text-sm bg-white/20 text-white rounded-md hover:bg-white/30 transition-colors"
+              className="px-2 py-1 text-sm bg-white/20 text-white rounded-md"
             >
               {language === 'en' ? '\u0627\u0631\u062f\u0648' : 'English'}
             </button>
@@ -345,7 +345,7 @@ function FarmerDashboard() {
               <button
                 type="button"
                 onClick={toggle_profile_menu}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50"
               >
                 <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center flex-shrink-0">
                   <span className="text-[#2D6A4F] font-semibold text-sm">{userInitial}</span>
@@ -359,14 +359,14 @@ function FarmerDashboard() {
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => set_is_profile_menu_open(false)} />
                   <div className="absolute right-0 mt-1 w-48 py-1 bg-white rounded-lg shadow-lg border border-[#2D6A4F] z-20">
-                    <button type="button" onClick={open_change_password_modal} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <button type="button" onClick={open_change_password_modal} className="block w-full text-left px-4 py-2 text-sm text-gray-700">
                       {t.farmerDashboard.changePassword}
                     </button>
-                    <button type="button" onClick={open_help_modal} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <button type="button" onClick={open_help_modal} className="block w-full text-left px-4 py-2 text-sm text-gray-700">
                       {t.farmerDashboard.needHelp}
                     </button>
                     <div className="border-t border-gray-200"></div>
-                    <button onClick={handle_logout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    <button onClick={handle_logout} className="block w-full text-left px-4 py-2 text-sm text-red-600">
                       {t.farmerDashboard.logout}
                     </button>
                   </div>
@@ -431,7 +431,7 @@ function FarmerDashboard() {
                 <h2 className="text-lg font-semibold text-gray-900">{t.farmerDashboard.currentWeather}</h2>
                 <p className="text-sm text-gray-500 mt-0.5">{t.farmerDashboard.checkWeatherSubtitle || 'Check today\'s conditions for your area'}</p>
               </div>
-              <div className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg text-sm font-medium hover:bg-[#1a4d35]">
+              <div className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg text-sm font-medium">
                 {is_getting_weather ? t.farmerDashboard.gettingWeather : t.farmerDashboard.getWeather}
               </div>
             </button>
@@ -444,7 +444,7 @@ function FarmerDashboard() {
                 <button
                   type="button"
                   onClick={() => set_weather_data(null)}
-                  className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-500"
                   aria-label="Close"
                 >
                   <svg className="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -503,7 +503,7 @@ function FarmerDashboard() {
           <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.myWheatFields}</h2>
-              <button type="button" className="text-sm text-[#2D6A4F] font-medium hover:underline">
+              <button type="button" className="text-sm text-[#2D6A4F] font-medium">
                 + {t.farmerDashboard.addNewField}
               </button>
             </div>
@@ -594,7 +594,7 @@ function FarmerDashboard() {
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.needHelp}</h2>
-              <button type="button" onClick={close_help_modal} className="text-gray-400 hover:text-gray-600" disabled={is_sending_help}>
+              <button type="button" onClick={close_help_modal} className="text-gray-400" disabled={is_sending_help}>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -614,8 +614,8 @@ function FarmerDashboard() {
                   placeholder={t.farmerDashboard.helpMessagePlaceholder}></textarea>
               </div>
               <div className="flex justify-end gap-3 pt-1">
-                <button type="button" onClick={close_help_modal} disabled={is_sending_help} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-60 font-medium">{t.common.close}</button>
-                <button type="submit" disabled={is_sending_help} className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] disabled:opacity-50 flex items-center font-medium">
+                <button type="button" onClick={close_help_modal} disabled={is_sending_help} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg disabled:opacity-60 font-medium">{t.common.close}</button>
+                <button type="submit" disabled={is_sending_help} className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg disabled:opacity-50 flex items-center font-medium">
                   {is_sending_help && <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>}
                   {is_sending_help ? t.common.sending : t.common.send}
                 </button>
@@ -631,7 +631,7 @@ function FarmerDashboard() {
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.changePassword}</h2>
-              <button type="button" onClick={close_change_password_modal} className="text-gray-400 hover:text-gray-600" disabled={is_changing_password}>
+              <button type="button" onClick={close_change_password_modal} className="text-gray-400" disabled={is_changing_password}>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -657,8 +657,8 @@ function FarmerDashboard() {
                   placeholder={t.farmerDashboard.newPasswordPlaceholder} />
               </div>
               <div className="flex justify-end gap-3 pt-1">
-                <button type="button" onClick={close_change_password_modal} disabled={is_changing_password} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-60 font-medium">{t.common.cancel}</button>
-                <button type="submit" disabled={is_changing_password} className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] disabled:opacity-50 flex items-center font-medium">
+                <button type="button" onClick={close_change_password_modal} disabled={is_changing_password} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg disabled:opacity-60 font-medium">{t.common.cancel}</button>
+                <button type="submit" disabled={is_changing_password} className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg disabled:opacity-50 flex items-center font-medium">
                   {is_changing_password && <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>}
                   {is_changing_password ? t.farmerDashboard.changing : t.farmerDashboard.changePasswordButton}
                 </button>
@@ -677,7 +677,7 @@ function FarmerDashboard() {
               <button
                 type="button"
                 onClick={clear_diagnosis}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400"
                 aria-label="Close"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -699,7 +699,7 @@ function FarmerDashboard() {
                     type="button"
                     onClick={handle_analyze_click}
                     disabled={is_uploading}
-                    className="w-full py-3 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium text-base"
+                    className="w-full py-3 bg-[#2D6A4F] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium text-base"
                   >
                     {is_uploading ? t.farmerDashboard.analyzing : t.farmerDashboard.analyzeImage}
                   </button>
@@ -778,7 +778,7 @@ function FarmerDashboard() {
                       className="flex-1 px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
                       placeholder={t.farmerDashboard.chatPlaceholder} />
                     <button type="submit" disabled={is_sending_chat || !chat_input.trim()}
-                      className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg font-medium hover:bg-[#1a4d35] disabled:opacity-50 transition-colors">
+                      className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg font-medium disabled:opacity-50">
                       {is_sending_chat ? t.common.sending : t.common.send}
                     </button>
                   </form>
