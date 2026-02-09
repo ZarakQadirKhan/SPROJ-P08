@@ -4,8 +4,8 @@ on: # Specifies events that trigger the workflow.
   push:
     branches: [main]
     paths: # Only triggers if changes occur in specific paths
-      - backend/**
-      - frontend/**
+      - P08-Agri/Prototype/code/backend/**
+      - P08-Agri/Prototype/code/frontend/**
       - .github/workflows/**
 
 permissions:
@@ -37,7 +37,7 @@ jobs: # Defines the jobs that run in this workflow.
           docker buildx build \
             -t ${IMAGE_PREFIX}/backend:${{ github.sha }} \
             -t ${IMAGE_PREFIX}/backend:latest \
-            --push backend     # pushes image directly to GHCR. backend is the path to the docker file
+            --push P08-Agri/Prototype/code/backend     # pushes image directly to GHCR. backend is the path to the docker file
 
       # 5️⃣ Build & Push Frontend
       - name: Build & Push Frontend
@@ -46,4 +46,4 @@ jobs: # Defines the jobs that run in this workflow.
           docker buildx build \
             -t ${IMAGE_PREFIX}/frontend:${{ github.sha }} \
             -t ${IMAGE_PREFIX}/frontend:latest \
-            --push frontend
+            --push P08-Agri/Prototype/code/frontend
