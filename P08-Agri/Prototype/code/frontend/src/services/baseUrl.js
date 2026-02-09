@@ -17,10 +17,7 @@ const env_base =
 const is_browser = typeof window !== 'undefined'
 const hostname = is_browser ? window.location.hostname : ''
 const is_localhost = hostname === 'localhost' || hostname === '127.0.0.1'
-const is_vercel = /\.vercel\.app$/.test(hostname)
 
-const default_base = is_localhost
-  ? 'http://localhost:5001'
-  : (is_vercel ? '' : 'https://sproj-p08-qnpt.onrender.com')
+const default_base = is_localhost ? 'http://localhost:5001' : 'https://api.agriqual.xyz'
 
 export const API_BASE_URL = env_base || default_base
