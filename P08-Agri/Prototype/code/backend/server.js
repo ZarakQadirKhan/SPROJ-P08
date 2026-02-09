@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const { connect_redis } = require('./redis_client')
 
 const app = express()
+app.set('trust proxy', 1)
 
 const mongo_uri = process.env.MONGODB_URI || process.env.MONGO_URI
 
