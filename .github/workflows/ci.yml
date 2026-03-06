@@ -7,6 +7,7 @@ on: # Specifies events that trigger the workflow.
       - P08-Agri/Prototype/code/backend/**
       - P08-Agri/Prototype/code/frontend/**
       - .github/workflows/**
+      - k8s/**
 
 permissions:
   contents: read # allows workflow to checkout code

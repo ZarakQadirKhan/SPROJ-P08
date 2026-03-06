@@ -10,24 +10,39 @@ permissions:
   contents: read  # can read repository files (needed for checkout).
   packages: read  # can pull Docker images from GitHub Container Registry.
 
-env: #environment variable for image prefix
+env:
+  # Use lowercase to match CI push (CI uses tr '[:upper:]' '[:lower:]' for image names)
   GHCR_IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Only deploy when the triggering CI workflow succeeded
+    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
-      # 1️⃣ Checkout the repo
+      # 1️⃣ Checkout the same commit that CI built (so image SHA matches)
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      # 2️⃣ Downloads and installs Oracle Cloud Infrastructure (OCI) CLI.
+      # 2️⃣ Install kubectl
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.28.0'
+
+      # 3️⃣ Install OCI CLI (must be on PATH for Get kubeconfig step)
       - name: Install OCI CLI
         run: |
-          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
+          curl -fsSL https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Verify OCI CLI on PATH
+        run: |
+          export PATH="$HOME/bin:$PATH"
+          which oci && oci --version
 
-      # 3️⃣ Configure OCI
+      # 4️⃣ Configure OCI (requires OCI_* secrets)
       - name: Configure OCI
         run: |
           mkdir -p ~/.oci
@@ -42,9 +57,10 @@ jobs:
 
           chmod 600 ~/.oci/oci_api_key.pem
 
-      # 4️⃣ Generate kubeconfig for OKE. Required to run kubectl commands against your cluster.
+      # 5️⃣ Generate kubeconfig for OKE
       - name: Get kubeconfig
         run: |
+          export PATH="$HOME/bin:$PATH"
           mkdir -p $HOME/.kube
           oci ce cluster create-kubeconfig \
             --cluster-id ${{ secrets.OKE_CLUSTER_OCID }} \
@@ -56,54 +72,69 @@ jobs:
       - name: Set KUBECONFIG environment
         run: echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
 
-      # 5️⃣ Verify cluster connectivity
+      # 6️⃣ Verify cluster connectivity
       - name: Verify cluster connectivity
         run: |
           kubectl get nodes
           kubectl get namespaces
 
-      # 6️⃣ Create namespace if not exists
+      # 7️⃣ Create namespace if not exists
       - name: Create namespace
-        run: kubectl create namespace sproj-app || echo "Namespace exists"
+        run: kubectl create namespace sproj-app || true
 
-      # 7️⃣ Create GHCR pull secret
+      # 8️⃣ Create app secret (JWT_SECRET) — fail fast if not set
+      - name: Create app secret
+        run: |
+          if [ -z "${{ secrets.JWT_SECRET }}" ]; then
+            echo "::error::JWT_SECRET must be set in repository Secrets (Settings → Secrets and variables → Actions)"
+            exit 1
+          fi
+          kubectl create secret generic sproj-app-secrets \
+            --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            -n sproj-app --dry-run=client -o yaml | kubectl apply -f -
+
+      # 9️⃣ Create GHCR pull secret
       - name: Create image pull secret
         run: |
           kubectl create secret docker-registry ghcr-secret \
             --docker-server=ghcr.io \
             --docker-username=${{ secrets.GHCR_USERNAME }} \
-            --docker-password=${{ secrets.GHCR_PAT}} \
-            -n sproj-app || echo "Secret exists"
+            --docker-password=${{ secrets.GHCR_PAT }} \
+            -n sproj-app --dry-run=client -o yaml | kubectl apply -f -
 
-      # 8️⃣ Apply MongoDB init ConfigMap
+      # 🔟 Apply MongoDB init ConfigMap
       - name: Apply MongoDB init ConfigMap
         run: |
           kubectl apply -f k8s/mongo-init-script.yaml -n sproj-app
 
-      # 9️⃣ Deploy MongoDB
+      # 1️⃣1️⃣ Deploy MongoDB
       - name: Deploy MongoDB
         run: |
           kubectl apply -f k8s/mongodb-deployment.yaml -n sproj-app
           kubectl apply -f k8s/mongodb-service.yaml -n sproj-app
-          kubectl rollout status deployment/mongodb -n sproj-app
+          kubectl rollout status deployment/mongodb -n sproj-app --timeout=300s
 
-      # 🔟 Deploy Backend
+      # 1️⃣2️⃣ Deploy Backend (use same SHA as CI so image tag matches)
       - name: Deploy Backend
         run: |
+          IMAGE_PREFIX=$(echo "$GHCR_IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]')
+          IMAGE_SHA="${{ github.event.workflow_run.head_sha }}"
           kubectl apply -f k8s/backend-deployment.yaml -n sproj-app
-          kubectl set image deployment/backend backend=$GHCR_IMAGE_PREFIX/backend:${{ github.sha }} -n sproj-app
-          kubectl rollout status deployment/backend -n sproj-app
+          kubectl set image deployment/backend backend=${IMAGE_PREFIX}/backend:${IMAGE_SHA} -n sproj-app
+          kubectl rollout status deployment/backend -n sproj-app --timeout=300s
           kubectl apply -f k8s/backend-service.yaml -n sproj-app
 
-      # 1️⃣1️⃣ Deploy Frontend
+      # 1️⃣3️⃣ Deploy Frontend
       - name: Deploy Frontend
         run: |
+          IMAGE_PREFIX=$(echo "$GHCR_IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]')
+          IMAGE_SHA="${{ github.event.workflow_run.head_sha }}"
           kubectl apply -f k8s/frontend-deployment.yaml -n sproj-app
-          kubectl set image deployment/frontend frontend=$GHCR_IMAGE_PREFIX/frontend:${{ github.sha }} -n sproj-app
-          kubectl rollout status deployment/frontend -n sproj-app
+          kubectl set image deployment/frontend frontend=${IMAGE_PREFIX}/frontend:${IMAGE_SHA} -n sproj-app
+          kubectl rollout status deployment/frontend -n sproj-app --timeout=300s
           kubectl apply -f k8s/frontend-service.yaml -n sproj-app
 
-      # 12 Install NGINX Ingress Controller (if not exists)
+      # 1️⃣4️⃣ Install NGINX Ingress Controller (if not exists)
       - name: Install NGINX Ingress Controller
         run: |
           kubectl get namespace ingress-nginx || \
@@ -113,7 +144,7 @@ jobs:
             --selector=app.kubernetes.io/component=controller \
             --timeout=180s
 
-      # 13 Apply ingress
+      # 1️⃣5️⃣ Apply ingress
       - name: Apply ingress
         run: |
           kubectl apply -f k8s/ingress.yaml -n sproj-app

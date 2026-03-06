@@ -14,7 +14,6 @@ const HELP_MAX_PER_WINDOW =
 
 const help_rate_store = new Map()
 
-// ---- figure out a stable client IP behind proxy (Render) ----
 function get_client_ip(request) {
   const xf = request.headers['x-forwarded-for']
 
