@@ -33,6 +33,7 @@ const PROD_ORIGIN = 'https://sproj-p08-silk.vercel.app'
 const VERCEL_PREVIEW_RE = /^https:\/\/[\w-]+\.vercel\.app$/
 
 function is_allowed_origin(origin) {
+  // No origin: server-to-server (e.g. Vercel proxy) or same-origin
   if (!origin) {
     return true
   }
@@ -47,6 +48,10 @@ function is_allowed_origin(origin) {
 
   const is_string_origin = typeof origin === 'string'
   if (is_string_origin === true && origin.includes('.vercel.app')) {
+    return true
+  }
+  // Frontend on Oracle or custom domain (e.g. app.agriqual.xyz)
+  if (is_string_origin === true && (origin.endsWith('.agriqual.xyz') || origin === 'https://agriqual.xyz')) {
     return true
   }
 
