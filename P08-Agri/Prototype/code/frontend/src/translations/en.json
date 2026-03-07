@@ -150,6 +150,7 @@
     "getWeather": "Get Weather",
     "gettingWeather": "Getting weather...",
     "currentWeather": "Current Weather",
+    "viewWeatherAdvisory": "View weather advisory",
     "temperature": "Temperature",
     "feelsLike": "Feels like",
     "humidity": "Humidity",

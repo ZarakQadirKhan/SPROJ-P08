@@ -478,6 +478,13 @@ function FarmerDashboard() {
                       <p className="text-xs text-[#78350F] leading-relaxed">{weather_data.advice[0]}</p>
                     </div>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => set_is_weather_modal_open(true)}
+                    className="mt-3 w-full py-2.5 px-3 rounded-lg bg-[#2D6A4F] text-white text-sm font-medium hover:bg-[#1a4d35] transition-colors"
+                  >
+                    {t.farmerDashboard.viewWeatherAdvisory || 'View weather advisory'}
+                  </button>
                 </>
               )}
 
@@ -830,7 +837,7 @@ function FarmerDashboard() {
                     <p className="text-sm text-gray-500">{weather_data.city}</p>
                     <div className="flex items-baseline gap-3 mt-1">
                       <span className="text-5xl font-bold text-gray-900">{weather_data.current.temperature_c}°</span>
-                      <span className="text-sm text-gray-500">{weather_data.current.condition}</span>
+                      <span className="text-sm text-gray-500">{weather_data.current.condition ?? '—'}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 mb-6">
@@ -840,7 +847,7 @@ function FarmerDashboard() {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 text-center">
                       <p className="text-xs uppercase tracking-wider text-gray-500 font-medium">{t.farmerDashboard.humidity || 'Humidity'}</p>
-                      <p className="text-lg font-bold text-gray-900 mt-1">{weather_data.current.humidity}<span className="text-xs font-normal text-gray-500">%</span></p>
+                      <p className="text-lg font-bold text-gray-900 mt-1">{weather_data.current.humidity ?? '—'}<span className="text-xs font-normal text-gray-500">%</span></p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 text-center">
                       <p className="text-xs uppercase tracking-wider text-gray-500 font-medium">{t.farmerDashboard.uvIndex || 'UV'}</p>

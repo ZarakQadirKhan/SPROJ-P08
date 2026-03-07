@@ -5,6 +5,22 @@ const { get_llm_weather_advice } = require('../lib/openaiClient')
 
 const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast'
 
+// WMO weather codes to short description (Open-Meteo)
+function weathercode_to_condition(code) {
+  if (code == null) return null
+  const c = Number(code)
+  if (c === 0) return 'Clear'
+  if (c >= 1 && c <= 3) return ['Mainly clear', 'Partly cloudy', 'Overcast'][c - 1]
+  if (c >= 45 && c <= 48) return 'Fog'
+  if (c >= 51 && c <= 57) return 'Drizzle'
+  if (c >= 61 && c <= 67) return 'Rain'
+  if (c >= 71 && c <= 77) return 'Snow'
+  if (c >= 80 && c <= 82) return 'Rain showers'
+  if (c >= 85 && c <= 86) return 'Snow showers'
+  if (c >= 95 && c <= 99) return 'Thunderstorm'
+  return 'Unknown'
+}
+
 function generate_advice(current, today) {
   const advice = []
 
@@ -35,7 +51,7 @@ async function fetch_weather_api(latitude, longitude) {
   const params = {
     latitude,
     longitude,
-    hourly: ['temperature_2m', 'precipitation', 'wind_speed_10m', 'uv_index'].join(','),
+    hourly: ['temperature_2m', 'precipitation', 'wind_speed_10m', 'uv_index', 'relative_humidity_2m'].join(','),
     daily: [
       'temperature_2m_max',
       'temperature_2m_min',
@@ -44,6 +60,7 @@ async function fetch_weather_api(latitude, longitude) {
       'wind_gusts_10m_max'
     ].join(','),
     current_weather: true,
+    current: 'relative_humidity_2m',
     timezone: 'auto'
   }
 
@@ -106,9 +123,13 @@ router.get('/', async function (request, response) {
 
     const data = api_response.data
 
+    const weathercode = data.current_weather?.weathercode ?? data.current?.weather_code
+    const humidity = data.current?.relative_humidity_2m ?? (data.hourly?.relative_humidity_2m?.[0])
     const current = {
       temperature_c: data.current_weather?.temperature || data.current?.temperature_2m,
-      wind_speed_kmh: data.current_weather?.windspeed || data.current?.wind_speed_10m
+      wind_speed_kmh: data.current_weather?.windspeed || data.current?.wind_speed_10m,
+      condition: weathercode_to_condition(weathercode) || null,
+      humidity: humidity != null ? Math.round(Number(humidity)) : null
     }
 
     const today = {
