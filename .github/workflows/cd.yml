@@ -57,9 +57,13 @@ jobs:
 
           chmod 600 ~/.oci/oci_api_key.pem
 
-      # 5️⃣ Generate kubeconfig for OKE (OCI CLI 3.37.x accepts these options; --region must be before 'ce')
+      # 5️⃣ Generate kubeconfig for OKE (requires secret OKE_CLUSTER_OCID)
       - name: Get kubeconfig
         run: |
+          if [ -z "${{ secrets.OKE_CLUSTER_OCID }}" ]; then
+            echo "::error::OKE_CLUSTER_OCID is not set or is empty. Add it in GitHub: Settings → Secrets and variables → Actions. Value = your OKE cluster OCID (e.g. ocid1.cluster.oc1..uniqueid)."
+            exit 1
+          fi
           export PATH="$HOME/.local/bin:$PATH"
           mkdir -p "$HOME/.kube"
           CFG="$HOME/.kube/config"
