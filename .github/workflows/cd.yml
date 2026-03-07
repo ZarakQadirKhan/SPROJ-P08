@@ -57,18 +57,17 @@ jobs:
 
           chmod 600 ~/.oci/oci_api_key.pem
 
-      # 5️⃣ Generate kubeconfig for OKE
+      # 5️⃣ Generate kubeconfig for OKE (--region is a global OCI param, must come before 'ce')
       - name: Get kubeconfig
         run: |
           export PATH="$HOME/bin:$PATH"
-          mkdir -p $HOME/.kube
-          oci ce cluster create-kubeconfig \
-            --cluster-id ${{ secrets.OKE_CLUSTER_OCID }} \
-            --file $HOME/.kube/config \
-            --region ${{ secrets.OCI_REGION }} \
-            --token-version 2.0.0 \
-            --kube-endpoint PUBLIC_ENDPOINT
-          chmod 600 $HOME/.kube/config
+          mkdir -p "$HOME/.kube"
+          oci --region "${{ secrets.OCI_REGION }}" ce cluster create-kubeconfig \
+            --cluster-id "${{ secrets.OKE_CLUSTER_OCID }}" \
+            --file "$HOME/.kube/config" \
+            --token-version "2.0.0" \
+            --kube-endpoint "PUBLIC_ENDPOINT"
+          chmod 600 "$HOME/.kube/config"
       - name: Set KUBECONFIG environment
         run: echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
 
