@@ -28,45 +28,31 @@ if (!mongo_uri) {
     })
 }
 
-const LOCAL_ORIGIN = 'http://localhost:3000'
-const PROD_ORIGIN = 'https://sproj-p08-silk.vercel.app'
-const VERCEL_PREVIEW_RE = /^https:\/\/[\w-]+\.vercel\.app$/
+/* ================================
+   FIXED CORS CONFIGURATION
+   ================================ */
 
-function is_allowed_origin(origin) {
-  // No origin: server-to-server (e.g. Vercel proxy) or same-origin
-  if (!origin) {
-    return true
-  }
-
-  if (origin === LOCAL_ORIGIN) {
-    return true
-  }
-
-  if (origin === PROD_ORIGIN) {
-    return true
-  }
-
-  const is_string_origin = typeof origin === 'string'
-  if (is_string_origin === true && origin.includes('.vercel.app')) {
-    return true
-  }
-  // Frontend on Oracle or custom domain (e.g. app.agriqual.xyz)
-  if (is_string_origin === true && (origin.endsWith('.agriqual.xyz') || origin === 'https://agriqual.xyz')) {
-    return true
-  }
-
-  return false
-}
+const allowed_origins = [
+  'http://localhost:3000',
+  'https://sproj-p08-silk.vercel.app'
+]
 
 const cors_options = {
-  origin(origin, callback) {
-    if (is_allowed_origin(origin) === true) {
-      callback(null, true)
-      return
+  origin: function (origin, callback) {
+    if (!origin) {
+      return callback(null, true)
     }
 
-    const cors_error = new Error('Not allowed by CORS')
-    callback(cors_error)
+    if (allowed_origins.includes(origin)) {
+      return callback(null, true)
+    }
+
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true)
+    }
+
+    console.warn('CORS blocked origin:', origin)
+    return callback(new Error('Not allowed by CORS'))
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -75,8 +61,13 @@ const cors_options = {
 }
 
 app.use(cors(cors_options))
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+/* ================================
+   HEALTH ROUTES
+   ================================ */
 
 app.get('/health', function (request, response) {
   const payload = { ok: true, cwd: process.cwd() }
@@ -88,8 +79,16 @@ app.get('/api/health', function (request, response) {
   response.json(payload)
 })
 
+/* ================================
+   AUTH ROUTES
+   ================================ */
+
 const auth_router = require(path.resolve(__dirname, 'routes', 'auth.js'))
 app.use('/api/auth', auth_router)
+
+/* ================================
+   WEATHER ROUTES
+   ================================ */
 
 const weather_router_path = path.resolve(__dirname, 'routes', 'weather.js')
 const weather_exists = fs.existsSync(weather_router_path)
@@ -109,6 +108,10 @@ if (weather_mounted === false) {
     response.status(501).json(payload)
   })
 }
+
+/* ================================
+   DIAGNOSE ROUTES
+   ================================ */
 
 const diagnose_router_path = path.resolve(__dirname, 'routes', 'diagnose.js')
 let diagnose_mounted = false
@@ -141,6 +144,10 @@ if (diagnose_mounted === false) {
   })
 }
 
+/* ================================
+   HELP ROUTES
+   ================================ */
+
 const help_router_path = path.resolve(__dirname, 'routes', 'help.js')
 const help_exists = fs.existsSync(help_router_path)
 let help_mounted = false
@@ -160,6 +167,10 @@ if (help_mounted === false) {
   })
 }
 
+/* ================================
+   ACCOUNT ROUTES
+   ================================ */
+
 const account_router_path = path.resolve(__dirname, 'routes', 'account.js')
 const account_exists = fs.existsSync(account_router_path)
 let account_mounted = false
@@ -178,6 +189,10 @@ if (account_mounted === false) {
     response.status(501).json(payload)
   })
 }
+
+/* ================================
+   ADMIN ROUTES
+   ================================ */
 
 const admin_router_path = path.resolve(__dirname, 'routes', 'admin.js')
 const admin_exists = fs.existsSync(admin_router_path)
@@ -199,6 +214,10 @@ if (admin_mounted === false) {
     response.status(501).json(payload)
   })
 }
+
+/* ================================
+   HISTORY ROUTES
+   ================================ */
 
 const history_router_path = path.resolve(__dirname, 'routes', 'history.js')
 const history_exists = fs.existsSync(history_router_path)
@@ -222,6 +241,10 @@ if (history_mounted === false) {
   })
 }
 
+/* ================================
+   CHAT ROUTES
+   ================================ */
+
 const chat_router_path = path.resolve(__dirname, 'routes', 'chat.js')
 const chat_exists = fs.existsSync(chat_router_path)
 let chat_mounted = false
@@ -230,7 +253,6 @@ try {
   if (chat_exists === true) {
     const chat_router = require(chat_router_path)
     app.use('/api/chat', chat_router)
-    // Also handle trailing slash explicitly
     app.use('/api/chat/', chat_router)
     chat_mounted = true
   }
@@ -249,6 +271,10 @@ if (chat_mounted === false) {
   })
 }
 
+/* ================================
+   CORS ERROR HANDLER
+   ================================ */
+
 app.use(function (error, request, response, next) {
   const is_cors_error = error && error.message === 'Not allowed by CORS'
   if (is_cors_error === true) {
@@ -259,6 +285,10 @@ app.use(function (error, request, response, next) {
 
   next(error)
 })
+
+/* ================================
+   START SERVER
+   ================================ */
 
 async function start_server() {
   try {
@@ -272,7 +302,9 @@ async function start_server() {
   }
 
   const port = process.env.PORT || 5000
-  app.listen(port, function () {})
+  app.listen(port, function () {
+    console.log(`Server running on port ${port}`)
+  })
 }
 
 start_server()
