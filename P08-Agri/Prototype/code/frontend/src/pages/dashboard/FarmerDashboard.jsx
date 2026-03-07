@@ -7,44 +7,51 @@ import { changePassword } from '../../services/authService'
 import { send_chat_message } from '../../services/chatService'
 import { useLanguage } from '../../contexts/LanguageContext'
 
-/* Helper functions to reduce cognitive complexity */
-function buildChatIntroMessage(diagnoseResult, t) {
-  const confidence = typeof diagnoseResult.confidence === 'number' 
-    ? (diagnoseResult.confidence * 100).toFixed(1) 
-    : 'unknown'
-  
-  const confidenceText = confidence !== 'unknown' 
-    ? `${t.farmerDashboard.withConfidence} ${confidence}${t.farmerDashboard.confidencePercent} `
-    : ''
-  
+function build_chat_intro_message(diagnose_result, t) {
+  const confidence =
+    typeof diagnose_result.confidence === 'number'
+      ? (diagnose_result.confidence * 100).toFixed(1)
+      : 'unknown'
+
+  const confidence_text =
+    confidence !== 'unknown'
+      ? `${t.farmerDashboard.withConfidence} ${confidence}${t.farmerDashboard.confidencePercent} `
+      : ''
+
   return {
     role: 'assistant',
-    content: `${t.farmerDashboard.analyzedWheatImage} "${diagnoseResult.diagnosis}" ${confidenceText}${t.farmerDashboard.askFollowUp}`
+    content: `${t.farmerDashboard.analyzedWheatImage} "${diagnose_result.diagnosis}" ${confidence_text}${t.farmerDashboard.askFollowUp}`
   }
 }
 
-function validateHelpForm(subject, message, t) {
-  const trimmedSubject = subject.trim()
-  const trimmedMessage = message.trim()
-  if (!trimmedSubject || !trimmedMessage) {
+function validate_help_form(subject, message, t) {
+  const trimmed_subject = subject.trim()
+  const trimmed_message = message.trim()
+
+  if (!trimmed_subject || !trimmed_message) {
     return { isValid: false, error: t.farmerDashboard.helpFieldsRequired }
   }
-  return { isValid: true, subject: trimmedSubject, message: trimmedMessage }
+
+  return { isValid: true, subject: trimmed_subject, message: trimmed_message }
 }
 
-function validatePasswordChange(old1, old2, newPass, t) {
-  const trimmedOld1 = old1.trim()
-  const trimmedOld2 = old2.trim()
-  const trimmedNew = newPass.trim()
-  if (!trimmedOld1 || !trimmedOld2 || !trimmedNew) {
+function validate_password_change(old_1, old_2, new_pass, t) {
+  const trimmed_old_1 = old_1.trim()
+  const trimmed_old_2 = old_2.trim()
+  const trimmed_new = new_pass.trim()
+
+  if (!trimmed_old_1 || !trimmed_old_2 || !trimmed_new) {
     return { isValid: false, error: t.farmerDashboard.passwordFieldsRequired }
   }
-  if (trimmedOld1 !== trimmedOld2) {
+
+  if (trimmed_old_1 !== trimmed_old_2) {
     return { isValid: false, error: t.farmerDashboard.oldPasswordMismatch }
   }
-  if (trimmedNew.length < 6) {
+
+  if (trimmed_new.length < 6) {
     return { isValid: false, error: t.farmerDashboard.newPasswordTooShort }
   }
+
   return { isValid: true }
 }
 
@@ -96,7 +103,6 @@ function FarmerDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language])
 
-
   function handle_logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -109,6 +115,7 @@ function FarmerDashboard() {
         reject(new Error(t.farmerDashboard.geolocationNotAvailable))
         return
       }
+
       navigator.geolocation.getCurrentPosition(
         (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
         () => reject(new Error(t.farmerDashboard.locationPermissionDenied)),
@@ -118,10 +125,14 @@ function FarmerDashboard() {
   }
 
   async function handle_get_weather() {
-    if (is_getting_weather) return
+    if (is_getting_weather) {
+      return
+    }
+
     set_is_getting_weather(true)
     set_weather_error('')
     set_weather_data(null)
+
     try {
       const coords = await get_browser_location()
       const data = await fetch_weather_by_coords(coords.latitude, coords.longitude, language)
@@ -138,11 +149,14 @@ function FarmerDashboard() {
   }
 
   function handle_click_upload_button() {
-    if (file_input_ref.current) file_input_ref.current.click()
+    if (file_input_ref.current) {
+      file_input_ref.current.click()
+    }
   }
 
   function handle_file_change(e) {
     const file = e.target.files && e.target.files[0]
+
     if (file) {
       set_selected_file(file)
       set_preview_url(URL.createObjectURL(file))
@@ -157,7 +171,11 @@ function FarmerDashboard() {
   }
 
   async function handle_analyze_click() {
-    if (!selected_file) { set_diagnose_error('Please select an image'); return }
+    if (!selected_file) {
+      set_diagnose_error('Please select an image')
+      return
+    }
+
     set_is_uploading(true)
     set_diagnose_error('')
     set_diagnose_result(null)
@@ -165,6 +183,7 @@ function FarmerDashboard() {
     set_chat_messages([])
     set_chat_input('')
     set_chat_error_text('')
+
     try {
       const data = await diagnose_image(selected_file)
       set_diagnose_result(data)
@@ -177,9 +196,9 @@ function FarmerDashboard() {
 
   useEffect(() => {
     if (diagnose_result) {
-      const introMessage = buildChatIntroMessage(diagnose_result, t)
+      const intro_message = build_chat_intro_message(diagnose_result, t)
       set_is_chat_open(true)
-      set_chat_messages([introMessage])
+      set_chat_messages([intro_message])
       set_chat_input('')
       set_chat_error_text('')
     } else {
@@ -198,34 +217,57 @@ function FarmerDashboard() {
     set_is_sending_help(false)
     set_is_help_open(true)
   }
+
   function close_help_modal() {
-    if (is_sending_help) return
+    if (is_sending_help) {
+      return
+    }
+
     set_is_help_open(false)
   }
+
   function handle_help_subject_change(e) {
     set_help_subject(e.target.value)
-    if (help_error_text) set_help_error_text('')
-    if (help_success_text) set_help_success_text('')
+
+    if (help_error_text) {
+      set_help_error_text('')
+    }
+
+    if (help_success_text) {
+      set_help_success_text('')
+    }
   }
+
   function handle_help_message_change(e) {
     set_help_message(e.target.value)
-    if (help_error_text) set_help_error_text('')
-    if (help_success_text) set_help_success_text('')
+
+    if (help_error_text) {
+      set_help_error_text('')
+    }
+
+    if (help_success_text) {
+      set_help_success_text('')
+    }
   }
 
   async function handle_help_submit(e) {
     e.preventDefault()
-    if (is_sending_help) return
-    
-    const validation = validateHelpForm(help_subject, help_message, t)
+
+    if (is_sending_help) {
+      return
+    }
+
+    const validation = validate_help_form(help_subject, help_message, t)
+
     if (!validation.isValid) {
       set_help_error_text(validation.error)
       return
     }
-    
+
     set_is_sending_help(true)
     set_help_error_text('')
     set_help_success_text('')
+
     try {
       await send_complaint({ subject: validation.subject, message: validation.message })
       set_help_success_text(t.farmerDashboard.helpSubmitSuccess)
@@ -233,10 +275,14 @@ function FarmerDashboard() {
       set_help_message('')
     } catch (error) {
       set_help_error_text(error && error.message ? error.message : t.farmerDashboard.helpSubmitFailed)
-    } finally { set_is_sending_help(false) }
+    } finally {
+      set_is_sending_help(false)
+    }
   }
 
-  function toggle_profile_menu() { set_is_profile_menu_open((prev) => !prev) }
+  function toggle_profile_menu() {
+    set_is_profile_menu_open((prev) => !prev)
+  }
 
   function open_change_password_modal() {
     set_is_profile_menu_open(false)
@@ -248,39 +294,69 @@ function FarmerDashboard() {
     set_is_changing_password(false)
     set_is_change_password_open(true)
   }
+
   function close_change_password_modal() {
-    if (is_changing_password) return
+    if (is_changing_password) {
+      return
+    }
+
     set_is_change_password_open(false)
   }
+
   function handle_old_password_first_change(e) {
     set_old_password_first(e.target.value)
-    if (cp_error_text) set_cp_error_text('')
-    if (cp_success_text) set_cp_success_text('')
+
+    if (cp_error_text) {
+      set_cp_error_text('')
+    }
+
+    if (cp_success_text) {
+      set_cp_success_text('')
+    }
   }
+
   function handle_old_password_second_change(e) {
     set_old_password_second(e.target.value)
-    if (cp_error_text) set_cp_error_text('')
-    if (cp_success_text) set_cp_success_text('')
+
+    if (cp_error_text) {
+      set_cp_error_text('')
+    }
+
+    if (cp_success_text) {
+      set_cp_success_text('')
+    }
   }
+
   function handle_new_password_change(e) {
     set_new_password(e.target.value)
-    if (cp_error_text) set_cp_error_text('')
-    if (cp_success_text) set_cp_success_text('')
+
+    if (cp_error_text) {
+      set_cp_error_text('')
+    }
+
+    if (cp_success_text) {
+      set_cp_success_text('')
+    }
   }
 
   async function handle_change_password_submit(e) {
     e.preventDefault()
-    if (is_changing_password) return
-    
-    const validation = validatePasswordChange(old_password_first, old_password_second, new_password, t)
+
+    if (is_changing_password) {
+      return
+    }
+
+    const validation = validate_password_change(old_password_first, old_password_second, new_password, t)
+
     if (!validation.isValid) {
       set_cp_error_text(validation.error)
       return
     }
-    
+
     set_is_changing_password(true)
     set_cp_error_text('')
     set_cp_success_text('')
+
     try {
       await changePassword({ oldPassword: old_password_first, newPassword: new_password })
       set_cp_success_text(t.farmerDashboard.passwordChangeSuccess)
@@ -294,52 +370,81 @@ function FarmerDashboard() {
     }
   }
 
-  function handle_chat_input_change(e) { set_chat_input(e.target.value); if (chat_error_text) set_chat_error_text('') }
+  function handle_chat_input_change(e) {
+    set_chat_input(e.target.value)
+
+    if (chat_error_text) {
+      set_chat_error_text('')
+    }
+  }
 
   async function handle_chat_submit(e) {
     e.preventDefault()
-    if (is_sending_chat || !chat_input.trim()) return
-    const userMessage = chat_input.trim()
-    set_chat_messages((prev) => [...prev, { role: 'user', content: userMessage }])
+
+    if (is_sending_chat || !chat_input.trim()) {
+      return
+    }
+
+    const user_message = chat_input.trim()
+    const updated_messages = [...chat_messages, { role: 'user', content: user_message }]
+
+    set_chat_messages(updated_messages)
     set_chat_input('')
     set_is_sending_chat(true)
     set_chat_error_text('')
+
     try {
-      const response = await send_chat_message(userMessage, diagnose_result)
-      set_chat_messages((prev) => [...prev, { role: 'assistant', content: response.reply }])
+      const response = await send_chat_message({
+        diagnosis: diagnose_result,
+        messages: updated_messages,
+        language
+      })
+
+      set_chat_messages((prev) => [
+        ...prev,
+        { role: 'assistant', content: response.content }
+      ])
     } catch (error) {
       set_chat_error_text(error && error.message ? error.message : t.farmerDashboard.chatSendFailed)
-    } finally { set_is_sending_chat(false) }
+    } finally {
+      set_is_sending_chat(false)
+    }
   }
 
   function clear_diagnosis() {
-    set_selected_file(null); set_preview_url(''); set_diagnose_result(null); set_diagnose_error('')
-    set_is_chat_open(false); set_chat_messages([]); set_chat_input(''); set_chat_error_text('')
+    set_selected_file(null)
+    set_preview_url('')
+    set_diagnose_result(null)
+    set_diagnose_error('')
+    set_is_chat_open(false)
+    set_chat_messages([])
+    set_chat_input('')
+    set_chat_error_text('')
     set_is_scan_modal_open(false)
-    if (file_input_ref.current) file_input_ref.current.value = ''
+
+    if (file_input_ref.current) {
+      file_input_ref.current.value = ''
+    }
   }
 
-  /* ─── DATA ─── */
   const fields = [
     { name: 'North Field', status: 'healthy', area: '5 acres', variety: 'Punjab-11', sowing: 'Oct 2024', location: 'Lahore, Punjab', health: 92 },
     { name: 'East Field', status: 'attention', area: '3 acres', variety: 'Faisalabad-2008', sowing: 'Nov 2024', location: 'Lahore, Punjab', health: 45 },
-    { name: 'South Field', status: 'healthy', area: '7 acres', variety: 'Sehar-2006', sowing: 'Oct 2024', location: 'Lahore, Punjab', health: 88 },
+    { name: 'South Field', status: 'healthy', area: '7 acres', variety: 'Sehar-2006', sowing: 'Oct 2024', location: 'Lahore, Punjab', health: 88 }
   ]
 
-  const userName = user?.name || 'Farmer'
-  const userInitial = (userName.charAt(0) || 'F').toUpperCase()
+  const user_name = user?.name || 'Farmer'
+  const user_initial = (user_name.charAt(0) || 'F').toUpperCase()
 
   const scan_history = [
     { status: 'healthy' }, { status: 'healthy' }, { status: 'issue' },
     { status: 'healthy' }, { status: 'healthy' }, { status: 'healthy' },
     { status: 'issue' }, { status: 'healthy' }, { status: 'healthy' },
-    { status: 'issue' }, { status: 'healthy' }, { status: 'healthy' },
+    { status: 'issue' }, { status: 'healthy' }, { status: 'healthy' }
   ]
 
-  /* ─── RENDER ─── */
   return (
     <div dir={direction} className="min-h-screen bg-[#f7fdf9]">
-      {/* ─── NAVBAR ─── */}
       <header className="bg-[#2D6A4F] shadow-sm border-b border-[#1a4d35]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -366,9 +471,9 @@ function FarmerDashboard() {
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
               >
                 <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                  <span className="text-[#2D6A4F] font-semibold text-sm">{userInitial}</span>
+                  <span className="text-[#2D6A4F] font-semibold text-sm">{user_initial}</span>
                 </div>
-                <span className="text-sm font-medium text-white hidden sm:inline">{userName}</span>
+                <span className="text-sm font-medium text-white hidden sm:inline">{user_name}</span>
                 <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -397,20 +502,15 @@ function FarmerDashboard() {
 
       <input ref={file_input_ref} type="file" accept="image/*" className="hidden" onChange={handle_file_change} />
 
-      {/* ─── MAIN ─── */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ─── HEADING ─── */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-emerald-800">
-            {t.farmerDashboard.welcome}, {userName}
+            {t.farmerDashboard.welcome}, {user_name}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">{t.farmerDashboard.manageFarmsSubtitle || 'Manage your fields, scan crops, and track your harvest health.'}</p>
         </div>
 
-        {/* ─── TOP ROW: Upload (left) | Weather + Quick Actions (right) ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
-
-          {/* ── LEFT: Upload Card ── */}
           <button
             type="button"
             onClick={handle_click_upload_button}
@@ -425,30 +525,28 @@ function FarmerDashboard() {
             <p className="text-sm text-gray-500 mt-1">{t.farmerDashboard.dropImageText || 'Drop an image or click to browse'}</p>
           </button>
 
-          {/* ── RIGHT: Weather + Quick Actions ── */}
           <div className="lg:col-span-2 flex flex-col gap-4">
-
-            {/* Weather Widget */}
             <div className="bg-white rounded-2xl border border-[#D5DDD0] p-5 flex-1">
-              {/* Loading state */}
               {is_getting_weather && !weather_data && (
                 <div className="flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D6A4F]"></div>
                 </div>
               )}
 
-              {/* Error state */}
               {weather_error && !weather_data && (
                 <div className="text-center py-4">
                   <p className="text-sm text-red-600 mb-3">{weather_error}</p>
-                  <button type="button" onClick={handle_get_weather} disabled={is_getting_weather}
-                    className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg text-sm font-medium hover:bg-[#1a4d35]">
+                  <button
+                    type="button"
+                    onClick={handle_get_weather}
+                    disabled={is_getting_weather}
+                    className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg text-sm font-medium hover:bg-[#1a4d35]"
+                  >
                     {t.farmerDashboard.getWeather || 'Try Again'}
                   </button>
                 </div>
               )}
 
-              {/* Weather data */}
               {weather_data && (
                 <>
                   <div className="flex items-start justify-between mb-4">
@@ -488,17 +586,14 @@ function FarmerDashboard() {
                 </>
               )}
 
-              {/* Initial state - not yet fetched */}
               {!weather_data && !weather_error && !is_getting_weather && (
-                <button type="button" onClick={handle_get_weather}
-                  className="w-full text-center py-6">
+                <button type="button" onClick={handle_get_weather} className="w-full text-center py-6">
                   <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">{t.farmerDashboard.currentWeather}</p>
                   <p className="text-sm text-[#2D6A4F] font-medium">{t.farmerDashboard.getWeather}</p>
                 </button>
               )}
             </div>
 
-            {/* Quick Action: View History + Need Help side by side */}
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
@@ -530,10 +625,7 @@ function FarmerDashboard() {
           </div>
         </div>
 
-        {/* ─── BOTTOM ROW: Fields (left) | Recent Scans (right) ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-          {/* ── LEFT: My Wheat Fields ── */}
           <div className="lg:col-span-3 bg-white rounded-2xl border border-[#D5DDD0] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#D5DDD0] flex items-center justify-between">
               <h2 className="text-base font-bold text-gray-900">{t.farmerDashboard.myWheatFields}</h2>
@@ -543,13 +635,14 @@ function FarmerDashboard() {
             </div>
             <div className="px-6 divide-y divide-gray-100">
               {fields.map((field) => {
-                const isAlert = field.status === 'attention'
+                const is_alert = field.status === 'attention'
+
                 return (
                   <div key={field.name} className="py-4 first:pt-4 last:pb-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-gray-900">{field.name}</span>
-                        {isAlert ? (
+                        {is_alert ? (
                           <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-800">
                             {t.farmerDashboard.needsAttention}
                           </span>
@@ -563,7 +656,7 @@ function FarmerDashboard() {
                     </div>
                     <div className="w-full h-2 rounded-full bg-gray-100">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${isAlert ? 'bg-[#F59E0B]' : 'bg-[#2D6A4F]'}`}
+                        className={`h-full rounded-full transition-all duration-500 ${is_alert ? 'bg-[#F59E0B]' : 'bg-[#2D6A4F]'}`}
                         style={{ width: `${field.health}%` }}
                       ></div>
                     </div>
@@ -573,7 +666,6 @@ function FarmerDashboard() {
             </div>
           </div>
 
-          {/* ── RIGHT: Recent Scans ── */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-[#D5DDD0] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#D5DDD0] flex items-center justify-between">
               <h2 className="text-base font-bold text-gray-900">{t.farmerDashboard.recentScans || 'Recent Scans'}</h2>
@@ -595,7 +687,6 @@ function FarmerDashboard() {
         </div>
       </main>
 
-      {/* ─── HELP MODAL ─── */}
       {is_help_open && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -610,15 +701,27 @@ function FarmerDashboard() {
             <form className="space-y-4" onSubmit={handle_help_submit}>
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="help_subject_farmer">{t.farmerDashboard.helpSubject}</label>
-                <input id="help_subject_farmer" type="text" value={help_subject} onChange={handle_help_subject_change} disabled={is_sending_help}
+                <input
+                  id="help_subject_farmer"
+                  type="text"
+                  value={help_subject}
+                  onChange={handle_help_subject_change}
+                  disabled={is_sending_help}
                   className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
-                  placeholder={t.farmerDashboard.helpSubjectPlaceholder} />
+                  placeholder={t.farmerDashboard.helpSubjectPlaceholder}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="help_message_farmer">{t.farmerDashboard.helpMessage}</label>
-                <textarea id="help_message_farmer" rows={4} value={help_message} onChange={handle_help_message_change} disabled={is_sending_help}
+                <textarea
+                  id="help_message_farmer"
+                  rows={4}
+                  value={help_message}
+                  onChange={handle_help_message_change}
+                  disabled={is_sending_help}
                   className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50 resize-y"
-                  placeholder={t.farmerDashboard.helpMessagePlaceholder}></textarea>
+                  placeholder={t.farmerDashboard.helpMessagePlaceholder}
+                ></textarea>
               </div>
               <div className="flex justify-end gap-3 pt-1">
                 <button type="button" onClick={close_help_modal} disabled={is_sending_help} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-60 font-medium">{t.common.close}</button>
@@ -632,7 +735,6 @@ function FarmerDashboard() {
         </div>
       )}
 
-      {/* ─── CHANGE PASSWORD MODAL ─── */}
       {is_change_password_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -647,21 +749,39 @@ function FarmerDashboard() {
             <form className="space-y-4" onSubmit={handle_change_password_submit}>
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="old_password_1_farmer">{t.farmerDashboard.oldPassword}</label>
-                <input id="old_password_1_farmer" type="password" value={old_password_first} onChange={handle_old_password_first_change} disabled={is_changing_password}
+                <input
+                  id="old_password_1_farmer"
+                  type="password"
+                  value={old_password_first}
+                  onChange={handle_old_password_first_change}
+                  disabled={is_changing_password}
                   className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
-                  placeholder={t.farmerDashboard.oldPasswordPlaceholder} />
+                  placeholder={t.farmerDashboard.oldPasswordPlaceholder}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="old_password_2_farmer">{t.farmerDashboard.confirmOldPassword}</label>
-                <input id="old_password_2_farmer" type="password" value={old_password_second} onChange={handle_old_password_second_change} disabled={is_changing_password}
+                <input
+                  id="old_password_2_farmer"
+                  type="password"
+                  value={old_password_second}
+                  onChange={handle_old_password_second_change}
+                  disabled={is_changing_password}
                   className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
-                  placeholder={t.farmerDashboard.confirmOldPasswordPlaceholder} />
+                  placeholder={t.farmerDashboard.confirmOldPasswordPlaceholder}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700" htmlFor="new_password_farmer">{t.farmerDashboard.newPassword}</label>
-                <input id="new_password_farmer" type="password" value={new_password} onChange={handle_new_password_change} disabled={is_changing_password}
+                <input
+                  id="new_password_farmer"
+                  type="password"
+                  value={new_password}
+                  onChange={handle_new_password_change}
+                  disabled={is_changing_password}
                   className="mt-1 w-full px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
-                  placeholder={t.farmerDashboard.newPasswordPlaceholder} />
+                  placeholder={t.farmerDashboard.newPasswordPlaceholder}
+                />
               </div>
               <div className="flex justify-end gap-3 pt-1">
                 <button type="button" onClick={close_change_password_modal} disabled={is_changing_password} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-60 font-medium">{t.common.cancel}</button>
@@ -674,11 +794,10 @@ function FarmerDashboard() {
           </div>
         </div>
       )}
-      {/* ─── SCAN MODAL ─── */}
+
       {is_scan_modal_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
             <div className="sticky top-0 z-10 bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between rounded-t-xl">
               <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.diagnosisResults || 'Diagnosis Results'}</h2>
               <button
@@ -693,13 +812,11 @@ function FarmerDashboard() {
               </button>
             </div>
 
-            {/* Image Preview */}
             {preview_url && (
               <img src={preview_url} alt="preview" className="w-full max-h-[300px] object-cover" />
             )}
 
             <div className="p-6">
-              {/* Analyze Button */}
               {!diagnose_result && (
                 <div className="mb-4">
                   <button
@@ -713,14 +830,12 @@ function FarmerDashboard() {
                 </div>
               )}
 
-              {/* Error */}
               {diagnose_error && (
                 <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
                   {diagnose_error}
                 </div>
               )}
 
-              {/* Results */}
               {diagnose_result && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -764,7 +879,6 @@ function FarmerDashboard() {
                 </div>
               )}
 
-              {/* Chat */}
               {is_chat_open && (
                 <div className="mt-6 border-t border-gray-200 pt-4">
                   <p className="text-sm font-semibold text-gray-700 mb-3">{t.farmerDashboard.aiAssistant}</p>
@@ -781,11 +895,19 @@ function FarmerDashboard() {
                   </div>
                   {chat_error_text && <div className="mb-2 bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm border border-red-200">{chat_error_text}</div>}
                   <form className="flex gap-2" onSubmit={handle_chat_submit}>
-                    <input type="text" value={chat_input} onChange={handle_chat_input_change} disabled={is_sending_chat}
+                    <input
+                      type="text"
+                      value={chat_input}
+                      onChange={handle_chat_input_change}
+                      disabled={is_sending_chat}
                       className="flex-1 px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F] disabled:bg-gray-50"
-                      placeholder={t.farmerDashboard.chatPlaceholder} />
-                    <button type="submit" disabled={is_sending_chat || !chat_input.trim()}
-                      className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg font-medium hover:bg-[#1a4d35] disabled:opacity-50 transition-colors">
+                      placeholder={t.farmerDashboard.chatPlaceholder}
+                    />
+                    <button
+                      type="submit"
+                      disabled={is_sending_chat || !chat_input.trim()}
+                      className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg font-medium hover:bg-[#1a4d35] disabled:opacity-50 transition-colors"
+                    >
                       {is_sending_chat ? t.common.sending : t.common.send}
                     </button>
                   </form>
@@ -796,11 +918,9 @@ function FarmerDashboard() {
         </div>
       )}
 
-      {/* ─── WEATHER MODAL ─── */}
       {is_weather_modal_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Header */}
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">{t.farmerDashboard.currentWeather}</h2>
               <button
@@ -816,21 +936,18 @@ function FarmerDashboard() {
             </div>
 
             <div className="p-6">
-              {/* Loading */}
               {is_getting_weather && (
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2D6A4F]"></div>
                 </div>
               )}
 
-              {/* Error */}
               {weather_error && (
                 <div className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg mb-4">
                   {weather_error}
                 </div>
               )}
 
-              {/* Weather Data */}
               {weather_data && (
                 <>
                   <div className="mb-6">
@@ -869,7 +986,6 @@ function FarmerDashboard() {
                 </>
               )}
 
-              {/* Retry button if error */}
               {weather_error && !is_getting_weather && (
                 <button
                   type="button"
