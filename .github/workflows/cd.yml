@@ -32,14 +32,14 @@ jobs:
         with:
           version: 'v1.28.0'
 
-      # 3️⃣ Install OCI CLI (must be on PATH for Get kubeconfig step)
+      # 3️⃣ Install OCI CLI via pip (pinned version to avoid "unexpected extra arguments" from install script version)
       - name: Install OCI CLI
         run: |
-          curl -fsSL https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
-          echo "$HOME/bin" >> $GITHUB_PATH
+          python3 -m pip install --user 'oci-cli==3.37.2'
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Verify OCI CLI on PATH
         run: |
-          export PATH="$HOME/bin:$PATH"
+          export PATH="$HOME/.local/bin:$PATH"
           which oci && oci --version
 
       # 4️⃣ Configure OCI (requires OCI_* secrets)
@@ -57,15 +57,14 @@ jobs:
 
           chmod 600 ~/.oci/oci_api_key.pem
 
-      # 5️⃣ Generate kubeconfig for OKE
+      # 5️⃣ Generate kubeconfig for OKE (OCI CLI 3.37.x accepts these options; --region must be before 'ce')
       - name: Get kubeconfig
         run: |
-          export PATH="$HOME/bin:$PATH"
+          export PATH="$HOME/.local/bin:$PATH"
           mkdir -p "$HOME/.kube"
-          export KUBECONFIG_FILE="$HOME/.kube/config"
-          # Use only cluster-id and file; token-version and kube-endpoint can trigger "unexpected extra arguments" on some OCI CLI versions
-          oci --region "${{ secrets.OCI_REGION }}" ce cluster create-kubeconfig --cluster-id "${{ secrets.OKE_CLUSTER_OCID }}" --file "$KUBECONFIG_FILE"
-          chmod 600 "$KUBECONFIG_FILE"
+          CFG="$HOME/.kube/config"
+          oci --region "${{ secrets.OCI_REGION }}" ce cluster create-kubeconfig --cluster-id "${{ secrets.OKE_CLUSTER_OCID }}" --file "$CFG" --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+          chmod 600 "$CFG"
       - name: Set KUBECONFIG environment
         run: echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
 
