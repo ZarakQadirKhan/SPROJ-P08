@@ -218,6 +218,7 @@ router.post('/register-otp', async function (request, response) {
 
     await user.save()
 
+    // Send OTP via Resend.com to the email entered in the registration form
     await sendOtpEmail(normalizedEmail, otp)
 
     const payload = {
