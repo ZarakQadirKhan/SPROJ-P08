@@ -165,6 +165,14 @@ function getLockoutSeconds(lockUntil) {
 
 router.post('/register-otp', async function (request, response) {
   try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error('[Auth] /register-otp: RESEND_API_KEY is not set')
+      return response.status(503).json({
+        ok: false,
+        message: 'Verification email service is not configured. Please try again later.'
+      })
+    }
+
     const { name, email, phone, password, role } = request.body || {}
     const safe_role = normalize_role(role)
 
