@@ -21,27 +21,35 @@ function weathercode_to_condition(code) {
   return 'Unknown'
 }
 
-function generate_advice(current, today) {
+const ADVICE_STRINGS = {
+  en: {
+    noRain: 'No significant rain today: if soil is dry, plan irrigation early morning or late evening.',
+    rain: 'Rain expected today: avoid unnecessary irrigation and make sure fields have proper drainage.',
+    calmWind: 'Calmer winds: if spraying is needed, this is a suitable window, but always follow label safety instructions.',
+    strongWind: 'Stronger winds: avoid spraying pesticides or fertilizers to prevent drift.'
+  },
+  ur: {
+    noRain: 'آج خاص بارش نہیں: اگر مٹی خشک ہے تو آبپاشی صبح سویرے یا شام دیر سے کریں۔',
+    rain: 'آج بارش کا امکان: غیر ضروری آبپاشی سے گریز کریں اور کھیتوں میں نکاسی کا خیال رکھیں۔',
+    calmWind: 'ہوا کم ہے: اگر سپرے کرنا ہو تو یہ موافق وقت ہے، پر ہمیشہ لیبل پر دی گئی ہدایات پر عمل کریں۔',
+    strongWind: 'تیز ہوا: زہریلی یا کھادی سپرے سے گریز کریں تاکہ دوسری جگہ نہ اڑے۔'
+  }
+}
+
+function generate_advice(current, today, language = 'en') {
+  const strings = ADVICE_STRINGS[language] || ADVICE_STRINGS.en
   const advice = []
 
   if ((today.precipitation_mm || 0) === 0) {
-    advice.push(
-      'No significant rain today: if soil is dry, plan irrigation early morning or late evening.'
-    )
+    advice.push(strings.noRain)
   } else {
-    advice.push(
-      'Rain expected today: avoid unnecessary irrigation and make sure fields have proper drainage.'
-    )
+    advice.push(strings.rain)
   }
 
   if ((current.wind_speed_kmh || 0) < 10) {
-    advice.push(
-      'Calmer winds: if spraying is needed, this is a suitable window, but always follow label safety instructions.'
-    )
+    advice.push(strings.calmWind)
   } else {
-    advice.push(
-      'Stronger winds: avoid spraying pesticides or fertilizers to prevent drift.'
-    )
+    advice.push(strings.strongWind)
   }
 
   return advice
@@ -140,7 +148,7 @@ router.get('/', async function (request, response) {
       wind_gust_max_kmh: data.daily?.wind_gusts_10m_max?.[0]
     }
 
-    const advice = generate_advice(current, today)
+    const advice = generate_advice(current, today, language)
 
     const city_label = data.timezone || 'Your location'
 

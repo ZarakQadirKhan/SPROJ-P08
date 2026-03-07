@@ -90,11 +90,11 @@ function FarmerDashboard() {
   const [is_scan_modal_open, set_is_scan_modal_open] = useState(false)
   const [is_weather_modal_open, set_is_weather_modal_open] = useState(false)
 
-  /* Auto-fetch weather on mount */
+  /* Auto-fetch weather on mount and when language changes (so advice is in the right language) */
   useEffect(() => {
     handle_get_weather()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [language])
 
 
   function handle_logout() {
@@ -124,7 +124,7 @@ function FarmerDashboard() {
     set_weather_data(null)
     try {
       const coords = await get_browser_location()
-      const data = await fetch_weather_by_coords(coords.latitude, coords.longitude)
+      const data = await fetch_weather_by_coords(coords.latitude, coords.longitude, language)
       set_weather_data(data)
     } catch (error) {
       set_weather_error(error && error.message ? error.message : t.farmerDashboard.weatherFetchFailed)
