@@ -5,7 +5,7 @@ import { diagnose_image } from '../../services/diagnoseService'
 import { send_complaint } from '../../services/helpService'
 import { changePassword } from '../../services/authService'
 import { send_chat_message } from '../../services/chatService'
-import { get_fields, create_field, update_field, delete_field, link_diagnosis_to_field } from '../../services/fieldService'
+import { get_fields, create_field, update_field, delete_field, link_diagnosis_to_field, save_and_link_diagnosis_to_field } from '../../services/fieldService'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 function build_chat_intro_message(diagnose_result, t) {
@@ -519,12 +519,15 @@ function FarmerDashboard() {
   }
 
   async function handle_assign_to_field() {
-    const diagnosis_id = diagnose_result && diagnose_result.diagnosisId
-    if (!diagnosis_id || !assign_field_id) return
+    if (!diagnose_result || !assign_field_id) return
     set_is_linking(true)
     set_link_success(false)
     try {
-      await link_diagnosis_to_field(diagnosis_id, assign_field_id)
+      if (diagnose_result.diagnosisId) {
+        await link_diagnosis_to_field(diagnose_result.diagnosisId, assign_field_id)
+      } else {
+        await save_and_link_diagnosis_to_field(diagnose_result, assign_field_id)
+      }
       set_link_success(true)
       await load_fields()
     } catch (err) {
@@ -1084,7 +1087,7 @@ function FarmerDashboard() {
                     </div>
                   )}
 
-                  {diagnose_result.diagnosisId && (
+                  {diagnose_result && (
                     <div className="pt-3 border-t border-gray-200">
                       <div className="text-sm font-medium text-gray-700 mb-2">{t.farmerDashboard.assignToField || 'Add this diagnosis to a field'}</div>
                       <div className="flex flex-wrap items-center gap-2">

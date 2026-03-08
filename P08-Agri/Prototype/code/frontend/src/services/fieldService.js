@@ -60,6 +60,25 @@ export async function link_diagnosis_to_field(diagnosis_id, field_id) {
   return data
 }
 
+export async function save_and_link_diagnosis_to_field(result, field_id) {
+  const url = `${base()}/api/diagnose/save-and-link`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: get_headers(),
+    body: JSON.stringify({
+      diagnosis: result.diagnosis,
+      confidence: result.confidence,
+      alternatives: result.alternatives,
+      recommendations: result.recommendations,
+      processing_ms: result.processing_ms,
+      field_id
+    })
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.message || `Failed to save and link (${res.status})`)
+  return data
+}
+
 const fieldService = {
   get_fields,
   create_field,

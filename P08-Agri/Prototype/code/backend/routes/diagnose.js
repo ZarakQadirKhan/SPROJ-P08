@@ -103,4 +103,36 @@ router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.
   }
 })
 
+// Save a diagnosis from frontend result (e.g. when initial save failed) and link to field
+router.post('/save-and-link', requireAuth, requireRole(['farmer']), async (req, res) => {
+  const { diagnosis, confidence, alternatives, recommendations, processing_ms, field_id } = req.body || {}
+  if (!diagnosis || !field_id) {
+    res.status(400).json({ message: 'diagnosis and field_id are required' })
+    return
+  }
+  const Field = require('../models/Field')
+  const mongoose = require('mongoose')
+  try {
+    const field = await Field.findOne({ _id: field_id, user_id: req.auth.userId })
+    if (!field) {
+      res.status(404).json({ message: 'Field not found' })
+      return
+    }
+    const diagnosis_record = new Diagnosis({
+      user_id: req.auth.userId,
+      diagnosis: typeof diagnosis === 'string' ? diagnosis : String(diagnosis),
+      confidence: typeof confidence === 'number' ? confidence : 0,
+      alternatives: Array.isArray(alternatives) ? alternatives : [],
+      recommendations: Array.isArray(recommendations) ? recommendations : [],
+      processing_ms: typeof processing_ms === 'number' ? processing_ms : undefined,
+      field_id: new mongoose.Types.ObjectId(field_id)
+    })
+    await diagnosis_record.save()
+    res.json({ diagnosisId: diagnosis_record._id.toString() })
+  } catch (err) {
+    console.error('Save-and-link diagnosis error:', err.message || err)
+    res.status(500).json({ message: 'Failed to save and link diagnosis' })
+  }
+})
+
 module.exports = router
