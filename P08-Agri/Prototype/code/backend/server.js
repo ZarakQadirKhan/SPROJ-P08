@@ -261,9 +261,13 @@ try {
 }
 
 if (fields_mounted === false) {
-  app.get('/api/fields', function (request, response) {
+  const fields_unavailable = function (request, response) {
     response.status(501).json({ ok: false, message: 'Fields router not mounted' })
-  })
+  }
+  app.get('/api/fields', fields_unavailable)
+  app.post('/api/fields', fields_unavailable)
+  app.put('/api/fields/:id', fields_unavailable)
+  app.delete('/api/fields/:id', fields_unavailable)
 }
 
 /* ================================
