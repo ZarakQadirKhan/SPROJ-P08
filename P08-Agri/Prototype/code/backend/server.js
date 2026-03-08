@@ -242,6 +242,31 @@ if (history_mounted === false) {
 }
 
 /* ================================
+   FIELDS ROUTES (wheat field plots)
+   ================================ */
+
+const fields_router_path = path.resolve(__dirname, 'routes', 'fields.js')
+const fields_exists = fs.existsSync(fields_router_path)
+let fields_mounted = false
+
+try {
+  if (fields_exists === true) {
+    const fields_router = require(fields_router_path)
+    app.use('/api/fields', fields_router)
+    fields_mounted = true
+    console.log('Fields router mounted successfully')
+  }
+} catch (error) {
+  console.error('Failed to mount fields router:', error.message || error)
+}
+
+if (fields_mounted === false) {
+  app.get('/api/fields', function (request, response) {
+    response.status(501).json({ ok: false, message: 'Fields router not mounted' })
+  })
+}
+
+/* ================================
    CHAT ROUTES
    ================================ */
 

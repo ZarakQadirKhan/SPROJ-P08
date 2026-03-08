@@ -1,6 +1,8 @@
 const express = require('express')
+const mongoose = require('mongoose')
 const { requireAuth } = require('../middleware/auth')
 const Diagnosis = require('../models/Diagnosis')
+const Field = require('../models/Field')
 
 const router = express.Router()
 
@@ -16,7 +18,7 @@ router.get('/', requireAuth, async function (request, response) {
 
     const [diagnoses, total] = await Promise.all([
       Diagnosis.find(query)
-        .sort({ createdAt: -1, _id: -1 })
+        .sort({ created_at: -1, _id: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -55,6 +57,41 @@ router.get('/:id', requireAuth, async function (request, response) {
     response.status(500).json({
       message: 'Failed to load diagnosis details'
     })
+  }
+})
+
+router.patch('/:id/field', requireAuth, async function (request, response) {
+  try {
+    const diagnosis = await Diagnosis.findOne({
+      _id: request.params.id,
+      user_id: request.auth.userId
+    })
+    if (!diagnosis) {
+      response.status(404).json({ message: 'Diagnosis not found' })
+      return
+    }
+    const { field_id } = request.body || {}
+    if (field_id === null || field_id === '') {
+      diagnosis.field_id = undefined
+      await diagnosis.save()
+      return response.json({ ...diagnosis.toObject(), field_id: null })
+    }
+    if (!field_id) {
+      return response.status(400).json({ message: 'field_id is required' })
+    }
+    const field = await Field.findOne({
+      _id: field_id,
+      user_id: request.auth.userId
+    })
+    if (!field) {
+      return response.status(404).json({ message: 'Field not found' })
+    }
+    diagnosis.field_id = new mongoose.Types.ObjectId(field_id)
+    await diagnosis.save()
+    response.json(diagnosis)
+  } catch (error) {
+    console.error('Link diagnosis to field error:', error.message || error)
+    response.status(500).json({ message: 'Failed to link diagnosis to field' })
   }
 })
 

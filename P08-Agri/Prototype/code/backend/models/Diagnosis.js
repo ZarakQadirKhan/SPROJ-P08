@@ -22,6 +22,11 @@ const diagnosis_schema = new mongoose.Schema({
   processing_ms: {
     type: Number
   },
+  field_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Field',
+    default: null
+  },
   created_at: {
     type: Date,
     default: Date.now

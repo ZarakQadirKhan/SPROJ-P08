@@ -5,6 +5,7 @@ import { diagnose_image } from '../../services/diagnoseService'
 import { send_complaint } from '../../services/helpService'
 import { changePassword } from '../../services/authService'
 import { send_chat_message } from '../../services/chatService'
+import { get_fields, create_field, update_field, delete_field, link_diagnosis_to_field } from '../../services/fieldService'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 function build_chat_intro_message(diagnose_result, t) {
@@ -97,11 +98,40 @@ function FarmerDashboard() {
   const [is_scan_modal_open, set_is_scan_modal_open] = useState(false)
   const [is_weather_modal_open, set_is_weather_modal_open] = useState(false)
 
+  const [fields, set_fields] = useState([])
+  const [fields_loading, set_fields_loading] = useState(false)
+  const [fields_error, set_fields_error] = useState('')
+  const [is_field_modal_open, set_is_field_modal_open] = useState(false)
+  const [editing_field, set_editing_field] = useState(null)
+  const [field_form, set_field_form] = useState({ name: '', area: '', location: '', wheat_variety: '', sowing_date: '' })
+  const [field_form_error, set_field_form_error] = useState('')
+  const [is_saving_field, set_is_saving_field] = useState(false)
+  const [assign_field_id, set_assign_field_id] = useState('')
+  const [is_linking, set_is_linking] = useState(false)
+  const [link_success, set_link_success] = useState(false)
+
+  async function load_fields() {
+    set_fields_loading(true)
+    set_fields_error('')
+    try {
+      const list = await get_fields()
+      set_fields(list)
+    } catch (err) {
+      set_fields_error(err && err.message ? err.message : 'Failed to load fields')
+    } finally {
+      set_fields_loading(false)
+    }
+  }
+
   /* Auto-fetch weather on mount and when language changes (so advice is in the right language) */
   useEffect(() => {
     handle_get_weather()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language])
+
+  useEffect(() => {
+    load_fields()
+  }, [])
 
   function handle_logout() {
     localStorage.removeItem('token')
@@ -421,17 +451,99 @@ function FarmerDashboard() {
     set_chat_input('')
     set_chat_error_text('')
     set_is_scan_modal_open(false)
+    set_assign_field_id('')
+    set_link_success(false)
 
     if (file_input_ref.current) {
       file_input_ref.current.value = ''
     }
   }
 
-  const fields = [
-    { name: 'North Field', status: 'healthy', area: '5 acres', variety: 'Punjab-11', sowing: 'Oct 2024', location: 'Lahore, Punjab', health: 92 },
-    { name: 'East Field', status: 'attention', area: '3 acres', variety: 'Faisalabad-2008', sowing: 'Nov 2024', location: 'Lahore, Punjab', health: 45 },
-    { name: 'South Field', status: 'healthy', area: '7 acres', variety: 'Sehar-2006', sowing: 'Oct 2024', location: 'Lahore, Punjab', health: 88 }
-  ]
+  function open_add_field_modal() {
+    set_editing_field(null)
+    set_field_form({ name: '', area: '', location: '', wheat_variety: '', sowing_date: '' })
+    set_field_form_error('')
+    set_is_field_modal_open(true)
+  }
+
+  function open_edit_field_modal(field) {
+    set_editing_field(field)
+    set_field_form({
+      name: field.name || '',
+      area: field.area || '',
+      location: field.location || '',
+      wheat_variety: field.wheat_variety || '',
+      sowing_date: field.sowing_date || ''
+    })
+    set_field_form_error('')
+    set_is_field_modal_open(true)
+  }
+
+  function close_field_modal() {
+    set_is_field_modal_open(false)
+    set_editing_field(null)
+    set_field_form_error('')
+  }
+
+  async function handle_field_submit(e) {
+    e.preventDefault()
+    if (!field_form.name.trim()) {
+      set_field_form_error(t.farmerDashboard.fieldNameRequired || 'Field name is required')
+      return
+    }
+    set_is_saving_field(true)
+    set_field_form_error('')
+    try {
+      if (editing_field) {
+        await update_field(editing_field._id, field_form)
+      } else {
+        await create_field(field_form)
+      }
+      await load_fields()
+      close_field_modal()
+    } catch (err) {
+      set_field_form_error(err && err.message ? err.message : 'Failed to save field')
+    } finally {
+      set_is_saving_field(false)
+    }
+  }
+
+  async function handle_delete_field(field) {
+    if (!window.confirm(t.farmerDashboard.deleteFieldConfirm || `Delete "${field.name}"?`)) return
+    try {
+      await delete_field(field._id)
+      await load_fields()
+    } catch (err) {
+      set_fields_error(err && err.message ? err.message : 'Failed to delete field')
+    }
+  }
+
+  async function handle_assign_to_field() {
+    const diagnosis_id = diagnose_result && diagnose_result.diagnosisId
+    if (!diagnosis_id || !assign_field_id) return
+    set_is_linking(true)
+    set_link_success(false)
+    try {
+      await link_diagnosis_to_field(diagnosis_id, assign_field_id)
+      set_link_success(true)
+      await load_fields()
+    } catch (err) {
+      set_field_form_error(err && err.message ? err.message : 'Failed to link to field')
+    } finally {
+      set_is_linking(false)
+    }
+  }
+
+  const fields_display = fields.map((f) => ({
+    ...f,
+    name: f.name || 'Unnamed',
+    status: f.status || 'unknown',
+    area: f.area || '—',
+    variety: f.wheat_variety || '—',
+    sowing: f.sowing_date || '—',
+    location: f.location || '—',
+    health: typeof f.health === 'number' ? f.health : null
+  }))
 
   const user_name = user?.name || 'Farmer'
   const user_initial = (user_name.charAt(0) || 'F').toUpperCase()
@@ -629,20 +741,36 @@ function FarmerDashboard() {
           <div className="lg:col-span-3 bg-white rounded-2xl border border-[#D5DDD0] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#D5DDD0] flex items-center justify-between">
               <h2 className="text-base font-bold text-gray-900">{t.farmerDashboard.myWheatFields}</h2>
-              <button type="button" className="text-sm text-[#2D6A4F] font-medium hover:underline">
+              <button type="button" onClick={open_add_field_modal} className="text-sm text-[#2D6A4F] font-medium hover:underline">
                 + {t.farmerDashboard.addNewField}
               </button>
             </div>
+            {fields_error && <div className="px-6 py-2 text-sm text-red-600">{fields_error}</div>}
+            {fields_loading && (
+              <div className="px-6 py-8 flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D6A4F]" />
+              </div>
+            )}
+            {!fields_loading && fields_display.length === 0 && (
+              <div className="px-6 py-8 text-center text-gray-500 text-sm">
+                {t.farmerDashboard.noFieldsFound || 'No fields found. Add a field to get started.'}
+              </div>
+            )}
             <div className="px-6 divide-y divide-gray-100">
-              {fields.map((field) => {
+              {fields_display.map((field) => {
                 const is_alert = field.status === 'attention'
+                const is_issue = field.status === 'issue'
 
                 return (
-                  <div key={field.name} className="py-4 first:pt-4 last:pb-4">
+                  <div key={field._id} className="py-4 first:pt-4 last:pb-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-gray-900">{field.name}</span>
-                        {is_alert ? (
+                        {is_issue ? (
+                          <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-red-800">
+                            {t.farmerDashboard.needsAttention}
+                          </span>
+                        ) : is_alert ? (
                           <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-800">
                             {t.farmerDashboard.needsAttention}
                           </span>
@@ -652,12 +780,20 @@ function FarmerDashboard() {
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-500">{field.area} · {field.variety}</span>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => open_edit_field_modal(field)} className="text-xs text-[#2D6A4F] font-medium hover:underline">
+                          {t.farmerDashboard.edit}
+                        </button>
+                        <button type="button" onClick={() => handle_delete_field(field)} className="text-xs text-red-600 font-medium hover:underline">
+                          {t.farmerDashboard.delete || 'Delete'}
+                        </button>
+                      </div>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-gray-100">
+                    <span className="text-xs text-gray-500 block mb-1">{field.area} · {field.variety}</span>
+                    <div className="w-full h-2 rounded-full bg-gray-100 mt-1">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${is_alert ? 'bg-[#F59E0B]' : 'bg-[#2D6A4F]'}`}
-                        style={{ width: `${field.health}%` }}
+                        className={`h-full rounded-full transition-all duration-500 ${field.health == null ? 'bg-gray-300' : is_issue ? 'bg-red-500' : is_alert ? 'bg-[#F59E0B]' : 'bg-[#2D6A4F]'}`}
+                        style={{ width: `${field.health != null ? field.health : 0}%` }}
                       ></div>
                     </div>
                   </div>
@@ -795,6 +931,79 @@ function FarmerDashboard() {
         </div>
       )}
 
+      {is_field_modal_open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-gray-900">{editing_field ? (t.farmerDashboard.editField || 'Edit field') : (t.farmerDashboard.addNewField || 'Add new field')}</h2>
+              <button type="button" onClick={close_field_modal} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            {field_form_error && <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{field_form_error}</div>}
+            <form onSubmit={handle_field_submit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t.farmerDashboard.fieldName || 'Field name'} *</label>
+                <input
+                  type="text"
+                  value={field_form.name}
+                  onChange={(e) => set_field_form((f) => ({ ...f, name: e.target.value }))}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  placeholder={t.farmerDashboard.fieldNamePlaceholder || 'e.g. North Field'}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t.farmerDashboard.area}</label>
+                <input
+                  type="text"
+                  value={field_form.area}
+                  onChange={(e) => set_field_form((f) => ({ ...f, area: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  placeholder={t.farmerDashboard.areaPlaceholder || 'e.g. 5 acres'}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t.farmerDashboard.location}</label>
+                <input
+                  type="text"
+                  value={field_form.location}
+                  onChange={(e) => set_field_form((f) => ({ ...f, location: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  placeholder={t.farmerDashboard.locationPlaceholder || 'e.g. Lahore, Punjab'}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t.farmerDashboard.variety}</label>
+                <input
+                  type="text"
+                  value={field_form.wheat_variety}
+                  onChange={(e) => set_field_form((f) => ({ ...f, wheat_variety: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  placeholder={t.farmerDashboard.varietyPlaceholder || 'e.g. Punjab-11'}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t.farmerDashboard.sowingDate}</label>
+                <input
+                  type="text"
+                  value={field_form.sowing_date}
+                  onChange={(e) => set_field_form((f) => ({ ...f, sowing_date: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  placeholder={t.farmerDashboard.sowingDatePlaceholder || 'e.g. Oct 2024'}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={close_field_modal} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">{t.common.cancel}</button>
+                <button type="submit" disabled={is_saving_field} className="px-4 py-2 text-sm bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] disabled:opacity-50 font-medium">
+                  {is_saving_field ? (t.common.saving || 'Saving...') : (t.common.save || 'Save')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {is_scan_modal_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -872,6 +1081,34 @@ function FarmerDashboard() {
                           </span>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {diagnose_result.diagnosisId && (
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="text-sm font-medium text-gray-700 mb-2">{t.farmerDashboard.assignToField || 'Add this diagnosis to a field'}</div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={assign_field_id}
+                          onChange={(e) => set_assign_field_id(e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                        >
+                          <option value="">— {t.farmerDashboard.selectField || 'Select field'} —</option>
+                          {fields.map((f) => (
+                            <option key={f._id} value={f._id}>{f.name}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={handle_assign_to_field}
+                          disabled={!assign_field_id || is_linking}
+                          className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] disabled:opacity-50 text-sm font-medium"
+                        >
+                          {is_linking ? (t.common.sending || 'Linking...') : (t.farmerDashboard.addToField || 'Add to field')}
+                        </button>
+                        {link_success && <span className="text-sm text-green-600">{t.farmerDashboard.linkedToField || 'Linked! Field health updated.'}</span>}
+                      </div>
+                      {fields.length === 0 && <p className="text-xs text-gray-500 mt-1">{t.farmerDashboard.addFieldFirst || 'Add a field from the dashboard to link diagnoses.'}</p>}
                     </div>
                   )}
 

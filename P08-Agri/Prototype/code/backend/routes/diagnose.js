@@ -76,7 +76,8 @@ router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.
       return
     }
 
-    // Save diagnosis to database (req.auth set by requireAuth)
+    const field_id = req.body && req.body.field_id ? req.body.field_id : null
+
     try {
       const diagnosis_record = new Diagnosis({
         user_id: req.auth.userId,
@@ -84,15 +85,15 @@ router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.
         confidence: ml_resp.data.confidence,
         alternatives: ml_resp.data.alternatives || [],
         recommendations: ml_resp.data.recommendations || [],
-        processing_ms: ml_resp.data.processing_ms
+        processing_ms: ml_resp.data.processing_ms,
+        field_id: field_id || undefined
       })
       await diagnosis_record.save()
+      res.json({ ...ml_resp.data, diagnosisId: diagnosis_record._id.toString() })
     } catch (error_) {
       console.error('Failed to save diagnosis to database:', error_.message || error_)
-      // Continue even if saving fails - user still gets result
+      res.json(ml_resp.data)
     }
-    
-    res.json(ml_resp.data)
   } catch (err) {
     // Priority 3: Log detailed error but return generic message
     console.error('Diagnosis error:', err.message || err)
