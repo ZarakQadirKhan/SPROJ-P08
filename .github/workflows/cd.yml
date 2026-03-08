@@ -42,22 +42,46 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           which oci && oci --version
 
-      # 4️⃣ Configure OCI (requires OCI_* secrets)
+      # 4️⃣ Configure OCI (requires OCI_USER_OCID, OCI_TENANCY_OCID, OCI_REGION, OCI_PRIVATE_KEY; fingerprint is derived from the key).
       - name: Configure OCI
         run: |
           mkdir -p ~/.oci
+          trim() { echo "$1" | tr -d '\n\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
+
+          if [ -z "$(trim "${{ secrets.OCI_USER_OCID }}")" ]; then
+            echo "::error::OCI_USER_OCID secret is missing or empty. Add it in GitHub Actions secrets (your user OCID, e.g. ocid1.user.oc1..aaaa...)."
+            exit 1
+          fi
+          if [ -z "$(trim "${{ secrets.OCI_TENANCY_OCID }}")" ]; then
+            echo "::error::OCI_TENANCY_OCID secret is missing or empty. Add it in GitHub Actions secrets."
+            exit 1
+          fi
+
           echo "${{ secrets.OCI_PRIVATE_KEY }}" > ~/.oci/oci_api_key.pem
-
-          echo "[DEFAULT]" > ~/.oci/config
-          echo "user=${{ secrets.OCI_USER_OCID }}" >> ~/.oci/config
-          echo "fingerprint=${{ secrets.OCI_FINGERPRINT }}" >> ~/.oci/config
-          echo "tenancy=${{ secrets.OCI_TENANCY_OCID }}" >> ~/.oci/config
-          echo "region=${{ secrets.OCI_REGION }}" >> ~/.oci/config
-          echo "key_file=~/.oci/oci_api_key.pem" >> ~/.oci/config
-
           chmod 600 ~/.oci/oci_api_key.pem
 
-      # 5️⃣ Generate kubeconfig for OKE (requires secret OKE_CLUSTER_OCID)
+          FINGERPRINT=$(openssl rsa -pubout -outform DER -in ~/.oci/oci_api_key.pem 2>/dev/null | openssl md5 -c 2>/dev/null | awk -F'= ' '{print $2}' | tr -d '\n\r')
+          if [ -z "$FINGERPRINT" ]; then
+            echo "::error::Could not derive fingerprint from OCI_PRIVATE_KEY. Ensure the secret is the full PEM (-----BEGIN PRIVATE KEY----- ... -----END PRIVATE KEY-----) with newlines preserved; no extra text after END."
+            exit 1
+          fi
+
+          USER_OCID=$(trim "${{ secrets.OCI_USER_OCID }}")
+          TENANCY_OCID=$(trim "${{ secrets.OCI_TENANCY_OCID }}")
+          REGION=$(trim "${{ secrets.OCI_REGION }}")
+
+          {
+            echo "[DEFAULT]"
+            echo "user=$USER_OCID"
+            echo "fingerprint=$FINGERPRINT"
+            echo "tenancy=$TENANCY_OCID"
+            echo "region=$REGION"
+            echo "key_file=~/.oci/oci_api_key.pem"
+          } > ~/.oci/config
+          chmod 600 ~/.oci/config
+          echo "OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True" >> $GITHUB_ENV
+
+      # 5️⃣ Generate kubeconfig for OKE (OKE_CLUSTER_OCID + OCI_REGION must match cluster region, e.g. ap-mumbai-1)
       - name: Get kubeconfig
         run: |
           if [ -z "${{ secrets.OKE_CLUSTER_OCID }}" ]; then
