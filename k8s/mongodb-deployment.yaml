@@ -23,8 +23,8 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 27017
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            initialDelaySeconds: 30
+            periodSeconds: 10
           resources:
             requests:
               memory: "256Mi"

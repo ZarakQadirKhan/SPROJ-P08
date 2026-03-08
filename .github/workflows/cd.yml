@@ -131,12 +131,23 @@ jobs:
         run: |
           kubectl apply -f k8s/mongo-init-script.yaml -n sproj-app
 
-      # 1️⃣1️⃣ Deploy MongoDB
-      - name: Deploy MongoDB
+      # 1️⃣1️⃣ Deploy MongoDB (longer timeout for first-time image pull from Docker Hub)
+      - id: deploy-mongodb
+        name: Deploy MongoDB
         run: |
           kubectl apply -f k8s/mongodb-deployment.yaml -n sproj-app
           kubectl apply -f k8s/mongodb-service.yaml -n sproj-app
-          kubectl rollout status deployment/mongodb -n sproj-app --timeout=300s
+          kubectl rollout status deployment/mongodb -n sproj-app --timeout=600s
+
+      - name: Debug MongoDB pods (on failure)
+        if: failure() && steps.deploy-mongodb.outcome == 'failure'
+        run: |
+          echo "=== MongoDB pods ==="
+          kubectl get pods -l app=mongodb -n sproj-app -o wide || true
+          echo "=== Pod description ==="
+          kubectl describe pods -l app=mongodb -n sproj-app || true
+          echo "=== Recent events in sproj-app ==="
+          kubectl get events -n sproj-app --sort-by='.lastTimestamp' | tail -40 || true
 
       # 1️⃣2️⃣ Deploy Backend (use same SHA as CI so image tag matches)
       - name: Deploy Backend
