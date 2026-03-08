@@ -8,6 +8,7 @@ on: # Specifies events that trigger the workflow.
       - P08-Agri/Prototype/code/frontend/**
       - .github/workflows/**
       - k8s/**
+      - P08-Agri/Development/Sprint-4/k8s/**
 
 permissions:
   contents: read # allows workflow to checkout code

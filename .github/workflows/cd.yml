@@ -13,6 +13,8 @@ permissions:
 env:
   # Use lowercase to match CI push (CI uses tr '[:upper:]' '[:lower:]' for image names)
   GHCR_IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+  # k8s manifests path (match your repo layout: e.g. repo root k8s/ or Sprint-4 k8s)
+  K8S_DIR: P08-Agri/Development/Sprint-4/k8s
 
 jobs:
   deploy:
@@ -129,14 +131,14 @@ jobs:
       # 🔟 Apply MongoDB init ConfigMap
       - name: Apply MongoDB init ConfigMap
         run: |
-          kubectl apply -f k8s/mongo-init-script.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/mongo-init-script.yaml -n sproj-app
 
       # 1️⃣1️⃣ Deploy MongoDB (longer timeout for first-time image pull from Docker Hub)
       - id: deploy-mongodb
         name: Deploy MongoDB
         run: |
-          kubectl apply -f k8s/mongodb-deployment.yaml -n sproj-app
-          kubectl apply -f k8s/mongodb-service.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/mongodb-deployment.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/mongodb-service.yaml -n sproj-app
           kubectl rollout status deployment/mongodb -n sproj-app --timeout=600s
 
       - name: Debug MongoDB pods (on failure)
@@ -154,20 +156,20 @@ jobs:
         run: |
           IMAGE_PREFIX=$(echo "$GHCR_IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]')
           IMAGE_SHA="${{ github.event.workflow_run.head_sha }}"
-          kubectl apply -f k8s/backend-deployment.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/backend-deployment.yaml -n sproj-app
           kubectl set image deployment/backend backend=${IMAGE_PREFIX}/backend:${IMAGE_SHA} -n sproj-app
           kubectl rollout status deployment/backend -n sproj-app --timeout=300s
-          kubectl apply -f k8s/backend-service.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/backend-service.yaml -n sproj-app
 
       # 1️⃣3️⃣ Deploy Frontend
       - name: Deploy Frontend
         run: |
           IMAGE_PREFIX=$(echo "$GHCR_IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]')
           IMAGE_SHA="${{ github.event.workflow_run.head_sha }}"
-          kubectl apply -f k8s/frontend-deployment.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/frontend-deployment.yaml -n sproj-app
           kubectl set image deployment/frontend frontend=${IMAGE_PREFIX}/frontend:${IMAGE_SHA} -n sproj-app
           kubectl rollout status deployment/frontend -n sproj-app --timeout=300s
-          kubectl apply -f k8s/frontend-service.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/frontend-service.yaml -n sproj-app
 
       # 1️⃣4️⃣ Install NGINX Ingress Controller (if not exists)
       - name: Install NGINX Ingress Controller
@@ -182,5 +184,5 @@ jobs:
       # 1️⃣5️⃣ Apply ingress
       - name: Apply ingress
         run: |
-          kubectl apply -f k8s/ingress.yaml -n sproj-app
+          kubectl apply -f ${{ env.K8S_DIR }}/ingress.yaml -n sproj-app
           kubectl get ingress -n sproj-app
