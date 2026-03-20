@@ -2,17 +2,23 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, Tooltip, ResponsiveContainer
+} from 'recharts'
+import {
   fetch_complaints,
   update_complaint_status,
   send_admin_email,
   respond_to_complaint,
-  reset_farmer_password
+  reset_farmer_password,
+  fetch_inspection_statistics
 } from '../../services/adminService'
 
 const VIEW_HOME = 'home'
 const VIEW_EMAIL = 'email'
 const VIEW_COMPLAINTS = 'complaints'
 const VIEW_RESET = 'reset'
+const VIEW_STATS = 'stats'
 
 function format_date(dateString) {
   if (!dateString) return 'Unknown'
@@ -66,6 +72,28 @@ function AdminDashboard() {
   const [reset_status_text, set_reset_status_text] = useState('')
   const [is_resetting_password, set_is_resetting_password] = useState(false)
 
+  const [stats_data, set_stats_data] = useState(null)
+  const [stats_loading, set_stats_loading] = useState(false)
+  const [stats_error, set_stats_error] = useState('')
+  const [stats_start_date, set_stats_start_date] = useState('')
+  const [stats_end_date, set_stats_end_date] = useState('')
+
+  const load_stats = useCallback(async () => {
+    set_stats_loading(true)
+    set_stats_error('')
+    try {
+      const data = await fetch_inspection_statistics({
+        startDate: stats_start_date,
+        endDate: stats_end_date
+      })
+      set_stats_data(data)
+    } catch (error) {
+      set_stats_error(error?.message || 'Failed to load statistics')
+    } finally {
+      set_stats_loading(false)
+    }
+  }, [stats_start_date, stats_end_date])
+
   const load_complaints = useCallback(async () => {
     set_is_loading(true)
     set_error_text('')
@@ -91,6 +119,20 @@ function AdminDashboard() {
       load_complaints()
     }
   }, [view, load_complaints])
+
+  useEffect(() => {
+    if (view === VIEW_STATS) {
+      load_stats()
+    }
+  }, [view, load_stats])
+
+  useEffect(() => {
+    const today = new Date()
+    const thirty_days_ago = new Date()
+    thirty_days_ago.setDate(today.getDate() - 30)
+    set_stats_end_date(today.toISOString().slice(0, 10))
+    set_stats_start_date(thirty_days_ago.toISOString().slice(0, 10))
+  }, [])
 
   const load_unaddressed_count = useCallback(async () => {
     try {
@@ -360,6 +402,29 @@ function AdminDashboard() {
                 <div className="flex-1 min-w-0 text-left">
                   <h2 className="text-lg font-semibold text-gray-900">Reset Password</h2>
                   <p className="text-sm text-gray-500 mt-0.5">Reset farmer password and email it</p>
+                </div>
+                <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  Open
+                </span>
+              </button>
+
+              {/* Inspection Statistics card */}
+              <button
+                type="button"
+                onClick={() => set_view(VIEW_STATS)}
+                className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+              >
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <h2 className="text-lg font-semibold text-gray-900">Inspection Statistics</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">View diagnosis trends and disease distribution charts</p>
                 </div>
                 <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -706,6 +771,100 @@ function AdminDashboard() {
                   </button>
                 </div>
               </form>
+            </div>
+          </section>
+        )}
+        {/* ---------- INSPECTION STATISTICS screen ---------- */}
+        {view === VIEW_STATS && (
+          <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
+              <BackButton onClick={() => set_view(VIEW_HOME)} />
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Inspection Statistics</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Diagnosis trends and disease distribution</p>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-wrap items-end gap-3 mb-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Start date</label>
+                  <input
+                    type="date"
+                    value={stats_start_date}
+                    onChange={(e) => set_stats_start_date(e.target.value)}
+                    className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">End date</label>
+                  <input
+                    type="date"
+                    value={stats_end_date}
+                    onChange={(e) => set_stats_end_date(e.target.value)}
+                    className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={load_stats}
+                  disabled={stats_loading}
+                  className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium"
+                >
+                  {stats_loading ? 'Loading...' : 'Generate'}
+                </button>
+              </div>
+              {stats_error && (
+                <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                  {stats_error}
+                </div>
+              )}
+              {stats_loading && (
+                <div className="text-sm text-gray-500 py-4">Loading statistics...</div>
+              )}
+              {!stats_loading && stats_data && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-green-50 border border-[#2D6A4F] rounded-xl p-4 text-center">
+                      <p className="text-sm text-gray-500">Total Diagnoses</p>
+                      <p className="text-3xl font-bold text-[#2D6A4F] mt-1">{stats_data.total_diagnoses}</p>
+                    </div>
+                    <div className="bg-green-50 border border-[#2D6A4F] rounded-xl p-4 text-center">
+                      <p className="text-sm text-gray-500">Avg Confidence</p>
+                      <p className="text-3xl font-bold text-[#2D6A4F] mt-1">
+                        {(stats_data.avg_confidence * 100).toFixed(0)}%
+                      </p>
+                    </div>
+                    <div className="bg-green-50 border border-[#2D6A4F] rounded-xl p-4 text-center">
+                      <p className="text-sm text-gray-500">Most Common Disease</p>
+                      <p className="text-xl font-bold text-[#2D6A4F] mt-1 truncate">
+                        {(stats_data.diagnosis_distribution[0] && stats_data.diagnosis_distribution[0].label) || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mb-8">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Disease Distribution (Top 10)</h3>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={stats_data.diagnosis_distribution} margin={{ top: 4, right: 8, left: 0, bottom: 60 }}>
+                        <XAxis dataKey="label" tick={{ fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#2D6A4F" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Diagnoses Over Time</h3>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <LineChart data={stats_data.diagnoses_over_time} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="count" stroke="#2D6A4F" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              )}
             </div>
           </section>
         )}
