@@ -125,6 +125,33 @@ export async function fetch_inspection_statistics({ startDate, endDate } = {}) {
   return data
 }
 
+export async function fetch_sla_statistics({ startDate, endDate } = {}) {
+  const params = new URLSearchParams()
+  if (startDate) {
+    params.set('startDate', startDate)
+  }
+  if (endDate) {
+    params.set('endDate', endDate)
+  }
+
+  const res = await fetch(`${API_BASE_URL}/api/admin/sla?${params.toString()}`, {
+    method: 'GET',
+    headers: get_auth_headers()
+  })
+
+  let data = null
+  try {
+    data = await res.json()
+  } catch {}
+
+  if (!res.ok) {
+    const message = (data && (data.message || data.error)) || `Request failed (${res.status})`
+    throw new Error(message)
+  }
+
+  return data
+}
+
 export async function reset_farmer_password({ email, newPassword }) {
   const res = await fetch(`${API_BASE_URL}/api/admin/users/reset-password`, {
     method: 'POST',
@@ -151,7 +178,8 @@ const admin_service = {
   send_admin_email,
   respond_to_complaint,
   reset_farmer_password,
-  fetch_inspection_statistics
+  fetch_inspection_statistics,
+  fetch_sla_statistics
 }
 
 export default admin_service

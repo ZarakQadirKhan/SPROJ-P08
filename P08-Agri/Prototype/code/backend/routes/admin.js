@@ -428,4 +428,84 @@ router.get('/statistics', async function (request, response) {
   }
 })
 
+router.get('/sla', async function (request, response) {
+  try {
+    const auth_user = require_admin(request, response)
+    if (!auth_user) {
+      return
+    }
+
+    const { startDate, endDate } = request.query
+    const base_match = { processing_ms: { $exists: true, $ne: null } }
+    if (startDate || endDate) {
+      base_match.created_at = {}
+      if (startDate) {
+        base_match.created_at.$gte = new Date(startDate)
+      }
+      if (endDate) {
+        base_match.created_at.$lte = new Date(endDate + 'T23:59:59.999Z')
+      }
+    }
+
+    const pipeline = [
+      { $match: base_match },
+      {
+        $facet: {
+          summary: [
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                avg_ms: { $avg: '$processing_ms' },
+                compliant: {
+                  $sum: { $cond: [{ $lte: ['$processing_ms', 15000] }, 1, 0] }
+                },
+                breaches: {
+                  $sum: { $cond: [{ $gt: ['$processing_ms', 15000] }, 1, 0] }
+                }
+              }
+            }
+          ],
+          over_time: [
+            {
+              $group: {
+                _id: {
+                  $dateToString: { format: '%Y-%m-%d', date: '$created_at' }
+                },
+                compliant: {
+                  $sum: { $cond: [{ $lte: ['$processing_ms', 15000] }, 1, 0] }
+                },
+                breaches: {
+                  $sum: { $cond: [{ $gt: ['$processing_ms', 15000] }, 1, 0] }
+                }
+              }
+            },
+            { $sort: { _id: 1 } },
+            { $project: { _id: 0, date: '$_id', compliant: 1, breaches: 1 } }
+          ]
+        }
+      }
+    ]
+
+    const [result] = await Diagnosis.aggregate(pipeline)
+    const summary = (result && result.summary && result.summary[0]) || { total: 0, avg_ms: 0, compliant: 0, breaches: 0 }
+    const total = summary.total || 0
+    const compliant = summary.compliant || 0
+    const breaches = summary.breaches || 0
+    const compliance_rate = total > 0 ? Math.round((compliant / total) * 1000) / 10 : 0
+
+    response.json({
+      total_requests: total,
+      compliant,
+      breaches,
+      compliance_rate,
+      avg_processing_ms: Math.round(summary.avg_ms || 0),
+      sla_over_time: (result && result.over_time) || []
+    })
+  } catch (error) {
+    console.error('[Admin] Failed to fetch SLA statistics:', error.message || error)
+    response.status(500).json({ message: 'Failed to fetch SLA statistics' })
+  }
+})
+
 module.exports = router

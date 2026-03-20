@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, LineChart, Line,
-  XAxis, YAxis, Tooltip, ResponsiveContainer
+  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
 import {
   fetch_complaints,
@@ -11,7 +11,8 @@ import {
   send_admin_email,
   respond_to_complaint,
   reset_farmer_password,
-  fetch_inspection_statistics
+  fetch_inspection_statistics,
+  fetch_sla_statistics
 } from '../../services/adminService'
 
 const VIEW_HOME = 'home'
@@ -19,6 +20,7 @@ const VIEW_EMAIL = 'email'
 const VIEW_COMPLAINTS = 'complaints'
 const VIEW_RESET = 'reset'
 const VIEW_STATS = 'stats'
+const VIEW_SLA = 'sla'
 
 function format_date(dateString) {
   if (!dateString) return 'Unknown'
@@ -78,6 +80,12 @@ function AdminDashboard() {
   const [stats_start_date, set_stats_start_date] = useState('')
   const [stats_end_date, set_stats_end_date] = useState('')
 
+  const [sla_data, set_sla_data] = useState(null)
+  const [sla_loading, set_sla_loading] = useState(false)
+  const [sla_error, set_sla_error] = useState('')
+  const [sla_start_date, set_sla_start_date] = useState('')
+  const [sla_end_date, set_sla_end_date] = useState('')
+
   const load_stats = useCallback(async () => {
     set_stats_loading(true)
     set_stats_error('')
@@ -93,6 +101,22 @@ function AdminDashboard() {
       set_stats_loading(false)
     }
   }, [stats_start_date, stats_end_date])
+
+  const load_sla_stats = useCallback(async () => {
+    set_sla_loading(true)
+    set_sla_error('')
+    try {
+      const data = await fetch_sla_statistics({
+        startDate: sla_start_date,
+        endDate: sla_end_date
+      })
+      set_sla_data(data)
+    } catch (error) {
+      set_sla_error(error?.message || 'Failed to load SLA data')
+    } finally {
+      set_sla_loading(false)
+    }
+  }, [sla_start_date, sla_end_date])
 
   const load_complaints = useCallback(async () => {
     set_is_loading(true)
@@ -127,11 +151,21 @@ function AdminDashboard() {
   }, [view, load_stats])
 
   useEffect(() => {
+    if (view === VIEW_SLA) {
+      load_sla_stats()
+    }
+  }, [view, load_sla_stats])
+
+  useEffect(() => {
     const today = new Date()
     const thirty_days_ago = new Date()
     thirty_days_ago.setDate(today.getDate() - 30)
-    set_stats_end_date(today.toISOString().slice(0, 10))
-    set_stats_start_date(thirty_days_ago.toISOString().slice(0, 10))
+    const today_str = today.toISOString().slice(0, 10)
+    const thirty_ago_str = thirty_days_ago.toISOString().slice(0, 10)
+    set_stats_end_date(today_str)
+    set_stats_start_date(thirty_ago_str)
+    set_sla_end_date(today_str)
+    set_sla_start_date(thirty_ago_str)
   }, [])
 
   const load_unaddressed_count = useCallback(async () => {
@@ -402,6 +436,29 @@ function AdminDashboard() {
                 <div className="flex-1 min-w-0 text-left">
                   <h2 className="text-lg font-semibold text-gray-900">Inspection Statistics</h2>
                   <p className="text-sm text-gray-500 mt-0.5">View diagnosis trends and disease distribution charts</p>
+                </div>
+                <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  Open
+                </span>
+              </button>
+
+              {/* SLA Monitoring card */}
+              <button
+                type="button"
+                onClick={() => set_view(VIEW_SLA)}
+                className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+              >
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <h2 className="text-lg font-semibold text-gray-900">SLA Monitoring</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">Track diagnosis processing times and SLA compliance</p>
                 </div>
                 <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -774,6 +831,111 @@ function AdminDashboard() {
             </div>
           </section>
         )}
+        {/* ---------- SLA MONITORING screen ---------- */}
+        {view === VIEW_SLA && (
+          <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
+              <BackButton onClick={() => set_view(VIEW_HOME)} />
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">SLA Monitoring</h2>
+                <p className="text-sm text-gray-500 mt-0.5">15 second SLA threshold</p>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-wrap items-end gap-3 mb-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Start date</label>
+                  <input
+                    type="date"
+                    value={sla_start_date}
+                    onChange={(e) => set_sla_start_date(e.target.value)}
+                    className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">End date</label>
+                  <input
+                    type="date"
+                    value={sla_end_date}
+                    onChange={(e) => set_sla_end_date(e.target.value)}
+                    className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={load_sla_stats}
+                  disabled={sla_loading}
+                  className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium"
+                >
+                  {sla_loading ? 'Loading...' : 'Generate'}
+                </button>
+              </div>
+              {sla_error && (
+                <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                  {sla_error}
+                </div>
+              )}
+              {sla_loading && (
+                <div className="text-sm text-gray-500 py-4">Loading statistics...</div>
+              )}
+              {!sla_loading && sla_data && (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-green-50 border border-[#2D6A4F] rounded-xl p-4 text-center">
+                      <p className="text-sm text-gray-500">Total Requests</p>
+                      <p className="text-3xl font-bold text-[#2D6A4F] mt-1">{sla_data.total_requests}</p>
+                    </div>
+                    <div className="bg-green-50 border border-[#2D6A4F] rounded-xl p-4 text-center">
+                      <p className="text-sm text-gray-500">Compliant</p>
+                      <p className="text-3xl font-bold text-[#2D6A4F] mt-1">{sla_data.compliant}</p>
+                    </div>
+                    <div className={`rounded-xl p-4 text-center border ${sla_data.breaches > 0 ? 'bg-red-50 border-red-300' : 'bg-green-50 border-[#2D6A4F]'}`}>
+                      <p className="text-sm text-gray-500">Breaches</p>
+                      <p className={`text-3xl font-bold mt-1 ${sla_data.breaches > 0 ? 'text-red-700' : 'text-[#2D6A4F]'}`}>
+                        {sla_data.breaches}
+                      </p>
+                    </div>
+                    <div className={`rounded-xl p-4 text-center border ${
+                      sla_data.compliance_rate >= 95
+                        ? 'bg-green-50 border-green-500'
+                        : sla_data.compliance_rate >= 80
+                        ? 'bg-yellow-50 border-yellow-500'
+                        : 'bg-red-50 border-red-500'
+                    }`}>
+                      <p className="text-sm text-gray-500">Compliance Rate</p>
+                      <p className={`text-3xl font-bold mt-1 ${
+                        sla_data.compliance_rate >= 95
+                          ? 'text-green-700'
+                          : sla_data.compliance_rate >= 80
+                          ? 'text-yellow-700'
+                          : 'text-red-700'
+                      }`}>
+                        {sla_data.compliance_rate}%
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Compliant vs Breaches Over Time</h3>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={sla_data.sla_over_time} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="compliant" stackId="a" fill="#2D6A4F" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="breaches" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Avg processing time: <span className="font-semibold text-gray-900">{(sla_data.avg_processing_ms / 1000).toFixed(2)}s</span>
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* ---------- INSPECTION STATISTICS screen ---------- */}
         {view === VIEW_STATS && (
           <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
