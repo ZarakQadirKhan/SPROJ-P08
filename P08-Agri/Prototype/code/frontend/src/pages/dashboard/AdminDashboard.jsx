@@ -387,6 +387,29 @@ function AdminDashboard() {
                   Open
                 </span>
               </button>
+              
+              {/* Inspection Statistics card */}
+              <button
+                type="button"
+                onClick={() => set_view(VIEW_STATS)}
+                className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
+              >
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <h2 className="text-lg font-semibold text-gray-900">Inspection Statistics</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">View diagnosis trends and disease distribution charts</p>
+                </div>
+                <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  Open
+                </span>
+              </button>
 
               {/* Reset Password card */}
               <button
@@ -402,29 +425,6 @@ function AdminDashboard() {
                 <div className="flex-1 min-w-0 text-left">
                   <h2 className="text-lg font-semibold text-gray-900">Reset Password</h2>
                   <p className="text-sm text-gray-500 mt-0.5">Reset farmer password and email it</p>
-                </div>
-                <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                  Open
-                </span>
-              </button>
-
-              {/* Inspection Statistics card */}
-              <button
-                type="button"
-                onClick={() => set_view(VIEW_STATS)}
-                className="w-full bg-white rounded-xl shadow-sm border border-[#2D6A4F] p-6 text-left hover:shadow-lg hover:border-[#1a4d35] hover:-translate-y-0.5 transition-all flex flex-row items-center gap-4 cursor-pointer"
-              >
-                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <h2 className="text-lg font-semibold text-gray-900">Inspection Statistics</h2>
-                  <p className="text-sm text-gray-500 mt-0.5">View diagnosis trends and disease distribution charts</p>
                 </div>
                 <span className="flex items-center gap-1 text-[#2D6A4F] font-medium text-sm flex-shrink-0">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
