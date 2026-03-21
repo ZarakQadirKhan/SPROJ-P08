@@ -85,6 +85,7 @@ function AdminDashboard() {
   const [sla_error, set_sla_error] = useState('')
   const [sla_start_date, set_sla_start_date] = useState('')
   const [sla_end_date, set_sla_end_date] = useState('')
+  const [sla_preset, set_sla_preset] = useState('today')
 
   const load_stats = useCallback(async () => {
     set_stats_loading(true)
@@ -102,13 +103,13 @@ function AdminDashboard() {
     }
   }, [stats_start_date, stats_end_date])
 
-  const load_sla_stats = useCallback(async () => {
-    set_sla_loading(true)
+  const load_sla_stats = useCallback(async ({ silent = false, start_override, end_override } = {}) => {
+    if (!silent) set_sla_loading(true)
     set_sla_error('')
     try {
       const data = await fetch_sla_statistics({
-        startDate: sla_start_date,
-        endDate: sla_end_date
+        startDate: start_override !== undefined ? start_override : sla_start_date,
+        endDate: end_override !== undefined ? end_override : sla_end_date
       })
       set_sla_data(data)
     } catch (error) {
@@ -151,10 +152,31 @@ function AdminDashboard() {
   }, [view, load_stats])
 
   useEffect(() => {
-    if (view === VIEW_SLA) {
-      load_sla_stats()
+    if (view !== VIEW_SLA || sla_preset === 'custom') return
+
+    function compute_range() {
+      const now = new Date()
+      if (sla_preset === 'last_hour') {
+        return {
+          start: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
+          end: now.toISOString()
+        }
+      }
+      const sod = new Date(now)
+      sod.setHours(0, 0, 0, 0)
+      return { start: sod.toISOString(), end: now.toISOString() }
     }
-  }, [view, load_sla_stats])
+
+    const { start, end } = compute_range()
+    load_sla_stats({ silent: false, start_override: start, end_override: end })
+
+    const interval_id = setInterval(() => {
+      const { start: s, end: e } = compute_range()
+      load_sla_stats({ silent: true, start_override: s, end_override: e })
+    }, 60000)
+
+    return () => clearInterval(interval_id)
+  }, [view, sla_preset, load_sla_stats])
 
   useEffect(() => {
     const today = new Date()
@@ -837,38 +859,70 @@ function AdminDashboard() {
             <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
               <BackButton onClick={() => set_view(VIEW_HOME)} />
               <div>
-                <h2 className="text-lg font-bold text-gray-900">SLA Monitoring</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-gray-900">SLA Monitoring</h2>
+                  {sla_preset !== 'custom' && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-[#2D6A4F]">
+                      <span className="h-2 w-2 rounded-full bg-[#2D6A4F] animate-pulse" />
+                      Live
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 mt-0.5">15 second SLA threshold</p>
               </div>
             </div>
             <div className="p-6">
-              <div className="flex flex-wrap items-end gap-3 mb-6">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Start date</label>
-                  <input
-                    type="date"
-                    value={sla_start_date}
-                    onChange={(e) => set_sla_start_date(e.target.value)}
-                    className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
-                  />
+              <div className="mb-6">
+                <div className="flex gap-2 mb-4">
+                  {[
+                    { key: 'last_hour', label: 'Last 1 Hour' },
+                    { key: 'today', label: 'Today' },
+                    { key: 'custom', label: 'Custom' }
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => set_sla_preset(key)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 ${
+                        sla_preset === key
+                          ? 'bg-[#2D6A4F] text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">End date</label>
-                  <input
-                    type="date"
-                    value={sla_end_date}
-                    onChange={(e) => set_sla_end_date(e.target.value)}
-                    className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={load_sla_stats}
-                  disabled={sla_loading}
-                  className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium"
-                >
-                  {sla_loading ? 'Loading...' : 'Generate'}
-                </button>
+                {sla_preset === 'custom' && (
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">Start date</label>
+                      <input
+                        type="date"
+                        value={sla_start_date}
+                        onChange={(e) => set_sla_start_date(e.target.value)}
+                        className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1">End date</label>
+                      <input
+                        type="date"
+                        value={sla_end_date}
+                        onChange={(e) => set_sla_end_date(e.target.value)}
+                        className="px-3 py-2 border border-[#2D6A4F] rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 focus:border-[#2D6A4F]"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => load_sla_stats()}
+                      disabled={sla_loading}
+                      className="px-4 py-2 bg-[#2D6A4F] text-white rounded-lg hover:bg-[#1a4d35] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/50 disabled:opacity-60 font-medium"
+                    >
+                      {sla_loading ? 'Loading...' : 'Generate'}
+                    </button>
+                  </div>
+                )}
               </div>
               {sla_error && (
                 <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
