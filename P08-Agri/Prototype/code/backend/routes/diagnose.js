@@ -5,6 +5,7 @@ const FormData = require('form-data')
 const rateLimit = require('express-rate-limit')
 const Diagnosis = require('../models/Diagnosis')
 const { requireAuth, requireRole } = require('../middleware/auth')
+const { send_admin_broadcast_email } = require('../email_service')
 
 const router = express.Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } })
@@ -89,6 +90,32 @@ router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.
         field_id: field_id || undefined
       })
       await diagnosis_record.save()
+
+      if (typeof diagnosis_record.processing_ms === 'number' && diagnosis_record.processing_ms > 15000) {
+        const sla_ms = diagnosis_record.processing_ms
+        const sla_label = diagnosis_record.diagnosis
+        const sla_time = new Date().toISOString()
+        ;(async () => {
+          try {
+            const admin_email = process.env.ADMIN_EMAIL || process.env.SUPPORT_TO_EMAIL || 'zarakqadirkhan02@gmail.com'
+            const processing_s = (sla_ms / 1000).toFixed(1) + 's'
+            await send_admin_broadcast_email({
+              recipient_email: admin_email,
+              subject: 'SLA Breach: Diagnosis exceeded 15s threshold',
+              message: [
+                'SLA breach detected in AgriQual diagnosis pipeline.',
+                '',
+                'Processing time: ' + processing_s,
+                'Diagnosis: ' + sla_label,
+                'Timestamp: ' + sla_time
+              ].join('\n')
+            })
+          } catch (email_err) {
+            console.error('SLA breach alert email failed:', email_err.message || email_err)
+          }
+        })()
+      }
+
       res.json({ ...ml_resp.data, diagnosisId: diagnosis_record._id.toString() })
     } catch (error_) {
       console.error('Failed to save diagnosis to database:', error_.message || error_)
