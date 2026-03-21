@@ -868,7 +868,6 @@ function AdminDashboard() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 mt-0.5">15 second SLA threshold</p>
               </div>
             </div>
             <div className="p-6">
