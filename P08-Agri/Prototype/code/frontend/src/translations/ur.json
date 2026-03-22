@@ -87,7 +87,14 @@
     "goBackToRegister": "رجسٹر پر واپس جائیں",
     "noPendingSignup": "کوئی زیر التواء سائن اپ نہیں ملا۔ براہ کرم دوبارہ رجسٹر کریں۔",
     "enterVerificationCode": "براہ کرم تصدیقی کوڈ درج کریں۔",
-    "invalidCode": "غلط کوڈ۔ براہ کرم دوبارہ کوشش کریں۔"
+    "invalidCode": "غلط کوڈ۔ براہ کرم دوبارہ کوشش کریں۔",
+    "heroTitle": "شروع کرنے کے لیے ایک قدم اور",
+    "heroDescription": "ہم نے آپ کی ای میل پر 6 ہندسوں کا تصدیقی کوڈ بھیجا ہے۔ اسے نیچے درج کریں تاکہ آپ کا ایگری کوال اکاؤنٹ فعال ہو اور آپ اپنی گندم کی فصل کی حفاظت شروع کر سکیں۔",
+    "heroFeature1": "آپ کا ڈیٹا محفوظ اور خفیہ ہے",
+    "heroFeature2": "کوڈ 10 منٹ میں ختم ہو جائے گا",
+    "heroFeature3": "اگر نہ ملے تو اپنا سپام فولڈر چیک کریں",
+    "errorHeroTitle": "محفوظ اکاؤنٹ کی تصدیق",
+    "errorHeroDescription": "ہم نے آپ کی ای میل پر ایک تصدیقی کوڈ بھیجا ہے تاکہ آپ کے اکاؤنٹ اور زرعی ڈیٹا کی حفاظت یقینی بنائی جا سکے۔"
   },
   "dashboard": {
     "aiAssistant": "AI معاون",
@@ -254,7 +261,10 @@
     "locationPlaceholder": "مثلاً لاہور، پنجاب",
     "varietyPlaceholder": "مثلاً پنجاب-11",
     "sowingDatePlaceholder": "مثلاً اکتوبر 2024",
-    "manageFarmsSubtitle": "اپنے کھیتوں کا انتظام کریں، فصلوں کا اسکین کریں، اور صحت ٹریک کریں۔"
+    "manageFarmsSubtitle": "اپنے کھیتوں کا انتظام کریں، فصلوں کا اسکین کریں، اور صحت ٹریک کریں۔",
+    "helpFieldsRequired": "موضوع اور پیغام ضروری ہیں",
+    "passwordFieldsRequired": "تمام پاس ورڈ فیلڈز ضروری ہیں",
+    "oldPasswordMismatch": "پرانے پاس ورڈ مماثل نہیں ہیں"
   },
   "diagnosticHistory": {
     "backButton": "واپس",
@@ -274,6 +284,8 @@
     "alternativeDiagnoses": "متبادل تشخیص",
     "recommendations": "سفارشات",
     "processingTime": "پروسیسنگ کا وقت",
-    "close": "بند کریں"
+    "close": "بند کریں",
+    "yourHistory": "آپ کی تشخیصی تاریخ",
+    "viewPastDiagnoses": "گزشتہ گندم کی تشخیص دیکھیں اور جائزہ لیں"
   }
 }

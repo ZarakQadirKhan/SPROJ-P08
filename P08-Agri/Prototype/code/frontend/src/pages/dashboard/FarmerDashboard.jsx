@@ -6,6 +6,7 @@ import { send_complaint } from '../../services/helpService'
 import { changePassword } from '../../services/authService'
 import { send_chat_message } from '../../services/chatService'
 import { get_fields, create_field, update_field, delete_field, link_diagnosis_to_field, save_and_link_diagnosis_to_field } from '../../services/fieldService'
+import { get_diagnosis_history } from '../../services/historyService'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 function build_chat_intro_message(diagnose_result, t) {
@@ -110,6 +111,8 @@ function FarmerDashboard() {
   const [is_linking, set_is_linking] = useState(false)
   const [link_success, set_link_success] = useState(false)
 
+  const [scan_history, set_scan_history] = useState([])
+
   async function load_fields() {
     set_fields_loading(true)
     set_fields_error('')
@@ -131,6 +134,17 @@ function FarmerDashboard() {
 
   useEffect(() => {
     load_fields()
+  }, [])
+
+  useEffect(() => {
+    get_diagnosis_history(12, 0)
+      .then((data) => {
+        const mapped = (Array.isArray(data) ? data : []).map((item) => ({
+          status: item.label && !item.label.toLowerCase().includes('healthy') ? 'issue' : 'healthy'
+        }))
+        set_scan_history(mapped)
+      })
+      .catch(() => {})
   }, [])
 
   function handle_logout() {
@@ -550,13 +564,6 @@ function FarmerDashboard() {
 
   const user_name = user?.name || 'Farmer'
   const user_initial = (user_name.charAt(0) || 'F').toUpperCase()
-
-  const scan_history = [
-    { status: 'healthy' }, { status: 'healthy' }, { status: 'issue' },
-    { status: 'healthy' }, { status: 'healthy' }, { status: 'healthy' },
-    { status: 'issue' }, { status: 'healthy' }, { status: 'healthy' },
-    { status: 'issue' }, { status: 'healthy' }, { status: 'healthy' }
-  ]
 
   return (
     <div dir={direction} className="min-h-screen bg-[#f7fdf9]">

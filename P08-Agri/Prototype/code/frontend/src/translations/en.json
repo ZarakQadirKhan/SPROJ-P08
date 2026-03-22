@@ -87,7 +87,14 @@
     "goBackToRegister": "Go back to Register",
     "noPendingSignup": "No pending signup found. Please register again.",
     "enterVerificationCode": "Please enter the verification code.",
-    "invalidCode": "Invalid code. Please try again."
+    "invalidCode": "Invalid code. Please try again.",
+    "heroTitle": "One more step to get started",
+    "heroDescription": "We've sent a 6-digit verification code to your email. Enter it below to activate your AgriQual account and start protecting your wheat crops.",
+    "heroFeature1": "Your data is encrypted and secure",
+    "heroFeature2": "Code expires in 10 minutes",
+    "heroFeature3": "Check your spam folder if you can't find it",
+    "errorHeroTitle": "Secure Account Verification",
+    "errorHeroDescription": "We've sent a verification code to your email to ensure the security of your account and protect your agricultural data."
   },
   "dashboard": {
     "aiAssistant": "AI Assistant",
@@ -250,7 +257,10 @@
     "locationPlaceholder": "e.g. Lahore, Punjab",
     "varietyPlaceholder": "e.g. Punjab-11",
     "sowingDatePlaceholder": "e.g. Oct 2024",
-    "manageFarmsSubtitle": "Manage your fields, scan crops, and track your harvest health."
+    "manageFarmsSubtitle": "Manage your fields, scan crops, and track your harvest health.",
+    "helpFieldsRequired": "Subject and message are required",
+    "passwordFieldsRequired": "All password fields are required",
+    "oldPasswordMismatch": "Old passwords do not match"
   },
   "diagnosticHistory": {
     "backButton": "Back",
@@ -270,6 +280,8 @@
     "alternativeDiagnoses": "Alternative Diagnoses",
     "recommendations": "Recommendations",
     "processingTime": "Processing time",
-    "close": "Close"
+    "close": "Close",
+    "yourHistory": "Your Diagnostic History",
+    "viewPastDiagnoses": "View and review past wheat diagnoses"
   }
 }

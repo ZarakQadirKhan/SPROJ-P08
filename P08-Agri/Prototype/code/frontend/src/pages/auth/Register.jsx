@@ -146,8 +146,8 @@ function Register() {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div dir={direction} className="max-w-md w-full space-y-6">
           <div>
-            <h1 className="text-[28px] font-semibold text-[#1B1B1B]">Create your account</h1>
-            <p className="mt-2 text-[15px] text-[#6B7280]">Join AgriQual to get started</p>
+            <h1 className="text-[28px] font-semibold text-[#1B1B1B]">{t.register.title}</h1>
+            <p className="mt-2 text-[15px] text-[#6B7280]">{t.register.subtitle}</p>
           </div>
 
           {apiError && (
@@ -346,34 +346,34 @@ function Register() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#2D6A4F] to-[#1a4d35] opacity-90"></div>
         <div className="relative h-full flex items-center justify-center p-12">
           <div className="max-w-md text-white space-y-6">
-            <h2 className="text-[28px] font-semibold leading-tight">Start your journey with AgriQual</h2>
+            <h2 className="text-[28px] font-semibold leading-tight">{t.register.heroTitle}</h2>
             <p className="text-[#B8E0D2] leading-relaxed text-[15px]">
-              Join thousands of wheat farmers in Pakistan who are already using AgriQual to protect their crops, increase yields, and farm smarter with AI-powered insights.
+              {t.register.heroDescription}
             </p>
             <div className="space-y-3 pt-4">
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-[#52B788] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm">Free account with instant access</span>
+                <span className="text-sm">{t.register.heroFeature1}</span>
               </div>
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-[#52B788] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm">AI-powered disease detection in seconds</span>
+                <span className="text-sm">{t.register.heroFeature2}</span>
               </div>
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-[#52B788] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm">Expert recommendations tailored to your region</span>
+                <span className="text-sm">{t.register.heroFeature3}</span>
               </div>
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-[#52B788] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm">Track your field health over time</span>
+                <span className="text-sm">{t.register.heroFeature4}</span>
               </div>
             </div>
           </div>
