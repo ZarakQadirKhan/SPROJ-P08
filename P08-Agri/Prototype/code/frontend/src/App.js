@@ -101,7 +101,7 @@ function App() {
   const routes = (
     <Router>
       <Routes>
-        <Route path="/login" element={<FarmerDashboard />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/dashboard" element={<DashboardRedirect />} />
