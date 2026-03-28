@@ -1,3 +1,7 @@
+/**
+ * Chooses the API origin: REACT_APP_* or window.__ENV__ override; otherwise dev localhost,
+ * Vercel same-origin (proxy), or production api host.
+ */
 const read_env = (key) => {
   if (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__[key]) {
     return window.__ENV__[key]

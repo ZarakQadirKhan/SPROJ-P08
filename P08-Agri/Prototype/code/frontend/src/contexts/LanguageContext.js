@@ -1,3 +1,6 @@
+/**
+ * App-wide English/Urdu strings and reading direction (LTR vs RTL).
+ */
 import React, { createContext, useContext, useState } from 'react'
 import enTranslations from '../translations/en.json'
 import urTranslations from '../translations/ur.json'

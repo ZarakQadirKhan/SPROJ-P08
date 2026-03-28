@@ -1,3 +1,6 @@
+/**
+ * Thin fetch wrapper for legacy register call (uses API_BASE_URL).
+ */
 import { API_BASE_URL } from './baseUrl'
 
 export async function register_user(payload) {

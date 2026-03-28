@@ -12,10 +12,7 @@ import AdminDashboard from './pages/dashboard/AdminDashboard'
 import './App.css'
 
 /**
- * RBAC: role-based access control for farmer / inspector / admin.
- * STRIDE: invalid or unknown role clears session (no elevation); wrong-role URL
- * redirects to that user's dashboard (no info leak); catch-all sends to login or
- * role dashboard (no arbitrary URL access).
+ * App shell: routes and guards so each role only reaches its dashboards; bad or missing role clears storage and sends users to login.
  */
 function App() {
   const isAuthenticated = () => {
@@ -48,6 +45,7 @@ function App() {
     return null
   }
 
+  // Enforces login and allowed role; unknown or mismatched role clears localStorage, then redirects.
   const PrivateRoute = ({ children, allowedRoles }) => {
     if (!isAuthenticated()) {
       return <Navigate to="/login" replace />
@@ -155,5 +153,5 @@ function App() {
     </LanguageProvider>
   )
 }
-//hello
+
 export default App

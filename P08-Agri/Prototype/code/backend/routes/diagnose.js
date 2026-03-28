@@ -1,3 +1,7 @@
+/**
+ * Image diagnosis: forwards uploads to the ML service, stores results in MongoDB,
+ * and can save/link a diagnosis to a farmer’s field. Farmers only.
+ */
 const express = require('express')
 const axios = require('axios')
 const multer = require('multer')
@@ -11,8 +15,8 @@ const router = express.Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } })
 
 const diagnose_limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per window
+  windowMs: 60 * 1000,
+  max: 10,
   message: { message: 'Too many diagnosis requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -51,9 +55,7 @@ function get_error_message(status) {
   return 'Diagnosis request failed'
 }
 
-// RBAC: only farmers can submit diagnoses
 router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.single('image'), async (req, res) => {
-  // Validate image
   const validation = validate_image_file(req.file)
   if (!validation.valid) {
     res.status(400).json({ message: validation.message })
@@ -91,6 +93,7 @@ router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.
       })
       await diagnosis_record.save()
 
+      // SLA: if ML took >15s, email ops in the background so the client still gets an immediate JSON body.
       if (typeof diagnosis_record.processing_ms === 'number' && diagnosis_record.processing_ms > 15000) {
         const sla_ms = diagnosis_record.processing_ms
         const sla_label = diagnosis_record.diagnosis
@@ -122,7 +125,6 @@ router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.
       res.json(ml_resp.data)
     }
   } catch (err) {
-    // Priority 3: Log detailed error but return generic message
     console.error('Diagnosis error:', err.message || err)
     const status = err?.response?.status ?? null
     const safe_message = get_error_message(status)
@@ -130,7 +132,6 @@ router.post('/', requireAuth, requireRole(['farmer']), diagnose_limiter, upload.
   }
 })
 
-// Save a diagnosis from frontend result (e.g. when initial save failed) and link to field
 router.post('/save-and-link', requireAuth, requireRole(['farmer']), async (req, res) => {
   const { diagnosis, confidence, alternatives, recommendations, processing_ms, field_id } = req.body || {}
   if (!diagnosis || !field_id) {

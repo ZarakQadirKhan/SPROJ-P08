@@ -1,3 +1,6 @@
+/**
+ * Upload an image for ML diagnosis (multipart) with auth header.
+ */
 import { API_BASE_URL } from './baseUrl'
 
 async function post_diagnose(file) {

@@ -1,3 +1,6 @@
+/**
+ * Farmer view of past diagnoses loaded from the history API.
+ */
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { get_diagnosis_history } from '../../services/historyService'

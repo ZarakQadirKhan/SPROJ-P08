@@ -1,3 +1,6 @@
+/**
+ * Sign-in with email/password or Google; language toggle; links to register.
+ */
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";

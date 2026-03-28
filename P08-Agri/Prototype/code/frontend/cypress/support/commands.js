@@ -1,5 +1,5 @@
 /**
- * Custom commands — use in specs: cy.loginWithMock('farmer' | 'inspector' | 'admin')
+ * cy.loginWithMock(role) — stubs POST login and completes the form (farmer | inspector | admin).
  */
 const MOCK_USERS = {
   farmer: {

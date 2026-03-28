@@ -1,3 +1,6 @@
+/**
+ * List and fetch single diagnosis records for the current user.
+ */
 import { API_BASE_URL } from './baseUrl'
 
 export async function get_diagnosis_history(limit = 50, skip = 0) {

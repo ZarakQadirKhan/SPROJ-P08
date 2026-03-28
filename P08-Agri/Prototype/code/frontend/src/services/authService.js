@@ -1,3 +1,6 @@
+/**
+ * Login, register, OTP verify, Google sign-in, password change — stores JWT and user in localStorage on success.
+ */
 import axios from 'axios'
 import { API_BASE_URL } from './baseUrl'
 
@@ -88,6 +91,7 @@ export const login = async (credentials) => {
       error?.response?.data?.error ||
       'Login failed'
 
+    // Backend may return 429 with retryAfterSeconds after too many failed logins; surface a friendly wait time.
     if (error?.response?.status === 429) {
       const raw_seconds = Number(error?.response?.data?.retryAfterSeconds)
       if (!Number.isNaN(raw_seconds) && raw_seconds > 0) {
@@ -140,6 +144,7 @@ export const changePassword = async ({ oldPassword, newPassword }) => {
       error?.response?.data?.error ||
       'Failed to change password'
 
+    // Same lockout messaging as login when change-password is rate limited.
     if (error?.response?.status === 429) {
       const raw_seconds = Number(error?.response?.data?.retryAfterSeconds)
       if (!Number.isNaN(raw_seconds) && raw_seconds > 0) {

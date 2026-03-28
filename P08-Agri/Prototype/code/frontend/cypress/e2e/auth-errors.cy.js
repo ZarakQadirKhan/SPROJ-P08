@@ -1,5 +1,5 @@
 /**
- * Login API error handling (mocked) — no real backend.
+ * Failed login responses show the right message in the UI (intercepted).
  */
 describe('Login errors (mocked API)', () => {
   beforeEach(() => {

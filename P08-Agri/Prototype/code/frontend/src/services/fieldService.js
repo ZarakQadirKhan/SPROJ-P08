@@ -1,3 +1,6 @@
+/**
+ * Farmer field CRUD and linking a saved diagnosis to a field.
+ */
 import { API_BASE_URL } from './baseUrl'
 
 function get_headers() {

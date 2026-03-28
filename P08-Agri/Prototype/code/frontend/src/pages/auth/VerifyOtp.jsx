@@ -1,3 +1,6 @@
+/**
+ * Enter email OTP after register; on success stores session and routes by role.
+ */
 import React, { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { verifyOtp } from '../../services/authService'

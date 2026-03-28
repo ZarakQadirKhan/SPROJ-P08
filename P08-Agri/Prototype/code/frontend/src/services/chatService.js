@@ -1,3 +1,6 @@
+/**
+ * Authenticated chat messages to the RAG assistant API.
+ */
 import axios from 'axios'
 import { getToken } from './authService'
 import { API_BASE_URL } from './baseUrl'

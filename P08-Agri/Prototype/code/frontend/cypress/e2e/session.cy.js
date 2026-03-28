@@ -1,5 +1,5 @@
 /**
- * Logout clears session and returns to login (farmer + admin).
+ * Profile menu logout returns to /login and clears the token (farmer and admin).
  */
 describe('Session / logout', () => {
   beforeEach(() => {
@@ -10,7 +10,6 @@ describe('Session / logout', () => {
     cy.loginWithMock('farmer')
     cy.url().should('include', '/farmer-dashboard')
 
-    // Open profile menu (user name is visible at sm+ viewport)
     cy.contains('Test Farmer').click()
     cy.contains('button', 'Logout').click()
 

@@ -1,5 +1,5 @@
 /**
- * Login flow with mocked API — uses shared cy.loginWithMock from support/commands.js.
+ * Happy-path login with cy.loginWithMock('farmer').
  */
 describe('Login (mocked API)', () => {
   beforeEach(() => {

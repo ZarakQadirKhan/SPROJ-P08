@@ -1,5 +1,5 @@
 /**
- * Role-based routing after login (mocked API).
+ * Each role lands on the correct dashboard after mocked login.
  */
 describe('Role dashboards (mocked login)', () => {
   beforeEach(() => {

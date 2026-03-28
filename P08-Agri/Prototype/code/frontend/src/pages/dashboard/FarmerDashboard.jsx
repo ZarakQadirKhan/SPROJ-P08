@@ -1,3 +1,6 @@
+/**
+ * Farmer home: weather, image scan, fields, history link, help, password, chat, profile.
+ */
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetch_weather_by_coords } from '../../services/weatherService'
@@ -113,6 +116,7 @@ function FarmerDashboard() {
 
   const [scan_history, set_scan_history] = useState([])
 
+  // Refreshes wheat fields + health after CRUD or linking a diagnosis.
   async function load_fields() {
     set_fields_loading(true)
     set_fields_error('')
@@ -126,10 +130,9 @@ function FarmerDashboard() {
     }
   }
 
-  /* Auto-fetch weather on mount and when language changes (so advice is in the right language) */
   useEffect(() => {
     handle_get_weather()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only language should retrigger weather copy
   }, [language])
 
   useEffect(() => {

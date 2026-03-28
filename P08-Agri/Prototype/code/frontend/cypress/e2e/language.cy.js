@@ -1,5 +1,5 @@
 /**
- * Language toggle on login (client-side only, no API).
+ * Login page EN ↔ Urdu toggle using visible copy.
  */
 describe('Language toggle', () => {
   beforeEach(() => {

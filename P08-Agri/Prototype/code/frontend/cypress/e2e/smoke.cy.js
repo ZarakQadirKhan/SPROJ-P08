@@ -1,6 +1,5 @@
 /**
- * Smoke tests — no backend required.
- * Asserts public routes render and the default redirect works.
+ * Public routes and navigation without calling the real API.
  */
 describe('AgriQual smoke', () => {
   it('redirects / to /login', () => {

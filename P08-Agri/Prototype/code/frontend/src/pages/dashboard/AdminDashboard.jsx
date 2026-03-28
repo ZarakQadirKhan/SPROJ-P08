@@ -1,4 +1,7 @@
 /* eslint-disable jsx-a11y/role-has-required-aria-props */
+/**
+ * Admin console: complaints, bulk email, password reset, inspection and SLA statistics.
+ */
 import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -386,14 +389,12 @@ function AdminDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ---------- HOME: 3 cards ---------- */}
         {view === VIEW_HOME && (
           <>
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-emerald-800">Admin Dashboard</h1>
             </div>
             <div className="space-y-4">
-              {/* Email Users card */}
               <button
                 type="button"
                 onClick={() => set_view(VIEW_EMAIL)}
@@ -416,7 +417,6 @@ function AdminDashboard() {
                 </span>
               </button>
 
-              {/* Complaints card */}
               <button
                 type="button"
                 onClick={() => set_view(VIEW_COMPLAINTS)}
@@ -444,7 +444,6 @@ function AdminDashboard() {
                 </span>
               </button>
               
-              {/* Inspection Statistics card */}
               <button
                 type="button"
                 onClick={() => set_view(VIEW_STATS)}
@@ -467,7 +466,6 @@ function AdminDashboard() {
                 </span>
               </button>
 
-              {/* SLA Monitoring card */}
               <button
                 type="button"
                 onClick={() => set_view(VIEW_SLA)}
@@ -490,7 +488,6 @@ function AdminDashboard() {
                 </span>
               </button>
 
-              {/* Reset Password card */}
               <button
                 type="button"
                 onClick={() => set_view(VIEW_RESET)}
@@ -516,7 +513,6 @@ function AdminDashboard() {
           </>
         )}
 
-        {/* ---------- EMAIL USERS screen ---------- */}
         {view === VIEW_EMAIL && (
           <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
@@ -607,7 +603,6 @@ function AdminDashboard() {
           </section>
         )}
 
-        {/* ---------- COMPLAINTS screen ---------- */}
         {view === VIEW_COMPLAINTS && (
           <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-visible">
             <div className="px-6 py-4 border-b border-[#2D6A4F] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -801,7 +796,6 @@ function AdminDashboard() {
           </section>
         )}
 
-        {/* ---------- RESET PASSWORD screen ---------- */}
         {view === VIEW_RESET && (
           <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
@@ -853,7 +847,6 @@ function AdminDashboard() {
             </div>
           </section>
         )}
-        {/* ---------- SLA MONITORING screen ---------- */}
         {view === VIEW_SLA && (
           <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">
@@ -989,7 +982,6 @@ function AdminDashboard() {
           </section>
         )}
 
-        {/* ---------- INSPECTION STATISTICS screen ---------- */}
         {view === VIEW_STATS && (
           <section className="bg-white rounded-xl shadow-sm border border-[#2D6A4F] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#2D6A4F] flex items-center gap-3">

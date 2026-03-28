@@ -1,3 +1,6 @@
+/**
+ * Open-Meteo-backed weather + tips for given coordinates; passes UI language for copy.
+ */
 import { API_BASE_URL } from './baseUrl'
 
 export async function fetch_weather_by_coords(latitude, longitude, language = 'en') {

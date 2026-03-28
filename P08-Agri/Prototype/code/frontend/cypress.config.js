@@ -1,13 +1,7 @@
 const { defineConfig } = require('cypress')
 
 /**
- * Cypress E2E config for Create React App (default dev server: http://localhost:3000).
- *
- * How to run:
- *  1) Terminal A: npm start
- *  2) Terminal B: npm run cypress:open   (interactive)  OR  npm run cypress:run   (headless)
- *
- * One-shot (starts app + runs tests): npm run test:e2e:ci
+ * Cypress E2E against CRA dev server (port 3000). Run: npm run cypress:open | cypress:run | test:e2e:ci.
  */
 module.exports = defineConfig({
   e2e: {
@@ -17,8 +11,6 @@ module.exports = defineConfig({
     video: false,
     screenshotOnRunFailure: true,
     defaultCommandTimeout: 10000,
-    setupNodeEvents() {
-      // extend with plugins later if needed
-    }
+    setupNodeEvents() {}
   }
 })

@@ -1,3 +1,6 @@
+/**
+ * Submit help/complaint tickets as a logged-in user.
+ */
 import axios from 'axios'
 import { getToken } from './authService'
 import { API_BASE_URL } from './baseUrl'

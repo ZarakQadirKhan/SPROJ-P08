@@ -1,3 +1,6 @@
+/**
+ * Admin-only APIs: complaints, broadcast email, password resets, inspection/SLA stats. Uses JWT role admin.
+ */
 const express = require('express')
 const crypto = require('crypto')
 const bcrypt = require('bcryptjs')

@@ -1,3 +1,6 @@
+/**
+ * Admin dashboard API: complaints, email blast, password reset, inspection/SLA stats.
+ */
 import { API_BASE_URL } from './baseUrl'
 import { getToken } from './authService'
 

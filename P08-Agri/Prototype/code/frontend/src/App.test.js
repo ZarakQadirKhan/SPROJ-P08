@@ -1,3 +1,6 @@
+/**
+ * Smoke unit test: App redirects unauthenticated users toward login (axios mocked).
+ */
 import { render, screen } from '@testing-library/react'
 import App from './App'
 

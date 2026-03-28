@@ -1,3 +1,6 @@
+/**
+ * New account: collects profile, sends OTP email, optional Google sign-up with role.
+ */
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'

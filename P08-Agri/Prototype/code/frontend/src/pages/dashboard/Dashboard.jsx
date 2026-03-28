@@ -1,3 +1,6 @@
+/**
+ * Inspector dashboard: similar tools to farmer (scan, weather, help) for field inspection workflows.
+ */
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetch_weather_by_coords } from '../../services/weatherService'
@@ -109,10 +112,9 @@ function Dashboard() {
 
   const [history_records, set_history_records] = useState([])
 
-  /* Auto-fetch weather on mount and when language changes */
   useEffect(() => {
     handle_get_weather()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only language should retrigger weather copy
   }, [language])
 
   useEffect(() => {
@@ -517,7 +519,6 @@ function Dashboard() {
       <input ref={file_input_ref} type="file" accept="image/*" className="hidden" onChange={handle_file_change} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome row */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-emerald-800">
             {t.farmerDashboard.welcome}, {user_name}
@@ -525,7 +526,6 @@ function Dashboard() {
           <p className="text-sm text-gray-500 mt-0.5">Review crop assessments and manage quality inspections.</p>
         </div>
 
-        {/* Stats row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-2xl border border-[#D5DDD0] p-5 flex items-center gap-4">
             <div className="h-11 w-11 rounded-xl bg-[#EDF2E8] flex items-center justify-center flex-shrink-0">
@@ -562,9 +562,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Top 5-column grid */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
-          {/* Upload card — 3 cols */}
           <button
             type="button"
             onClick={handle_click_upload_button}
@@ -579,7 +577,6 @@ function Dashboard() {
             <p className="text-sm text-gray-500 mt-1">{t.farmerDashboard.dropImageText || 'Drop an image or click to browse'}</p>
           </button>
 
-          {/* Right column — weather + quick links */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-[#D5DDD0] p-5 flex-1">
               {is_getting_weather && !weather_data && (
@@ -680,7 +677,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Assessments panel — full width */}
         <div className="bg-white rounded-2xl border border-[#D5DDD0] overflow-hidden">
           <div className="px-6 py-4 border-b border-[#D5DDD0] flex items-center justify-between">
             <h2 className="text-base font-bold text-gray-900">Recent Assessments</h2>
@@ -728,7 +724,6 @@ function Dashboard() {
         </div>
       </main>
 
-      {/* Help modal */}
       {is_help_open && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -777,7 +772,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Change password modal */}
       {is_change_password_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -838,7 +832,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Scan / assessment modal */}
       {is_scan_modal_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -962,7 +955,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Weather detail modal */}
       {is_weather_modal_open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
