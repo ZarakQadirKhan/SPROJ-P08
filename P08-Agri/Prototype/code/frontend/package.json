@@ -21,7 +21,13 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test:e2e": "cypress run",
+    "test:e2e:ci": "BROWSER=none start-server-and-test start http://localhost:3000 cypress:run",
+    "cypress:install": "cypress install",
+    "postinstall": "cypress install"
   },
   "eslintConfig": {
     "extends": [
@@ -44,7 +50,9 @@
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.10",
     "autoprefixer": "^10.4.21",
+    "cypress": "^13.17.0",
     "postcss": "^8.5.6",
+    "start-server-and-test": "^2.0.3",
     "tailwindcss": "^3.4.18"
   }
 }
