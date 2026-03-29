@@ -14,6 +14,7 @@ import {
   WEATHER_ALERT_INTERVAL_MS,
   msUntilNextAlignedWeatherFetch
 } from '../../utils/weatherAlertSchedule'
+import { buildCrucialWeatherAlertText } from '../../utils/weatherCrucialSummary'
 
 function build_chat_intro_message(diagnose_result, t) {
   const confidence =
@@ -82,9 +83,12 @@ function Dashboard() {
   const [weather_error, set_weather_error] = useState('')
   const [weather_data, set_weather_data] = useState(null)
   const [weather_schedule_notice, set_weather_schedule_notice] = useState(false)
+  const [weather_alert_payload, set_weather_alert_payload] = useState(null)
 
   const language_ref = useRef(language)
   language_ref.current = language
+  const t_ref = useRef(t)
+  t_ref.current = t
   const weather_fetch_lock = useRef(false)
 
   const [selected_file, set_selected_file] = useState(null)
@@ -214,6 +218,8 @@ function Dashboard() {
       )
       set_weather_data(data)
       if (from_schedule) {
+        const summary = buildCrucialWeatherAlertText(data, t_ref.current.farmerDashboard)
+        set_weather_alert_payload(summary && summary.text ? summary : null)
         set_weather_schedule_notice(true)
       }
     } catch (error) {
@@ -637,16 +643,47 @@ function Dashboard() {
             <div className="bg-white rounded-2xl border border-[#D5DDD0] p-5 flex-1">
               {weather_schedule_notice && (
                 <div
-                  className="mb-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 flex justify-between items-start gap-2"
-                  role="status"
+                  className={`mb-3 rounded-lg border px-3 py-2 flex justify-between items-start gap-2 ${
+                    weather_alert_payload && weather_alert_payload.severe
+                      ? 'bg-amber-50 border-amber-300'
+                      : 'bg-emerald-50 border-emerald-200'
+                  }`}
+                  role="alert"
                 >
-                  <p className="text-xs text-emerald-900 leading-snug">
-                    {t.farmerDashboard.weatherAlertUpdated}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={`text-xs font-bold ${
+                        weather_alert_payload && weather_alert_payload.severe ? 'text-amber-950' : 'text-emerald-900'
+                      }`}
+                    >
+                      {t.farmerDashboard.weatherAlertBannerTitle}
+                    </p>
+                    <p
+                      className={`text-xs leading-snug mt-0.5 ${
+                        weather_alert_payload && weather_alert_payload.severe ? 'text-amber-950' : 'text-emerald-900'
+                      }`}
+                    >
+                      {weather_alert_payload && weather_alert_payload.text
+                        ? weather_alert_payload.text
+                        : t.farmerDashboard.weatherAlertUpdated}
+                    </p>
+                    <p
+                      className={`text-[10px] mt-1 opacity-80 ${
+                        weather_alert_payload && weather_alert_payload.severe ? 'text-amber-900' : 'text-emerald-800'
+                      }`}
+                    >
+                      {t.farmerDashboard.weatherAlertScheduleNote}
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => set_weather_schedule_notice(false)}
-                    className="text-emerald-800 text-xs font-medium shrink-0 hover:underline"
+                    onClick={() => {
+                      set_weather_schedule_notice(false)
+                      set_weather_alert_payload(null)
+                    }}
+                    className={`text-xs font-medium shrink-0 hover:underline ${
+                      weather_alert_payload && weather_alert_payload.severe ? 'text-amber-900' : 'text-emerald-800'
+                    }`}
                   >
                     {t.farmerDashboard.weatherAlertDismiss}
                   </button>
