@@ -11,6 +11,10 @@ import { send_chat_message } from '../../services/chatService'
 import { get_fields, create_field, update_field, delete_field, link_diagnosis_to_field, save_and_link_diagnosis_to_field } from '../../services/fieldService'
 import { get_diagnosis_history } from '../../services/historyService'
 import { useLanguage } from '../../contexts/LanguageContext'
+import {
+  WEATHER_ALERT_INTERVAL_MS,
+  msUntilNextAlignedWeatherFetch
+} from '../../utils/weatherAlertSchedule'
 
 function build_chat_intro_message(diagnose_result, t) {
   const confidence =
@@ -69,6 +73,11 @@ function FarmerDashboard() {
   const [is_getting_weather, set_is_getting_weather] = useState(false)
   const [weather_error, set_weather_error] = useState('')
   const [weather_data, set_weather_data] = useState(null)
+  const [weather_schedule_notice, set_weather_schedule_notice] = useState(false)
+
+  const language_ref = useRef(language)
+  language_ref.current = language
+  const weather_fetch_lock = useRef(false)
 
   const [selected_file, set_selected_file] = useState(null)
   const [preview_url, set_preview_url] = useState('')
@@ -136,6 +145,34 @@ function FarmerDashboard() {
   }, [language])
 
   useEffect(() => {
+    const created_raw = user && user.createdAt
+    const created_ms = created_raw ? new Date(created_raw).getTime() : null
+    let timeout_id
+    let interval_id
+
+    function run_scheduled_fetch() {
+      if (weather_fetch_lock.current) {
+        return
+      }
+      void handle_get_weather({ from_schedule: true, keep_previous: true })
+    }
+
+    const delay = msUntilNextAlignedWeatherFetch(
+      Number.isFinite(created_ms) ? created_ms : null
+    )
+    timeout_id = window.setTimeout(() => {
+      run_scheduled_fetch()
+      interval_id = window.setInterval(run_scheduled_fetch, WEATHER_ALERT_INTERVAL_MS)
+    }, delay)
+
+    return () => {
+      window.clearTimeout(timeout_id)
+      window.clearInterval(interval_id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- anchor is signup time; avoid resetting timer on every render
+  }, [user && user.id, user && user.createdAt])
+
+  useEffect(() => {
     load_fields()
   }, [])
 
@@ -171,22 +208,41 @@ function FarmerDashboard() {
     })
   }
 
-  async function handle_get_weather() {
-    if (is_getting_weather) {
+  async function handle_get_weather(options = {}) {
+    const from_schedule = Boolean(options.from_schedule)
+    const keep_previous = Boolean(options.keep_previous)
+
+    if (weather_fetch_lock.current) {
       return
     }
+    weather_fetch_lock.current = true
 
     set_is_getting_weather(true)
     set_weather_error('')
-    set_weather_data(null)
+    if (!keep_previous) {
+      set_weather_data(null)
+    }
 
     try {
       const coords = await get_browser_location()
-      const data = await fetch_weather_by_coords(coords.latitude, coords.longitude, language)
+      const data = await fetch_weather_by_coords(
+        coords.latitude,
+        coords.longitude,
+        language_ref.current
+      )
       set_weather_data(data)
+      if (from_schedule) {
+        set_weather_schedule_notice(true)
+      }
     } catch (error) {
-      set_weather_error(error && error.message ? error.message : t.farmerDashboard.weatherFetchFailed)
+      const fallback =
+        t.farmerDashboard.weatherFetchFailed || t.farmerDashboard.failedToGetWeather
+      set_weather_error(error && error.message ? error.message : fallback)
+      if (!keep_previous) {
+        set_weather_data(null)
+      }
     } finally {
+      weather_fetch_lock.current = false
       set_is_getting_weather(false)
     }
   }
@@ -652,6 +708,23 @@ function FarmerDashboard() {
 
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-[#D5DDD0] p-5 flex-1">
+              {weather_schedule_notice && (
+                <div
+                  className="mb-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 flex justify-between items-start gap-2"
+                  role="status"
+                >
+                  <p className="text-xs text-emerald-900 leading-snug">
+                    {t.farmerDashboard.weatherAlertUpdated}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => set_weather_schedule_notice(false)}
+                    className="text-emerald-800 text-xs font-medium shrink-0 hover:underline"
+                  >
+                    {t.farmerDashboard.weatherAlertDismiss}
+                  </button>
+                </div>
+              )}
               {is_getting_weather && !weather_data && (
                 <div className="flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2D6A4F]"></div>

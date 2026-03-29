@@ -141,6 +141,24 @@ function validatePasswordStrength(password) {
   return null
 }
 
+function userToSafeClient(user) {
+  let createdAt
+  const raw = user && user.createdAt
+  if (raw != null) {
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) {
+      createdAt = d.toISOString()
+    }
+  }
+  return {
+    id: user._id.toString(),
+    name: user.name,
+    email: user.email,
+    role: user.role || 'farmer',
+    ...(createdAt ? { createdAt } : {})
+  }
+}
+
 // JWT `sub` is the Mongo user id; middleware maps it to req.auth.userId for all protected routes.
 function createTokenForUser(user) {
   const payload = {
@@ -289,12 +307,7 @@ router.post('/verify-otp', async function (request, response) {
 
     const token = createTokenForUser(user)
 
-    const safeUser = {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role || 'farmer'
-    }
+    const safeUser = userToSafeClient(user)
 
     return response.json({
       token,
@@ -396,12 +409,7 @@ router.post('/login', async function (request, response) {
 
     const token = createTokenForUser(user)
 
-    const safeUser = {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role || 'farmer'
-    }
+    const safeUser = userToSafeClient(user)
 
     console.log('[Auth][login] success:', baseLog)
 
@@ -496,12 +504,7 @@ router.post('/google', google_auth_limiter, async function (request, response) {
     }
 
     const token = createTokenForUser(user)
-    const safeUser = {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role || 'farmer'
-    }
+    const safeUser = userToSafeClient(user)
 
     await log_google_attempt(request, user.email, user._id, true, undefined)
 
@@ -559,12 +562,7 @@ router.post('/register', async function (request, response) {
 
     const token = createTokenForUser(user)
 
-    const safeUser = {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role || 'farmer'
-    }
+    const safeUser = userToSafeClient(user)
 
     return response.json({
       token,
