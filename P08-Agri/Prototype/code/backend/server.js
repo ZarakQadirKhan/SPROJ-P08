@@ -9,6 +9,7 @@ const fs = require('fs')
 const path = require('path')
 const mongoose = require('mongoose')
 const { connect_redis } = require('./redis_client')
+const { start_weather_email_alerts } = require('./weather_email_alerts')
 
 const app = express()
 // Behind reverse proxy / load balancer (e.g. K8s ingress) so req.ip and rate limits use the real client.
@@ -290,6 +291,8 @@ async function start_server() {
   app.listen(port, function () {
     console.log(`Server running on port ${port}`)
   })
+
+  start_weather_email_alerts()
 }
 
 start_server()

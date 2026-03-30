@@ -65,6 +65,18 @@ const userSchema = new mongoose.Schema(
       required: false,
       sparse: true,
       unique: true
+    },
+
+    weather_alert_lat: {
+      type: Number
+    },
+
+    weather_alert_lon: {
+      type: Number
+    },
+
+    weather_alert_last_sent_at: {
+      type: Date
     }
   },
   {

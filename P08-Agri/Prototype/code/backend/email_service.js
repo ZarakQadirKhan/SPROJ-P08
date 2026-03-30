@@ -300,11 +300,60 @@ async function send_admin_password_reset_email(payload = {}) {
   }
 }
 
+async function send_weather_alert_email(payload = {}) {
+  const recipient_email = String(payload?.recipient_email || '').trim()
+  const location_label = String(payload?.location_label || 'Your area').trim()
+  const summary = String(payload?.summary || '').trim()
+  const details = String(payload?.details || '').trim()
+
+  if (!recipient_email || !summary) {
+    throw new Error('Missing recipient_email or summary')
+  }
+
+  const client = get_resend_client()
+  if (!client) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Weather alert (not sent). To:', recipient_email)
+      console.log('Location:', location_label)
+      console.log('Summary:', summary)
+      console.log('Details:', details)
+      return
+    }
+    throw new Error('RESEND_API_KEY is not set')
+  }
+
+  const from_email = process.env.EMAIL_FROM || 'AgriQual <onboarding@resend.dev>'
+  const body_lines = [
+    `Weather alert for ${location_label}`,
+    '',
+    summary,
+    '',
+    ...(details ? [details, ''] : []),
+    'This is an automated update from AgriQual (every 5 minutes).'
+  ]
+
+  const result = await client.emails.send({
+    from: from_email,
+    to: [recipient_email],
+    subject: '[AgriQual Weather Alert] Important update',
+    text: body_lines.join('\n')
+  })
+
+  if (result && result.error) {
+    throw new Error(String(result.error.message || 'Resend failed'))
+  }
+
+  if (result && result.id) {
+    console.log('Resend weather alert email id:', result.id)
+  }
+}
+
 module.exports = {
   send_otp_email,
   send_help_email,
   send_password_change_email,
   send_admin_broadcast_email,
   send_complaint_response_email,
-  send_admin_password_reset_email
+  send_admin_password_reset_email,
+  send_weather_alert_email
 }

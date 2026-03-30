@@ -3,7 +3,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetch_weather_by_coords } from '../../services/weatherService'
+import { fetch_weather_by_coords, save_weather_alert_location } from '../../services/weatherService'
 import { diagnose_image } from '../../services/diagnoseService'
 import { send_complaint } from '../../services/helpService'
 import { changePassword } from '../../services/authService'
@@ -216,6 +216,7 @@ function Dashboard() {
         coords.longitude,
         language_ref.current
       )
+      void save_weather_alert_location(coords.latitude, coords.longitude)
       set_weather_data(data)
       if (from_schedule) {
         const summary = buildCrucialWeatherAlertText(data, t_ref.current.farmerDashboard)

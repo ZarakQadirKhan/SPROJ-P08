@@ -5,6 +5,8 @@ const express = require('express')
 const axios = require('axios')
 const router = express.Router()
 const { get_llm_weather_advice } = require('../lib/openaiClient')
+const { requireAuth } = require('../middleware/auth')
+const User = require('../models/User')
 
 const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast'
 
@@ -85,6 +87,35 @@ async function fetch_weather_api(latitude, longitude) {
     return { success: false, error: axios_error }
   }
 }
+
+router.post('/alert-location', requireAuth, async function (request, response) {
+  try {
+    const latitude = Number.parseFloat(request.body?.latitude)
+    const longitude = Number.parseFloat(request.body?.longitude)
+
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+      return response.status(400).json({ message: 'latitude and longitude are required' })
+    }
+
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return response.status(400).json({ message: 'latitude/longitude out of range' })
+    }
+
+    const user = await User.findById(request.auth.userId)
+    if (!user) {
+      return response.status(404).json({ message: 'User not found' })
+    }
+
+    user.weather_alert_lat = latitude
+    user.weather_alert_lon = longitude
+    await user.save()
+
+    return response.json({ ok: true })
+  } catch (error) {
+    console.error('[Weather] Failed to save alert location:', error?.message || error)
+    return response.status(500).json({ message: 'Failed to save alert location' })
+  }
+})
 
 router.get('/', async function (request, response) {
   try {

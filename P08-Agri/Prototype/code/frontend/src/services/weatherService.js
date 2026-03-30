@@ -34,8 +34,31 @@ export async function fetch_weather_by_coords(latitude, longitude, language = 'e
   return data
 }
 
+export async function save_weather_alert_location(latitude, longitude) {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    return
+  }
+  const base = (API_BASE_URL == null || API_BASE_URL === '') ? '' : API_BASE_URL.replace(/\/$/, '')
+  const url = `${base}/api/weather/alert-location`
+
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({ latitude, longitude })
+    })
+  } catch {
+    // Best-effort only; alert emails should not block dashboard weather UX.
+  }
+}
+
 const weather_service = {
-  fetch_weather_by_coords
+  fetch_weather_by_coords,
+  save_weather_alert_location
 }
 
 export default weather_service
