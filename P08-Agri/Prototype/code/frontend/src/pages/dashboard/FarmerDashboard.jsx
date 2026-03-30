@@ -719,7 +719,7 @@ function FarmerDashboard() {
                 <div
                   className={`mb-3 rounded-lg border px-3 py-2 flex justify-between items-start gap-2 ${
                     weather_alert_payload && weather_alert_payload.severe
-                      ? 'bg-amber-50 border-amber-300'
+                      ? 'bg-red-50 border-red-300'
                       : 'bg-emerald-50 border-emerald-200'
                   }`}
                   role="alert"
@@ -727,14 +727,14 @@ function FarmerDashboard() {
                   <div className="min-w-0 flex-1">
                     <p
                       className={`text-xs font-bold ${
-                        weather_alert_payload && weather_alert_payload.severe ? 'text-amber-950' : 'text-emerald-900'
+                        weather_alert_payload && weather_alert_payload.severe ? 'text-red-900' : 'text-emerald-900'
                       }`}
                     >
                       {t.farmerDashboard.weatherAlertBannerTitle}
                     </p>
                     <p
                       className={`text-xs leading-snug mt-0.5 ${
-                        weather_alert_payload && weather_alert_payload.severe ? 'text-amber-950' : 'text-emerald-900'
+                        weather_alert_payload && weather_alert_payload.severe ? 'text-red-900' : 'text-emerald-900'
                       }`}
                     >
                       {weather_alert_payload && weather_alert_payload.text
@@ -743,7 +743,7 @@ function FarmerDashboard() {
                     </p>
                     <p
                       className={`text-[10px] mt-1 opacity-80 ${
-                        weather_alert_payload && weather_alert_payload.severe ? 'text-amber-900' : 'text-emerald-800'
+                        weather_alert_payload && weather_alert_payload.severe ? 'text-red-800' : 'text-emerald-800'
                       }`}
                     >
                       {t.farmerDashboard.weatherAlertScheduleNote}
@@ -756,7 +756,7 @@ function FarmerDashboard() {
                       set_weather_alert_payload(null)
                     }}
                     className={`text-xs font-medium shrink-0 hover:underline ${
-                      weather_alert_payload && weather_alert_payload.severe ? 'text-amber-900' : 'text-emerald-800'
+                      weather_alert_payload && weather_alert_payload.severe ? 'text-red-800' : 'text-emerald-800'
                     }`}
                   >
                     {t.farmerDashboard.weatherAlertDismiss}
