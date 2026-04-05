@@ -1,5 +1,5 @@
 /** Weather refresh interval aligned to account `createdAt` (signup instant). */
-export const WEATHER_ALERT_INTERVAL_MS = 5 * 60 * 1000
+export const WEATHER_ALERT_INTERVAL_MS = 6 * 60 * 60 * 1000
 
 /**
  * Milliseconds until the next aligned boundary after account creation (signup + n × interval).

@@ -5,7 +5,7 @@ const { send_weather_alert_email } = require('./email_service')
 
 const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast'
 const RUNNER_INTERVAL_MS = Number.parseInt(process.env.WEATHER_ALERT_RUNNER_MS || String(15 * 60 * 1000), 10)
-const EMAIL_INTERVAL_MS = Number.parseInt(process.env.WEATHER_ALERT_EMAIL_MS || String(5 * 60 * 1000), 10)
+const EMAIL_INTERVAL_MS = Number.parseInt(process.env.WEATHER_ALERT_EMAIL_MS || String(6 * 60 * 60 * 1000), 10)
 
 let runner = null
 let in_flight = false

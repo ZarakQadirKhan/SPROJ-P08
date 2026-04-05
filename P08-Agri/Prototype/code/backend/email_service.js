@@ -329,7 +329,7 @@ async function send_weather_alert_email(payload = {}) {
     summary,
     '',
     ...(details ? [details, ''] : []),
-    'This is an automated update from AgriQual (every 5 minutes).'
+    'This is an automated update from AgriQual (every 6 hours).'
   ]
 
   const result = await client.emails.send({
