@@ -183,8 +183,9 @@ function FarmerDashboard() {
   useEffect(() => {
     get_diagnosis_history(12, 0)
       .then((data) => {
-        const mapped = (Array.isArray(data) ? data : []).map((item) => ({
-          status: item.label && !item.label.toLowerCase().includes('healthy') ? 'issue' : 'healthy'
+        const items = Array.isArray(data) ? data : (data && Array.isArray(data.diagnoses) ? data.diagnoses : [])
+        const mapped = items.map((item) => ({
+          status: item.diagnosis && !item.diagnosis.toLowerCase().includes('healthy') ? 'issue' : 'healthy'
         }))
         set_scan_history(mapped)
       })
