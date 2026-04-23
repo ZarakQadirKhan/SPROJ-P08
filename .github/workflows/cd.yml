@@ -17,8 +17,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only deploy when the triggering CI workflow succeeded
-    if: github.event.workflow_run.conclusion == 'success'
+    # Only deploy when CI succeeded AND OKE deploy is explicitly enabled via repo variable.
+    # Set repository variable OKE_DEPLOY_ENABLED=true when infra is ready.
+    if: github.event.workflow_run.conclusion == 'success' && vars.OKE_DEPLOY_ENABLED == 'true'
 
     steps:
       #  Checkout the same commit that CI built (so image SHA matches)
