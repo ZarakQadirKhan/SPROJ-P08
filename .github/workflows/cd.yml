@@ -84,14 +84,34 @@ jobs:
       # 5️⃣ Generate kubeconfig for OKE (OKE_CLUSTER_OCID + OCI_REGION must match cluster region, e.g. ap-mumbai-1)
       - name: Get kubeconfig
         run: |
-          if [ -z "${{ secrets.OKE_CLUSTER_OCID }}" ]; then
+          trim() { echo "$1" | tr -d '\n\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
+
+          CLUSTER_OCID="$(trim "${{ secrets.OKE_CLUSTER_OCID }}")"
+          OKE_REGION="$(trim "${{ secrets.OKE_REGION }}")"
+          if [ -z "$OKE_REGION" ]; then
+            OKE_REGION="$(trim "${{ secrets.OCI_REGION }}")"
+          fi
+
+          if [ -z "$CLUSTER_OCID" ]; then
             echo "::error::OKE_CLUSTER_OCID is not set or is empty. Add it in GitHub: Settings → Secrets and variables → Actions. Value = your OKE cluster OCID (e.g. ocid1.cluster.oc1..uniqueid)."
             exit 1
           fi
+          if [ -z "$OKE_REGION" ]; then
+            echo "::error::OCI_REGION (or optional OKE_REGION) is not set or is empty."
+            exit 1
+          fi
+
           export PATH="$HOME/.local/bin:$PATH"
           mkdir -p "$HOME/.kube"
           CFG="$HOME/.kube/config"
-          oci --region "${{ secrets.OCI_REGION }}" ce cluster create-kubeconfig --cluster-id "${{ secrets.OKE_CLUSTER_OCID }}" --file "$CFG" --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+
+          # Preflight check makes region/permission/OCID issues fail early with clearer logs.
+          if ! oci --region "$OKE_REGION" ce cluster get --cluster-id "$CLUSTER_OCID" >/dev/null 2>&1; then
+            echo "::error::Unable to access the OKE cluster in region '$OKE_REGION'. Check OKE_CLUSTER_OCID, region, tenancy, and IAM policy for the OCI user. You can also set OKE_REGION secret if it differs from OCI_REGION."
+            exit 1
+          fi
+
+          oci --region "$OKE_REGION" ce cluster create-kubeconfig --cluster-id "$CLUSTER_OCID" --file "$CFG" --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
           chmod 600 "$CFG"
       - name: Set KUBECONFIG environment
         run: echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV

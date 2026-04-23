@@ -1,1 +1,87 @@
+AgriQual Project Write-up (Problem, Solution, Features, Architecture, Results, Future)
 
+1) Problem Statement
+- Wheat farmers and field inspectors need quick and practical crop disease support, but traditional diagnosis is often delayed, location-bound, and hard to scale.
+- Farmers also need contextual advisory support after diagnosis, including weather-aware guidance and clear next steps.
+- Existing workflows usually miss integrated case history, field-level tracking, and simple communication with support/admin teams.
+
+2) Proposed Solution
+AgriQual is an AI-assisted web platform that combines image-based wheat disease diagnosis, weather-informed advisories, and role-based farm workflows. Farmers and inspectors can upload wheat images for ML diagnosis, receive confidence-based recommendations, ask follow-up questions through an evidence-grounded chat assistant, and track history over time. The platform also includes admin operations for complaint handling, user communication, and operational statistics/SLA monitoring.
+
+3) Core Features
+- Secure authentication with JWT, OTP email verification, Google sign-in, and role-based access (farmer, inspector, admin).
+- ML-powered disease diagnosis via image upload (Top-1 diagnosis, confidence score, alternatives, recommendations, processing time).
+- Farmer field management (create/update/delete fields, link diagnoses to fields, field health indicators).
+- Weather integration using Open-Meteo with practical farming tips and optional LLM weather summary.
+- Diagnosis history and detail views for traceability (including alternatives/recommendations).
+- RAG-based chat assistant using retrieved agriculture knowledge chunks and citation-style evidence behavior.
+- Help/complaint system for authenticated users with rate limiting and admin response flow.
+- Admin dashboard for complaints, broadcast email, farmer password reset, diagnosis statistics, and SLA compliance tracking.
+- Bilingual UX support (English/Urdu) in the frontend.
+- Deployment-ready setup with Docker/Kubernetes manifests and CI/CD workflows.
+
+4) System Architecture (Abstract Level)
+AgriQual follows a modular, service-oriented web architecture:
+
+- Presentation Layer (Frontend, React):
+  - Role-based dashboards for farmer, inspector, and admin.
+  - Handles user interaction, image upload, weather display, chat UI, and field/history views.
+
+- API Layer (Backend, Node.js + Express):
+  - Central gateway for authentication, weather, diagnosis orchestration, chat, help, admin, history, and fields.
+  - Enforces security policies (JWT auth, RBAC, rate limiting, validation).
+
+- ML Inference Layer (FastAPI + PyTorch):
+  - Dedicated Python service for crop disease image inference.
+  - Returns diagnosis label, confidence, alternatives, recommendations, and processing latency.
+
+- Data Layer (MongoDB + Redis):
+  - MongoDB stores users, diagnoses, complaints, fields, and security/history data.
+  - Redis supports backend connectivity/use for performance and operational resilience.
+
+- External Services:
+  - Open-Meteo for weather data.
+  - OpenAI for chat and weather-language augmentation.
+  - Resend for OTP and notification emails.
+
+Overall Request Flow (High-level):
+User -> Frontend -> Express API -> (ML Service / Weather API / OpenAI / Email) -> MongoDB/Redis -> Frontend response.
+
+5) Results and Performance (from current implementation)
+Important: The repository currently does not include an offline evaluation report (test-set accuracy, precision, recall, F1, confusion matrix) for the trained wheat model. So a defensible "model accuracy %" cannot be claimed from source files alone.
+
+What is available and measurable in the current system:
+- Per-inference confidence score is returned for each diagnosis.
+- Top alternative classes with confidence are provided.
+- Processing latency (`processing_ms`) is captured for each diagnosis.
+- Admin SLA dashboard tracks:
+  - Total requests
+  - Compliant vs breach counts against 15s threshold
+  - Compliance rate
+  - Average processing time
+- Admin inspection statistics track:
+  - Total diagnoses
+  - Average confidence
+  - Disease distribution
+  - Diagnoses over time
+
+Suggested report phrasing for now:
+"The deployed model provides real-time confidence-based inference and operational SLA tracking; however, a separate offline benchmark (accuracy/precision/recall/F1) should be included in the next evaluation cycle."
+
+6) Future Work
+- Add a formal ML evaluation pipeline and publish metrics (accuracy, precision, recall, F1, class-wise confusion matrix).
+- Introduce continual learning/retraining with newly validated field samples.
+- Expand disease/pest class coverage and support more crops beyond wheat.
+- Improve explainability (visual heatmaps/attention overlays) to support trust and expert review.
+- Add offline/low-connectivity mobile workflow for rural use.
+- Integrate geospatial risk mapping and seasonal forecasting.
+- Add multilingual voice assistant support for low-literacy users.
+- Strengthen observability with unified monitoring dashboards and alerting.
+
+7) Highlighted Evidence Mapping (Codebase Coverage)
+- Authentication + RBAC: backend routes and middleware.
+- ML diagnosis pipeline: backend diagnosis route + FastAPI ML service.
+- Weather advisory: backend weather route + frontend weather modules.
+- Chat assistant (RAG + LLM): backend chat and RAG libraries.
+- Field management and history: backend field/history routes + farmer dashboard/history UI.
+- Admin operations and analytics: admin route + admin dashboard pages.
